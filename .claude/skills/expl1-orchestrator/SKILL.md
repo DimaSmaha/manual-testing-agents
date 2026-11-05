@@ -30,7 +30,7 @@ by the next stage automatically.
 | 4 | `expl1-4-qa-test-cases` | `<ISSUEKEY>-3-checklist.md` | `<ISSUEKEY>-4-test-cases.md` | Sonnet · High · Thinking Off |
 | 5 | `expl1-5-pr-summary` | PR URL or branch | `<ISSUEKEY>-5-pr-summary.md` | Sonnet · Medium · Thinking Off |
 | 6 | `expl1-6-code-review` | `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`, PR URL or branch | `<ISSUEKEY>-6-code-review.md` | Opus · High · Thinking On |
-| 7 | `expl1-7-impact-analysis` | to be defined (placeholder skill) | `<ISSUEKEY>-7-impact-analysis.md` | to be defined |
+| 7 | `expl1-7-impact-analysis` | `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`, `<ISSUEKEY>-6-code-review.md`, PR URL or branch | `<ISSUEKEY>-7-impact-analysis.md` | Opus · High · Thinking On |
 | 8 | `expl1-8-web-testing` | `<ISSUEKEY>-6-code-review.md`, `<ISSUEKEY>-4-test-cases.md` (optional: `<ISSUEKEY>-3-checklist.md`) | `<ISSUEKEY>-8-web-testing.md` | Sonnet · High · Thinking Off |
 
 Stage artifacts are named `<ISSUEKEY>-<stage number>-<name>.md` (the stage number keeps the
@@ -97,6 +97,8 @@ Before launching a stage, check that its required input files exist in
 - Stage 5 needs the PR URL or branch name.
 - Stage 6 needs `<ISSUEKEY>-4-test-cases.md` and the PR URL or branch name
   (`<ISSUEKEY>-5-pr-summary.md` is recommended but the skill can work without it).
+- Stage 7 needs `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`,
+  `<ISSUEKEY>-6-code-review.md` and the PR URL or branch name.
 - Stage 8 needs `<ISSUEKEY>-6-code-review.md` and `<ISSUEKEY>-4-test-cases.md`.
 
 If a required file is missing, tell the user which stage produces it and offer to run
@@ -106,8 +108,9 @@ that stage first. If the chat is new, the user can upload the files instead.
 
 - **Stages 5–6 (PR):** if the task has no PR or branch yet, offer to stop after stage 4.
   Stage 8 cannot run without `<ISSUEKEY>-6-code-review.md`.
-- **Stage 7 (impact analysis):** currently a placeholder. Offer to skip it; run it only
-  if the user confirms the skill has been configured.
+- **Stage 7 (impact analysis):** optional. It needs the PR (stages 5–6 done). It compares
+  the PR with the commit before it and checks the files the PR did not change. Offer it
+  after stage 6; the user may skip it. Stage 8 does not depend on it.
 - **Stage 8 (web testing):** if `<ISSUEKEY>-6-code-review.md` has no test cases with
   status `QA` or `FAIL`, the stage has nothing to do — say so and skip it.
 
@@ -134,7 +137,7 @@ run / skipped / not run, its output file path, and its key counters:
 | 4 expl1-4-qa-test-cases | run | `<ISSUEKEY>-4-test-cases.md` | N test cases, N requirements covered |
 | 5 expl1-5-pr-summary | run | `<ISSUEKEY>-5-pr-summary.md` | N changed files |
 | 6 expl1-6-code-review | run | `<ISSUEKEY>-6-code-review.md` | PASS / FAIL / QA / N/A counters |
-| 7 expl1-7-impact-analysis | skipped | — | placeholder |
+| 7 expl1-7-impact-analysis | run | `<ISSUEKEY>-7-impact-analysis.md` | PASS / FAIL / QA / N/A counters |
 | 8 expl1-8-web-testing | run | `<ISSUEKEY>-8-web-testing.md` | counters + verdict |
 
 (The table above is an example — report the real values.)
