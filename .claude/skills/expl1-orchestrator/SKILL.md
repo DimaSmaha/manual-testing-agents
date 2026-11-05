@@ -101,7 +101,7 @@ Before launching a stage, check that its required input files exist in
   `<ISSUEKEY>-6-code-review.md` and the PR URL or branch name.
 - Stage 8 needs `<ISSUEKEY>-6-code-review.md` and `<ISSUEKEY>-4-test-cases.md`.
   `<ISSUEKEY>-7-impact-analysis.md` is optional: if it exists, stage 8 also runs its
-  browser retest rows.
+  retest rows.
 
 If a required file is missing, tell the user which stage produces it and offer to run
 that stage first. If the chat is new, the user can upload the files instead.
@@ -113,9 +113,9 @@ that stage first. If the chat is new, the user can upload the files instead.
 - **Stage 7 (impact analysis):** optional. It needs the PR (stages 5–6 done). It compares
   the PR with the commit before it and checks the files the PR did not change. Offer it
   after stage 6; the user may skip it. Stage 8 does not need it, but when it exists
-  stage 8 runs the `Browser` rows of its "Retest in stage 8" section.
+  stage 8 runs the rows of its "Retest in stage 8" section (live-app browser checks only).
 - **Stage 8 (web testing):** if `<ISSUEKEY>-6-code-review.md` has no test cases with
-  status `QA` or `FAIL` and `<ISSUEKEY>-7-impact-analysis.md` is absent or has no `Browser`
+  status `QA` or `FAIL` and `<ISSUEKEY>-7-impact-analysis.md` is absent or has no
   retest rows, the stage has nothing to do — say so and skip it.
 
 ## Settings and context hygiene

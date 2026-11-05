@@ -5,8 +5,8 @@ description: >
   (expl1-5) and the code review (expl1-6), compares the PR with the commit before it,
   builds an impact map (Risk Areas, Direct Impact, Dependent Modules, low risk),
   and checks that the files NOT changed in the PR still work with the changes.
-  Produces a results file with statuses and findings, plus retest notes for stage 8
-  (browser checks and manual follow-ups) for every QA and N/A result. Use when the user says
+  Produces a results file with statuses and findings, plus browser retest notes for
+  stage 8 (only the QA and N/A results that can be checked in the live app UI). Use when the user says
   "impact analysis", "what is affected by the change", "check the dependent files",
   or after the code review is finished.
 ---
@@ -64,9 +64,11 @@ Do not read the requirements or checklist files.
 - Every N/A has evidence: file, line, expected vs actual (or what exactly is absent).
 - No checks invented by the skill. Every check traces to an item of the impact map
   or to a test case / code-review row (validation).
-- Every QA and every N/A result gets a retest note for stage 8 (see Method, step 7).
-  The notes are not new checks: they only restate what the result could not confirm,
-  using the dependent's own flow, a finding, or a test case. Do not invent steps or data.
+- A QA or N/A result gets a retest note for stage 8 only if it can be checked in the
+  live app UI (see Method, step 7). Results about code, CI, deploy files, npm scripts,
+  build output, Storybook, CODEOWNERS and similar get no note. The notes are not new
+  checks: they only restate what the result could not confirm, using the dependent's own
+  flow, a finding, or a test case. Do not invent steps or data.
 - Do not re-review the PR's own code against the test cases — that is stage 6.
   Check only contracts and dependencies.
 - Do not evaluate code quality, style, architecture, or naming.
@@ -200,18 +202,15 @@ Rules:
 
 ### 7. Write the retest notes for stage 8
 
-For every result with status `QA` or `N/A`, add one row to the "Retest in stage 8" section.
+Stage 8 tests the live app in a browser only. It does not look at code, CI files or npm
+scripts. So the section holds only the checks a person can do in the product UI.
+
+For every result with status `QA` or `N/A`, decide: can it be verified in the live app UI
+(a page, a click path, a visible state, a URL that is opened)? If yes — add one row to
+"Retest in stage 8" with Page, Precondition, Steps (numbered, short, one action each)
+and Expected. If no (CI or deploy files, npm scripts, build output, Storybook, CODEOWNERS,
+library internals) — add no row; the QA / N/A result stays in the Results table.
 PASS and FAIL results get no row (FAIL already has a finding).
-
-Give each row a **Type**:
-
-- `Browser` — a person or stage 8 can verify it in the product UI: a page, a click path,
-  a visible state, a URL that is opened, a stored value that is visible through the UI.
-  Fill in Page, Precondition, Steps (numbered, short, one action each) and Expected.
-- `Manual` — cannot be verified in the browser UI: CI or deploy files, build output,
-  external services, Storybook, library internals. Describe in Steps what a person should
-  check and where; Page, Precondition and Expected stay `—` unless useful.
-- `None` — an `N/A` that needs no retest. Give the reason from the finding in Steps.
 
 Rules for the notes:
 - Take the steps and the expected result only from the dependent's own flow (for example
@@ -232,8 +231,9 @@ Before saving, check:
 - No FAIL on an uncovered file.
 - Every check traces to an `IMP-<n>` item or to a TC / code-review row. Remove anything else.
 - The order of the tables follows the risk priority.
-- Every QA and N/A result has exactly one row in "Retest in stage 8", and there are no
-  rows for PASS or FAIL results. Every `Browser` row has a page, steps and an expected result.
+- "Retest in stage 8" has no rows for PASS or FAIL results and no rows about code, CI,
+  npm scripts or build output. Every row has a page, steps and an expected result.
+  If no QA / N/A result can be checked in the UI — the section is not created.
 
 ## Output file
 
@@ -253,5 +253,4 @@ After saving the file, report:
 - The path to the saved file
 - PASS / FAIL / QA / N/A counters
 - The number of impact-map items per tier
-- The number of retest notes per type (`Browser` / `Manual` / `None`); stage 8 will
-  execute the `Browser` ones
+- The number of browser retest notes for stage 8

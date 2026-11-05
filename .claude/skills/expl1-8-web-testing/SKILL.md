@@ -60,7 +60,7 @@ Data sources for this skill:
   and expected results
 - the checklist file (optional) — structural checks
 - the impact analysis file (optional) — the section "Retest in stage 8": steps and
-  expected results for IMPACT items, and the `Manual` / `None` rows for the report
+  expected results for IMPACT items
 - the product UI through `playwright-cli` — the source of actual
   results
 - the user — for anything the agent cannot do or decide itself
@@ -85,9 +85,9 @@ do not inspect code.
   Do not guess, do not work around a blocker, do not bypass a login.
 - Test cases with the statuses PASS and N/A in the code review
   are not executed in the browser. Only QA and FAIL are executed.
-- From the impact analysis execute only the rows of type `Browser`. Rows of type `Manual`
-  and `None` are not executed — copy them to the report section "Manual follow-up".
-  Use the steps and the expected result of the row literally; do not add checks.
+- From the impact analysis execute the rows of the section "Retest in stage 8" (all of them
+  are browser checks against the live app). Use the steps and the expected result of the
+  row literally; do not add checks. Do not look at code, CI files or build output.
 - Do not change data in the system without a direct test case step
   that requires this change. If a step says "enter a value" —
   enter it. If it does not say so — do not enter. Do not create records,
@@ -170,17 +170,15 @@ file, line, what was expected, what is actually in the code.
 This information will help understand what exactly to verify in the UI.
 
 Then, if `<ISSUEKEY>-7-impact-analysis.md` exists, read its section "Retest in stage 8".
-- Rows of type `Browser` are added to the scope as items with Source `IMPACT`
+- Each row is added to the scope as an item with Source `IMPACT`
   (id `IMP-<n>`; page, precondition, steps and expected result come from the row).
   They are executed after the test cases, in the order of the file.
 - If an IMPACT row has a "Linked TC" that is already in the scope (QA or FAIL) — do not
   run it twice. Execute the test case once and add `also IMP-<n>` to its comment.
   If two IMPACT rows have the same steps — execute once and report both ids.
-- Rows of type `Manual` and `None` are not executed. Keep them for the report
-  (section "Manual follow-up").
 
 If there are no QA, FAIL or IMPACT items — tell the user that there are no items
-for web testing and stop. (A `Manual` row alone is not a reason to run the browser.)
+for web testing and stop.
 
 Briefly tell the user:
 ```
@@ -188,7 +186,6 @@ Scope: [N] items to execute in the browser.
 - QA (verification in the UI): [N]
 - FAIL (bug confirmation): [N]
 - IMPACT (retest from the impact analysis): [N]
-Manual follow-up (not executed): [N]
 Session: [SESSION], headed browser. I will ask if I need your help.
 ```
 
@@ -438,8 +435,6 @@ Before saving, check:
   ones and add them.
 - The order of test cases matches the order in the test-cases file; IMPACT items follow
   them in the order of the impact-analysis file.
-- Every `Manual` and `None` row of the impact analysis is listed in "Manual follow-up"
-  and is not counted in the statistics.
 - Every FAIL and FAIL CONFIRMED has: which step,
   expected result, actual result, screenshot path.
 - Every FAIL REJECTED has: the code review finding and what
@@ -480,5 +475,4 @@ After saving the file, report:
   the problems found
 - If there are OBSERVATION — briefly list the observations
 - If there are BLOCKED — list what could not be executed and why
-- If there is "Manual follow-up" — list the items a person still has to check
 - Whether the browser session was closed

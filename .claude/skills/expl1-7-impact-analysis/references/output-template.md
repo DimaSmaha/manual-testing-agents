@@ -41,11 +41,9 @@ Rows are ordered by tier: Risk Areas, Direct Impact, Dependent Modules, Low risk
 
 ## Retest in stage 8
 
-| ID | Status | Type | Page | Precondition | Steps | Expected | Linked TC / review row |
-|----|--------|------|------|--------------|-------|----------|------------------------|
-| IMP-1 | QA | Browser | <page or URL> | <state needed> | 1) <action> 2) <action> | <visible result> | TC-REQ-X.Y or — |
-| IMP-4 | QA | Manual | — | — | <what a person checks and where> | — | — |
-| IMP-11 | N/A | None | — | — | <reason no retest is needed> | — | — |
+| ID | Status | Page | Precondition | Steps | Expected | Linked TC / review row |
+|----|--------|------|--------------|-------|----------|------------------------|
+| IMP-1 | QA | <page or URL> | <state needed> | 1) <action> 2) <action> | <visible result> | TC-REQ-X.Y or — |
 
 ---
 
@@ -58,10 +56,11 @@ Section rules:
 - Every N/A has a file, a line, and a reason.
 - No FAIL for uncovered files — use QA or N/A.
 - If there is no FAIL or N/A — the Findings section is not created.
-- Retest in stage 8 — one row for every QA and N/A result in the Results table, in the
-  same order, and no rows for PASS or FAIL. Type: `Browser` (stage 8 executes it),
-  `Manual` (not a browser check, listed for a person), `None` (N/A, no retest needed).
+- Retest in stage 8 — browser checks against the live app only: a row for a QA or N/A
+  result that can be verified in the UI, in the order of the Results table. No rows for
+  PASS or FAIL, and none for code, CI, npm scripts, build output or Storybook results.
   Steps and Expected come only from the dependent's own flow, a finding, or a test case.
+  If there are no such rows — the section is not created.
 
 ## Statistics
 

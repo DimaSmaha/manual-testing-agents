@@ -62,18 +62,6 @@ Items for web testing: <N>
 - **Expected:** <expected result from the retest row>
 - **Actual:** <what the agent saw on the page>
 
-## Manual follow-up
-
-Items from the impact analysis that are not browser checks. Not executed, not counted
-in the statistics.
-
-| ID | Type | What to check |
-|----|------|---------------|
-| IMP-4 | Manual | <steps from the impact-analysis row> |
-| IMP-11 | None | <reason no retest is needed> |
-
-If the impact analysis has no `Manual` or `None` rows — the section is not created.
-
 ---
 
 Section rules:
