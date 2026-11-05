@@ -52,10 +52,10 @@ Conventions shared by all skills in the chain (keep when configuring):
 
 ## Output file
 
-Create the file `<ISSUEKEY>-impact-analysis.md` in the working
-directory and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-impact-analysis.md`
+and tell the user the path.
 
-The file stays in the working directory.
+The file stays in `.workflow-artifacts/<ISSUEKEY>/`.
 
 If the file already exists — delete it completely and create a new one.
 The output is always a single file with the result of the latest run.

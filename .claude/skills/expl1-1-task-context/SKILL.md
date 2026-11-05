@@ -63,7 +63,7 @@ Do not use workarounds (browser, web search, guessing the content) as a replacem
 ### Efficient usage
 
 An item record is small: one request per item is enough. Save the response to
-`.workflow-artifacts/tracker/<ISSUEKEY>.json` and read it with the Read tool.
+`.workflow-artifacts/<ISSUEKEY>/tracker/<ISSUEKEY>.json` and read it with the Read tool.
 Always use the retry flags from the reference file.
 
 ### Recommended flow
@@ -199,10 +199,11 @@ to the corresponding section before saving.
 
 ## Output file
 
-Create the file <ISSUEKEY>-context.md in the working directory
-and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-context.md`
+(the per-task artifacts folder; create the folder if it does not exist)
+and tell the user the path.
 
-The file stays in the working directory — the next skill
+The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill
 in the same chat picks it up automatically.
 
 If the file already exists — delete it completely and create a new one.

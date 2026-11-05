@@ -22,7 +22,7 @@ compact results table with findings for the FAIL items.
 Required from the user:
 1. The test cases file `<ISSUEKEY>-test-cases.md` created
    by the expl1-4-qa-test-cases skill. In the same chat the file is available
-   in the working directory automatically. If the chat is new —
+   in `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new —
    the user uploads the file to the chat.
 2. The PR summary file `<ISSUEKEY>-pr-summary.md` created
    by the expl1-5-pr-summary skill. In the same chat it is available automatically.
@@ -221,10 +221,10 @@ Rules:
 
 ## Output file
 
-Create the file `<ISSUEKEY>-code-review.md` in the working
-directory and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-code-review.md`
+and tell the user the path.
 
-The file stays in the working directory — the next skill
+The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill
 in the same chat picks it up automatically.
 
 If the file already exists — delete it completely and create a new one.

@@ -26,7 +26,7 @@ executed in the UI.
 Required from the user:
 1. The code review file `<ISSUEKEY>-code-review.md` created
    by the expl1-6-code-review skill. In the same chat the file is available
-   in the working directory automatically. If the chat is new —
+   in `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new —
    the user uploads the file to the chat.
 2. The test cases file `<ISSUEKEY>-test-cases.md` created
    by the expl1-4-qa-test-cases skill. In the same chat it is available automatically.
@@ -379,10 +379,10 @@ Before saving, check:
 
 ## Output file
 
-Create the file `<ISSUEKEY>-web-testing.md` in the working
-directory and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-web-testing.md`
+and tell the user the path.
 
-The file stays in the working directory.
+The file stays in `.workflow-artifacts/<ISSUEKEY>/`.
 
 If the file already exists — delete it completely and create a new one.
 The output is always a single file with the result of the latest run.

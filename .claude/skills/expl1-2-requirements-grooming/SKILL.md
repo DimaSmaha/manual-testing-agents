@@ -20,7 +20,7 @@ the final numbered list of requirements — input for the following skills.
 
 Input — the context file `<ISSUEKEY>-context.md` created by the
 context-collection skill (expl1-1-task-context). In the same chat the file is available
-in the working directory automatically. If the chat is new — the user
+in `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new — the user
 uploads the file to the chat.
 
 > ⚠️ CONFIGURE: replace "expl1-1-task-context" with the exact name of the skill that collects
@@ -191,10 +191,10 @@ Examples: "where applicable", "all places", "update the wording",
 
 ## Output file
 
-Create the file <ISSUEKEY>-requirements.md in the working directory
-and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-requirements.md`
+and tell the user the path.
 
-The file stays in the working directory — the next skill
+The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill
 in the same chat picks it up automatically.
 
 If the file already exists — delete it completely and create a new one.

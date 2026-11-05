@@ -47,7 +47,7 @@ Write the response into the git-ignored scratch folder and read it with the Read
 (one simple command, no `cd`, no `&&`):
 
 ```
-curl -s --retry 3 --retry-all-errors --max-time 10 --create-dirs <BASE>/<tasks|bugs>/<id> -o .workflow-artifacts/tracker/<ISSUEKEY>.json
+curl -s --retry 3 --retry-all-errors --max-time 10 --create-dirs <BASE>/<tasks|bugs>/<id> -o .workflow-artifacts/<ISSUEKEY>/tracker/<ISSUEKEY>.json
 ```
 
 - The retry flags are required: transient server errors (HTTP 5xx) must not stop the run.

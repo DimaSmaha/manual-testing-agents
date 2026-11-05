@@ -21,8 +21,8 @@ and for manual testing.
 ## Input
 
 Input — the file `<ISSUEKEY>-requirements.md` created by the
-expl1-2-requirements-grooming skill. In the same chat the file is available in the working
-directory automatically. If the chat is new — the user
+expl1-2-requirements-grooming skill. In the same chat the file is available in
+`.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new — the user
 uploads the file to the chat.
 
 Data sources for this skill:
@@ -119,10 +119,10 @@ If a problem is found — fix it before saving.
 
 ## Output file
 
-Create the file <ISSUEKEY>-checklist.md in the working directory
-and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-checklist.md`
+and tell the user the path.
 
-The file stays in the working directory — the next skill
+The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill
 in the same chat picks it up automatically.
 
 If the file already exists — delete it completely and create a new one.

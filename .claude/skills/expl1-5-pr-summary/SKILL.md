@@ -165,10 +165,10 @@ Before saving, check:
 
 ## Output file
 
-Create the file `<ISSUEKEY>-pr-summary.md` in the working
-directory and hand it to the user for download.
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-pr-summary.md`
+(create the folder if it does not exist) and tell the user the path.
 
-The file stays in the working directory — the next skill
+The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill
 in the same chat picks it up automatically.
 
 If the file already exists — delete it completely and create a new one.

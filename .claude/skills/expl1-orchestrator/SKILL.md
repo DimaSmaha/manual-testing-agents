@@ -17,7 +17,7 @@ description: >
 
 Drives the QA skills chain for one task, stage by stage. The orchestrator
 does not do the stage work itself: it launches each stage skill with the Skill tool
-in the same chat, so the artifact files in the working directory are picked up
+in the same chat, so the artifact files in `.workflow-artifacts/<ISSUEKEY>/` are picked up
 by the next stage automatically.
 
 ## Pipeline
@@ -78,14 +78,17 @@ A non-empty response means it is up. If the output is empty or the command fails
 tell the user the tracker is not reachable (and ask for the correct base URL if needed)
 and wait. Do not work around it. Skip the pre-flight when resuming from stage 2 or later.
 
-Locations: stage artifacts (`<ISSUEKEY>-*.md`) go to the working directory;
-scratch files (tracker responses, helper scripts and their output) go to
-`.workflow-artifacts/` (git-ignored) and are deleted when the run is finished.
+Locations: stage artifacts (`<ISSUEKEY>-*.md`) go to the per-task folder
+`.workflow-artifacts/<ISSUEKEY>/` (git-ignored) and are kept after the run;
+the raw tracker response is saved in `.workflow-artifacts/<ISSUEKEY>/tracker/` and is kept
+with the task folder. Other scratch files (helper scripts and their output) go to the other
+subfolders of `.workflow-artifacts/` and are deleted when the run is finished.
+Never delete the `.workflow-artifacts/<ISSUEKEY>/` folder.
 
 ## Handoff checks before each stage
 
-Before launching a stage, check that its required input files exist in the working
-directory and are not empty:
+Before launching a stage, check that its required input files exist in
+`.workflow-artifacts/<ISSUEKEY>/` and are not empty:
 
 - Stage 2 needs `<ISSUEKEY>-context.md`.
 - Stage 3 needs `<ISSUEKEY>-requirements.md`.
