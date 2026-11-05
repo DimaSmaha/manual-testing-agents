@@ -20,7 +20,7 @@ and for manual testing.
 
 ## Input
 
-Input — the file `<ISSUEKEY>-requirements.md` created by the
+Input — the file `<ISSUEKEY>-2-requirements.md` created by the
 expl1-2-requirements-grooming skill. In the same chat the file is available in
 `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new — the user
 uploads the file to the chat.
@@ -119,7 +119,7 @@ If a problem is found — fix it before saving.
 
 ## Output file
 
-Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-checklist.md`
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-3-checklist.md`
 and tell the user the path.
 
 The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill

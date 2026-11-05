@@ -24,7 +24,7 @@ agent asks for help when it needs it.
   it stops and asks you. You act in the open window, say "done", and it continues.
 - Screenshots (FAIL evidence only) and run scripts go to
   `.workflow-artifacts/<ISSUEKEY>/web-testing/`. The report goes to
-  `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-web-testing.md`.
+  `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-8-web-testing.md`.
 - `playwright-cli` snapshots are written to `.playwright-cli/` (excluded in
   `.git/info/exclude`).
 

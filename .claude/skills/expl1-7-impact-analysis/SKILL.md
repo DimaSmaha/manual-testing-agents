@@ -29,8 +29,8 @@ Then stop. Do not create the output file, do not invent the analysis.
 ## Input
 
 > ⚠️ **CONFIGURE:** specify the input artifacts. Likely candidates
-> (to be confirmed): `<ISSUEKEY>-requirements.md`,
-> `<ISSUEKEY>-pr-summary.md`, `<ISSUEKEY>-code-review.md`.
+> (to be confirmed): `<ISSUEKEY>-2-requirements.md`,
+> `<ISSUEKEY>-5-pr-summary.md`, `<ISSUEKEY>-6-code-review.md`.
 
 ## Rules
 
@@ -52,7 +52,7 @@ Conventions shared by all skills in the chain (keep when configuring):
 
 ## Output file
 
-Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-impact-analysis.md`
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-7-impact-analysis.md`
 and tell the user the path.
 
 The file stays in `.workflow-artifacts/<ISSUEKEY>/`.

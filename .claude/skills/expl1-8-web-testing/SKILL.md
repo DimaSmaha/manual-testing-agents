@@ -29,15 +29,15 @@ show the right page — and the agent continues from the same browser.
 ## Input
 
 Required from the user:
-1. The code review file `<ISSUEKEY>-code-review.md` created
+1. The code review file `<ISSUEKEY>-6-code-review.md` created
    by the expl1-6-code-review skill. In the same chat the file is available
    in `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new —
    the user uploads the file to the chat.
-2. The test cases file `<ISSUEKEY>-test-cases.md` created
+2. The test cases file `<ISSUEKEY>-4-test-cases.md` created
    by the expl1-4-qa-test-cases skill. In the same chat it is available automatically.
 
 Optional input:
-- The checklist file `<ISSUEKEY>-checklist.md` — for structural
+- The checklist file `<ISSUEKEY>-3-checklist.md` — for structural
   checks that did not make it into the test cases.
 
 If the code-review file is not provided — ask before starting. Offer the fallback:
@@ -132,7 +132,7 @@ If the user cannot help or says skip — mark the test case BLOCKED with that re
 
 ### Step 1 — Gather the scope
 
-Read `<ISSUEKEY>-code-review.md`. Find all test cases
+Read `<ISSUEKEY>-6-code-review.md`. Find all test cases
 with the status `QA` or `FAIL` in the results table.
 This is the working list for execution in the browser.
 
@@ -147,7 +147,7 @@ are not included in the scope — they have already been verified from the code.
 (If there is no code-review file and the user chose the fallback — the scope is
 every test case in the test-cases file, all treated as `QA`.)
 
-Then read `<ISSUEKEY>-test-cases.md`. For each
+Then read `<ISSUEKEY>-4-test-cases.md`. For each
 QA and FAIL test case extract the full data:
 - Precondition
 - The steps table (step, test data, expected result)
@@ -311,7 +311,7 @@ If `IS_NEW_PATH = true`:
 
 ### Step 8 — Build the report
 
-Create the file `<ISSUEKEY>-web-testing.md` with the results.
+Create the file `<ISSUEKEY>-8-web-testing.md` with the results.
 
 The template is in references/output-template.md.
 
@@ -419,7 +419,7 @@ Before saving, check:
 
 ## Output file
 
-Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-web-testing.md`
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-8-web-testing.md`
 and tell the user the path.
 
 The file stays in `.workflow-artifacts/<ISSUEKEY>/`.

@@ -199,7 +199,7 @@ to the corresponding section before saving.
 
 ## Output file
 
-Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-context.md`
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-1-context.md`
 (the per-task artifacts folder; create the folder if it does not exist)
 and tell the user the path.
 

@@ -39,7 +39,7 @@ exist in both. The kind must always be known before reading:
 - Input forms: a full URL (kind from the path), `TASK-<id>` / `BUG-<id>`, or a bare number
   together with the word task/bug. If a bare number has no kind — ask the user which one.
 - `<ISSUEKEY>` in all artifact file names = the key from the table (for example
-  `TASK-112-context.md`, `BUG-114-context.md`).
+  `TASK-112-1-context.md`, `BUG-114-1-context.md`).
 
 ## Reading an item
 

@@ -23,7 +23,7 @@ with specific actions and specific data.
 
 ## Input
 
-Input — the file `<ISSUEKEY>-checklist.md` created by the
+Input — the file `<ISSUEKEY>-3-checklist.md` created by the
 expl1-3-qa-checklist skill. In the same chat the file is available in
 `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new — the user
 uploads the file to the chat.
@@ -188,7 +188,7 @@ If a problem is found — fix it before saving.
 
 ## Output file
 
-Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-test-cases.md`
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-4-test-cases.md`
 and tell the user the path.
 
 The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill

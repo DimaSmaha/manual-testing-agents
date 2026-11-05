@@ -165,7 +165,7 @@ Before saving, check:
 
 ## Output file
 
-Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-pr-summary.md`
+Create the file `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-5-pr-summary.md`
 (create the folder if it does not exist) and tell the user the path.
 
 The file stays in `.workflow-artifacts/<ISSUEKEY>/` — the next skill

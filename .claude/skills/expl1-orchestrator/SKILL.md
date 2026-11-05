@@ -24,16 +24,17 @@ by the next stage automatically.
 
 | # | Skill | Input | Output | Recommended settings |
 |---|-------|-------|--------|----------------------|
-| 1 | `expl1-1-task-context` | task URL or key | `<ISSUEKEY>-context.md` | Sonnet · Medium · Thinking Off |
-| 2 | `expl1-2-requirements-grooming` | `<ISSUEKEY>-context.md` | `<ISSUEKEY>-requirements.md` | Opus · High · Thinking On |
-| 3 | `expl1-3-qa-checklist` | `<ISSUEKEY>-requirements.md` | `<ISSUEKEY>-checklist.md` | Sonnet · Medium · Thinking Off |
-| 4 | `expl1-4-qa-test-cases` | `<ISSUEKEY>-checklist.md` | `<ISSUEKEY>-test-cases.md` | Sonnet · High · Thinking Off |
-| 5 | `expl1-5-pr-summary` | PR URL or branch | `<ISSUEKEY>-pr-summary.md` | Sonnet · Medium · Thinking Off |
-| 6 | `expl1-6-code-review` | `<ISSUEKEY>-test-cases.md`, `<ISSUEKEY>-pr-summary.md`, PR URL or branch | `<ISSUEKEY>-code-review.md` | Opus · High · Thinking On |
-| 7 | `expl1-7-impact-analysis` | to be defined (placeholder skill) | `<ISSUEKEY>-impact-analysis.md` | to be defined |
-| 8 | `expl1-8-web-testing` | `<ISSUEKEY>-code-review.md`, `<ISSUEKEY>-test-cases.md` (optional: `<ISSUEKEY>-checklist.md`) | `<ISSUEKEY>-web-testing.md` | Sonnet · High · Thinking Off |
+| 1 | `expl1-1-task-context` | task URL or key | `<ISSUEKEY>-1-context.md` | Sonnet · Medium · Thinking Off |
+| 2 | `expl1-2-requirements-grooming` | `<ISSUEKEY>-1-context.md` | `<ISSUEKEY>-2-requirements.md` | Opus · High · Thinking On |
+| 3 | `expl1-3-qa-checklist` | `<ISSUEKEY>-2-requirements.md` | `<ISSUEKEY>-3-checklist.md` | Sonnet · Medium · Thinking Off |
+| 4 | `expl1-4-qa-test-cases` | `<ISSUEKEY>-3-checklist.md` | `<ISSUEKEY>-4-test-cases.md` | Sonnet · High · Thinking Off |
+| 5 | `expl1-5-pr-summary` | PR URL or branch | `<ISSUEKEY>-5-pr-summary.md` | Sonnet · Medium · Thinking Off |
+| 6 | `expl1-6-code-review` | `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`, PR URL or branch | `<ISSUEKEY>-6-code-review.md` | Opus · High · Thinking On |
+| 7 | `expl1-7-impact-analysis` | to be defined (placeholder skill) | `<ISSUEKEY>-7-impact-analysis.md` | to be defined |
+| 8 | `expl1-8-web-testing` | `<ISSUEKEY>-6-code-review.md`, `<ISSUEKEY>-4-test-cases.md` (optional: `<ISSUEKEY>-3-checklist.md`) | `<ISSUEKEY>-8-web-testing.md` | Sonnet · High · Thinking Off |
 
-Stage artifacts use the same `<ISSUEKEY>` throughout. Requirement IDs (`REQ-N`) are
+Stage artifacts are named `<ISSUEKEY>-<stage number>-<name>.md` (the stage number keeps the
+files in pipeline order in the folder) and use the same `<ISSUEKEY>` throughout. Requirement IDs (`REQ-N`) are
 assigned at stage 2 and stay the same through all following stages.
 
 ## Input
@@ -41,7 +42,7 @@ assigned at stage 2 and stay the same through all following stages.
 Collect from the user before starting (ask only for what is missing):
 1. The task or bug URL or key (needed for stage 1; also gives `<ISSUEKEY>` for all file names).
    Keys: `TASK-<id>` (story) or `BUG-<id>` (bug, for retesting); `<ISSUEKEY>` = the key
-   (for example `TASK-112-context.md`, `BUG-114-context.md`). A URL has the form
+   (for example `TASK-112-1-context.md`, `BUG-114-1-context.md`). A URL has the form
    `<BASE>/tasks/<id>` or `<BASE>/bugs/<id>`; the default `<BASE>` is `http://localhost:3000`.
    Tasks and bugs have separate id spaces — if the kind is unclear, ask.
    Details: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`.
@@ -90,13 +91,13 @@ Never delete the `.workflow-artifacts/<ISSUEKEY>/` folder.
 Before launching a stage, check that its required input files exist in
 `.workflow-artifacts/<ISSUEKEY>/` and are not empty:
 
-- Stage 2 needs `<ISSUEKEY>-context.md`.
-- Stage 3 needs `<ISSUEKEY>-requirements.md`.
-- Stage 4 needs `<ISSUEKEY>-checklist.md`.
+- Stage 2 needs `<ISSUEKEY>-1-context.md`.
+- Stage 3 needs `<ISSUEKEY>-2-requirements.md`.
+- Stage 4 needs `<ISSUEKEY>-3-checklist.md`.
 - Stage 5 needs the PR URL or branch name.
-- Stage 6 needs `<ISSUEKEY>-test-cases.md` and the PR URL or branch name
-  (`<ISSUEKEY>-pr-summary.md` is recommended but the skill can work without it).
-- Stage 8 needs `<ISSUEKEY>-code-review.md` and `<ISSUEKEY>-test-cases.md`.
+- Stage 6 needs `<ISSUEKEY>-4-test-cases.md` and the PR URL or branch name
+  (`<ISSUEKEY>-5-pr-summary.md` is recommended but the skill can work without it).
+- Stage 8 needs `<ISSUEKEY>-6-code-review.md` and `<ISSUEKEY>-4-test-cases.md`.
 
 If a required file is missing, tell the user which stage produces it and offer to run
 that stage first. If the chat is new, the user can upload the files instead.
@@ -104,10 +105,10 @@ that stage first. If the chat is new, the user can upload the files instead.
 ## Conditional stages
 
 - **Stages 5–6 (PR):** if the task has no PR or branch yet, offer to stop after stage 4.
-  Stage 8 cannot run without `<ISSUEKEY>-code-review.md`.
+  Stage 8 cannot run without `<ISSUEKEY>-6-code-review.md`.
 - **Stage 7 (impact analysis):** currently a placeholder. Offer to skip it; run it only
   if the user confirms the skill has been configured.
-- **Stage 8 (web testing):** if `<ISSUEKEY>-code-review.md` has no test cases with
+- **Stage 8 (web testing):** if `<ISSUEKEY>-6-code-review.md` has no test cases with
   status `QA` or `FAIL`, the stage has nothing to do — say so and skip it.
 
 ## Settings and context hygiene
@@ -127,13 +128,13 @@ run / skipped / not run, its output file path, and its key counters:
 
 | Stage | Status | Output | Key result |
 |-------|--------|--------|------------|
-| 1 expl1-1-task-context | run | `<ISSUEKEY>-context.md` | — |
-| 2 expl1-2-requirements-grooming | run | `<ISSUEKEY>-requirements.md` | N requirements |
-| 3 expl1-3-qa-checklist | run | `<ISSUEKEY>-checklist.md` | N checks |
-| 4 expl1-4-qa-test-cases | run | `<ISSUEKEY>-test-cases.md` | N test cases, N requirements covered |
-| 5 expl1-5-pr-summary | run | `<ISSUEKEY>-pr-summary.md` | N changed files |
-| 6 expl1-6-code-review | run | `<ISSUEKEY>-code-review.md` | PASS / FAIL / QA / N/A counters |
+| 1 expl1-1-task-context | run | `<ISSUEKEY>-1-context.md` | — |
+| 2 expl1-2-requirements-grooming | run | `<ISSUEKEY>-2-requirements.md` | N requirements |
+| 3 expl1-3-qa-checklist | run | `<ISSUEKEY>-3-checklist.md` | N checks |
+| 4 expl1-4-qa-test-cases | run | `<ISSUEKEY>-4-test-cases.md` | N test cases, N requirements covered |
+| 5 expl1-5-pr-summary | run | `<ISSUEKEY>-5-pr-summary.md` | N changed files |
+| 6 expl1-6-code-review | run | `<ISSUEKEY>-6-code-review.md` | PASS / FAIL / QA / N/A counters |
 | 7 expl1-7-impact-analysis | skipped | — | placeholder |
-| 8 expl1-8-web-testing | run | `<ISSUEKEY>-web-testing.md` | counters + verdict |
+| 8 expl1-8-web-testing | run | `<ISSUEKEY>-8-web-testing.md` | counters + verdict |
 
 (The table above is an example — report the real values.)
