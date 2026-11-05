@@ -31,7 +31,7 @@ by the next stage automatically.
 | 5 | `expl1-5-pr-summary` | PR URL or branch | `<ISSUEKEY>-5-pr-summary.md` | Sonnet · Medium · Thinking Off |
 | 6 | `expl1-6-code-review` | `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`, PR URL or branch | `<ISSUEKEY>-6-code-review.md` | Opus · High · Thinking On |
 | 7 | `expl1-7-impact-analysis` | `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`, `<ISSUEKEY>-6-code-review.md`, PR URL or branch | `<ISSUEKEY>-7-impact-analysis.md` | Opus · High · Thinking On |
-| 8 | `expl1-8-web-testing` | `<ISSUEKEY>-6-code-review.md`, `<ISSUEKEY>-4-test-cases.md` (optional: `<ISSUEKEY>-3-checklist.md`) | `<ISSUEKEY>-8-web-testing.md` | Sonnet · High · Thinking Off |
+| 8 | `expl1-8-web-testing` | `<ISSUEKEY>-6-code-review.md`, `<ISSUEKEY>-4-test-cases.md` (optional: `<ISSUEKEY>-3-checklist.md`, `<ISSUEKEY>-7-impact-analysis.md`) | `<ISSUEKEY>-8-web-testing.md` | Sonnet · High · Thinking Off |
 
 Stage artifacts are named `<ISSUEKEY>-<stage number>-<name>.md` (the stage number keeps the
 files in pipeline order in the folder) and use the same `<ISSUEKEY>` throughout. Requirement IDs (`REQ-N`) are
@@ -100,6 +100,8 @@ Before launching a stage, check that its required input files exist in
 - Stage 7 needs `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`,
   `<ISSUEKEY>-6-code-review.md` and the PR URL or branch name.
 - Stage 8 needs `<ISSUEKEY>-6-code-review.md` and `<ISSUEKEY>-4-test-cases.md`.
+  `<ISSUEKEY>-7-impact-analysis.md` is optional: if it exists, stage 8 also runs its
+  browser retest rows.
 
 If a required file is missing, tell the user which stage produces it and offer to run
 that stage first. If the chat is new, the user can upload the files instead.
@@ -110,9 +112,11 @@ that stage first. If the chat is new, the user can upload the files instead.
   Stage 8 cannot run without `<ISSUEKEY>-6-code-review.md`.
 - **Stage 7 (impact analysis):** optional. It needs the PR (stages 5–6 done). It compares
   the PR with the commit before it and checks the files the PR did not change. Offer it
-  after stage 6; the user may skip it. Stage 8 does not depend on it.
+  after stage 6; the user may skip it. Stage 8 does not need it, but when it exists
+  stage 8 runs the `Browser` rows of its "Retest in stage 8" section.
 - **Stage 8 (web testing):** if `<ISSUEKEY>-6-code-review.md` has no test cases with
-  status `QA` or `FAIL`, the stage has nothing to do — say so and skip it.
+  status `QA` or `FAIL` and `<ISSUEKEY>-7-impact-analysis.md` is absent or has no `Browser`
+  retest rows, the stage has nothing to do — say so and skip it.
 
 ## Settings and context hygiene
 

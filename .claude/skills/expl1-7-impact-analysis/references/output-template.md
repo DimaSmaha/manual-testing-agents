@@ -39,6 +39,14 @@ Rows are ordered by tier: Risk Areas, Direct Impact, Dependent Modules, Low risk
 - **File:** <path>, line <N>
 - **Reason:** <why it is not applicable — what exactly is absent>
 
+## Retest in stage 8
+
+| ID | Status | Type | Page | Precondition | Steps | Expected | Linked TC / review row |
+|----|--------|------|------|--------------|-------|----------|------------------------|
+| IMP-1 | QA | Browser | <page or URL> | <state needed> | 1) <action> 2) <action> | <visible result> | TC-REQ-X.Y or — |
+| IMP-4 | QA | Manual | — | — | <what a person checks and where> | — | — |
+| IMP-11 | N/A | None | — | — | <reason no retest is needed> | — | — |
+
 ---
 
 Section rules:
@@ -50,6 +58,10 @@ Section rules:
 - Every N/A has a file, a line, and a reason.
 - No FAIL for uncovered files — use QA or N/A.
 - If there is no FAIL or N/A — the Findings section is not created.
+- Retest in stage 8 — one row for every QA and N/A result in the Results table, in the
+  same order, and no rows for PASS or FAIL. Type: `Browser` (stage 8 executes it),
+  `Manual` (not a browser check, listed for a person), `None` (N/A, no retest needed).
+  Steps and Expected come only from the dependent's own flow, a finding, or a test case.
 
 ## Statistics
 

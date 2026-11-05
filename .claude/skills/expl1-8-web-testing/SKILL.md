@@ -5,7 +5,8 @@ description: >
   from the code review and the test cases, executes them in a headed browser
   through playwright-cli (with a named session), verifies the expected results,
   asks the user for help when needed (login, missing data, unclear steps), and
-  produces a detailed report. Use when the user says
+  produces a detailed report. Also executes the browser retest notes from the
+  impact analysis (stage 7) when that file exists. Use when the user says
   "web testing", "test in the browser", "go through the QA items",
   "manual testing", or after the code review is finished.
 ---
@@ -18,8 +19,10 @@ Executes the QA and FAIL test cases in a real, visible browser using `playwright
 QA — items that cannot be verified from the code.
 FAIL — items that the code review identified as problematic
 and that need confirmation in the UI that the bug really exists.
-Input — the code review and test cases files. Output —
-a detailed report with the results of each test case
+IMPACT — browser retest notes from the impact analysis (stage 7): QA and N/A results
+for files the PR did not change, which only the UI can confirm.
+Input — the code review and test cases files (and optionally the impact analysis). Output —
+a detailed report with the results of each test case and retest note
 executed in the UI.
 
 The browser is **headed** (the user sees it) and runs in a **named session**,
@@ -39,6 +42,10 @@ Required from the user:
 Optional input:
 - The checklist file `<ISSUEKEY>-3-checklist.md` — for structural
   checks that did not make it into the test cases.
+- The impact analysis file `<ISSUEKEY>-7-impact-analysis.md` created by the
+  expl1-7-impact-analysis skill — its section "Retest in stage 8" adds browser items
+  (source IMPACT) to the scope. If the file does not exist or has no such section —
+  continue without it and say so in one line.
 
 If the code-review file is not provided — ask before starting. Offer the fallback:
 "Run all test cases from the test-cases file as QA items?" If the user agrees,
@@ -52,6 +59,8 @@ Data sources for this skill:
 - the test-cases file — the source of steps, test data,
   and expected results
 - the checklist file (optional) — structural checks
+- the impact analysis file (optional) — the section "Retest in stage 8": steps and
+  expected results for IMPACT items, and the `Manual` / `None` rows for the report
 - the product UI through `playwright-cli` — the source of actual
   results
 - the user — for anything the agent cannot do or decide itself
@@ -76,6 +85,9 @@ do not inspect code.
   Do not guess, do not work around a blocker, do not bypass a login.
 - Test cases with the statuses PASS and N/A in the code review
   are not executed in the browser. Only QA and FAIL are executed.
+- From the impact analysis execute only the rows of type `Browser`. Rows of type `Manual`
+  and `None` are not executed — copy them to the report section "Manual follow-up".
+  Use the steps and the expected result of the row literally; do not add checks.
 - Do not change data in the system without a direct test case step
   that requires this change. If a step says "enter a value" —
   enter it. If it does not say so — do not enter. Do not create records,
@@ -157,14 +169,26 @@ For FAIL items additionally extract the finding from the code-review:
 file, line, what was expected, what is actually in the code.
 This information will help understand what exactly to verify in the UI.
 
-If there are no QA and FAIL items (all PASS/N/A) — tell
-the user that there are no items for web testing and stop.
+Then, if `<ISSUEKEY>-7-impact-analysis.md` exists, read its section "Retest in stage 8".
+- Rows of type `Browser` are added to the scope as items with Source `IMPACT`
+  (id `IMP-<n>`; page, precondition, steps and expected result come from the row).
+  They are executed after the test cases, in the order of the file.
+- If an IMPACT row has a "Linked TC" that is already in the scope (QA or FAIL) — do not
+  run it twice. Execute the test case once and add `also IMP-<n>` to its comment.
+  If two IMPACT rows have the same steps — execute once and report both ids.
+- Rows of type `Manual` and `None` are not executed. Keep them for the report
+  (section "Manual follow-up").
+
+If there are no QA, FAIL or IMPACT items — tell the user that there are no items
+for web testing and stop. (A `Manual` row alone is not a reason to run the browser.)
 
 Briefly tell the user:
 ```
-Scope: [N] test cases to execute in the browser.
+Scope: [N] items to execute in the browser.
 - QA (verification in the UI): [N]
 - FAIL (bug confirmation): [N]
+- IMPACT (retest from the impact analysis): [N]
+Manual follow-up (not executed): [N]
 Session: [SESSION], headed browser. I will ask if I need your help.
 ```
 
@@ -243,6 +267,9 @@ Set `IS_NEW_PATH = true`.
 ### Step 6 — Execute the test cases
 
 For each test case in the scope:
+
+For an IMPACT item the "precondition", "steps" and "expected result" are the columns
+Precondition, Steps and Expected of the impact-analysis row; handle them in the same way.
 
 1. **Check the precondition:**
    - If the precondition describes the page state (for example
@@ -342,7 +369,7 @@ Each test case gets one status:
 - `FAIL` — the UI behavior does not match the expected result.
   There is a concrete discrepancy between expected and actual.
   Used for test cases that came with the status
-  QA from the code review.
+  QA from the code review, and for IMPACT items.
 - `FAIL CONFIRMED` — the test case came with the status FAIL
   from the code review and the UI confirms: the bug really manifests
   in the interface. Include the finding from the code review + what the
@@ -404,10 +431,15 @@ caught the eye while going through the test cases.
 
 Before saving, check:
 
-- The number of test cases in the report equals the number
+- The number of items in the report equals the number
   of QA + FAIL items from the code-review file (or of all test cases when the
-  fallback was used). If it does not match — find the missing ones and add them.
-- The order of test cases matches the order in the test-cases file.
+  fallback was used) plus the IMPACT items from the impact-analysis file (without the ones
+  merged into a test case or into another row). If it does not match — find the missing
+  ones and add them.
+- The order of test cases matches the order in the test-cases file; IMPACT items follow
+  them in the order of the impact-analysis file.
+- Every `Manual` and `None` row of the impact analysis is listed in "Manual follow-up"
+  and is not counted in the statistics.
 - Every FAIL and FAIL CONFIRMED has: which step,
   expected result, actual result, screenshot path.
 - Every FAIL REJECTED has: the code review finding and what
@@ -448,4 +480,5 @@ After saving the file, report:
   the problems found
 - If there are OBSERVATION — briefly list the observations
 - If there are BLOCKED — list what could not be executed and why
+- If there is "Manual follow-up" — list the items a person still has to check
 - Whether the browser session was closed
