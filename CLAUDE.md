@@ -1,0 +1,54 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this repo is
+
+Not an application. It is a **Claude Code skill pipeline for manual QA of one task/bug at a time**. All the real content lives in `.claude/skills/` as Markdown skills (`SKILL.md` + `references/` + `setup-guide.md`). The only code is the stock Playwright scaffold (`playwright.config.ts`, `tests/example.spec.ts`), which is not part of the pipeline. `package.json` has no scripts; the only dependencies are `@playwright/test` and `@types/node`.
+
+## The pipeline
+
+`expl1-orchestrator` runs eight stage skills in order. Each stage reads the previous stages' artifacts and writes one Markdown file, then stops and waits for the user:
+
+| # | Skill | Output |
+|---|-------|--------|
+| 1 | `expl1-1-task-context` | `<ISSUEKEY>-1-context.md` |
+| 2 | `expl1-2-requirements-grooming` | `<ISSUEKEY>-2-requirements.md` |
+| 3 | `expl1-3-qa-checklist` | `<ISSUEKEY>-3-checklist.md` |
+| 4 | `expl1-4-qa-test-cases` | `<ISSUEKEY>-4-test-cases.md` |
+| 5 | `expl1-5-pr-summary` | `<ISSUEKEY>-5-pr-summary.md` |
+| 6 | `expl1-6-code-review` | `<ISSUEKEY>-6-code-review.md` (per test case: PASS / FAIL / QA / N/A) |
+| 7 | `expl1-7-impact-analysis` (optional) | `<ISSUEKEY>-7-impact-analysis.md` |
+| 8 | `expl1-8-web-testing` | `<ISSUEKEY>-8-web-testing.md` |
+
+Cross-stage contracts that span several skills (read the orchestrator `SKILL.md` for the full list):
+
+- **`<ISSUEKEY>`** is `TASK-<id>` or `BUG-<id>` and prefixes every artifact. Requirement IDs (`REQ-N`) are assigned in stage 2 and must stay stable through all later stages.
+- **Artifacts** go in `.workflow-artifacts/<ISSUEKEY>/` (git-ignored, kept after the run). Re-running a stage deletes and recreates its file; it never merges. Later stages may need a re-run if an earlier one changed.
+- **The orchestrator never does stage work or edits artifacts.** It launches stage skills via the Skill tool, checks handoff files exist and are non-empty, reports counters, and asks before advancing. Stage skills ask the user questions; never answer them on the user's behalf.
+- **Stage 8 scope** = `QA` and `FAIL` rows from stage 6, plus the rows of stage 7's "Retest in stage 8" section (source `IMPACT`; live-app browser checks only, code/CI/npm results get no row). `PASS`/`N/A` rows from the code review are not browser-tested. FAIL items from the code review may only end as `FAIL CONFIRMED` or `FAIL REJECTED`.
+- Each stage skill declares a recommended model/effort/thinking setting (Opus + thinking for stages 2, 6, 7; Sonnet otherwise). Stage 1 blocks until the user confirms those settings.
+- Stages 1–4 are tracker/requirements work; stages 5–7 need a PR URL or branch and use the `gh` CLI (`gh pr view`, `gh api repos/.../compare/...`) as the only code source; stage 8 uses the browser only.
+
+## External dependencies
+
+- **Issue tracker**: a REST API read with `curl` (no auth), default `http://localhost:3000`, with an ngrok alternative. Tasks (`/tasks/<id>`) and bugs (`/bugs/<id>`) have **separate id spaces**, so the kind must always be known. Commands, retry flags and response shapes: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`. Pre-flight health check is `curl -s --max-time 5 <BASE>/`; if it fails, stop and ask rather than work around it. Comments, attachments and linked items are not exposed by the tracker.
+- **Browser (stage 8)**: `playwright-cli` only (see `.claude/skills/playwright-cli/`), never Playwright MCP or the Chrome extension. Always a **headed** browser in a **named session** `qa-<ISSUEKEY>` with `--persistent`, so the user can log in or intervene. The agent does not type credentials unless the user gives them in chat. Per-page navigation memory is in `.claude/skills/expl1-8-web-testing/navigation_paths.json`; app settings are in `references/login-config.md`.
+- Stage 6/7 test the PR under review, which lives in another repo. A local clone sits in `.workflow-artifacts/clone/` (scratch).
+
+## Editing skills
+
+- `.claude/skills/` is the only folder Claude Code loads. `.claude/skills-archive/` holds retired versions (currently the Claude Desktop variant of stage 8) and is inert. To restore one, copy it into `skills/` under a non-clashing name.
+- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks.
+- `setup-guide.md` in each stage records how to reconfigure that stage for another tracker or project. Stages 1 and 7 also keep `references/configure-blocks-original.md` with the original `⚠️ CONFIGURE` placeholder blocks.
+- Skill text is written in English, with short chat messages and no invented data. Several skills have hard "do not" rules (do not reword requirements, do not invent test data, uncovered files never get FAIL). Preserve them when editing.
+
+## Script and output conventions (from the user's global rules)
+
+- Helper scripts (`playwright-cli run-code` files and so on) are written with the Write tool into a git-ignored folder in the repo, such as `.workflow-artifacts/<ISSUEKEY>/web-testing/`. Do not create them with heredocs or `sed`.
+- Run each as one simple command: no `cd`, no `&&`/`;` chains, no env-var prefixes, and no paths outside the repo. Redirect output to a git-excluded scratch folder and read it with the Read tool.
+- Delete scratch files you created when finished and confirm `git status --porcelain` shows nothing new. Never delete `.workflow-artifacts/<ISSUEKEY>/` itself.
+
+## Git-ignored locally
+
+`.workflow-artifacts/`, `.playwright-cli/`, `.claude/settings.local.json`, `TODO` (personal notes), and the usual Playwright output folders.
