@@ -1,69 +1,40 @@
 # Setup guide for the Web Testing skill
 
-This skill executes the QA and FAIL test cases in a real browser.
-The testing logic, classification, and navigation memory are universal.
-Only the login configuration needs to be configured.
+This skill executes the QA and FAIL test cases in a real, visible (headed) browser
+through `playwright-cli`. The testing logic, classification, and navigation memory are
+universal. Almost nothing needs to be configured: the user logs in themselves and the
+agent asks for help when it needs it.
 
-## What you need to know before setup
+## What you need before the first run
 
-### 1. Which browser tool do you use?
+1. `playwright-cli` available:
+   - check `npx --no-install playwright --version`, or `playwright-cli --help`;
+   - otherwise `npm install -g @playwright/cli@latest` (the agent asks before installing).
+2. The app is running and reachable (the agent asks for the URL if it is not known).
+3. You are ready to log in manually in the browser window the agent opens
+   (the login is kept in a persistent profile, so later runs usually skip it).
 
-The skill is built for the **Claude in Chrome extension**.
-All tool names (`navigate`, `find`, `computer`, `form_input`,
-etc.) are the names of this extension's tools.
+## How it works
 
-If you use Playwright MCP or another tool —
-you need to adapt all tool names in SKILL.md
-and references/browser-rules.md to your system.
+- Session tag: `qa-<ISSUEKEY>` (for example `qa-TASK-114`). Every command uses
+  `playwright-cli -s=<SESSION> ...`.
+- The browser is opened headed with a persistent profile:
+  `playwright-cli -s=qa-TASK-114 open <URL> --headed --persistent`.
+- When the agent is blocked (login, captcha, missing data, element not found, unclear step)
+  it stops and asks you. You act in the open window, say "done", and it continues.
+- Screenshots (FAIL evidence only) and run scripts go to
+  `.workflow-artifacts/<ISSUEKEY>/web-testing/`. The report goes to
+  `.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-web-testing.md`.
+- `playwright-cli` snapshots are written to `.playwright-cli/` (excluded in
+  `.git/info/exclude`).
 
-### 2. What does login look like in your product?
+## Optional configuration
 
-- The login page URL
-- How to find the email/username and password fields (label, placeholder)
-- The text of the submit button
-- Which credentials to use and where to get them
-- What appears after a successful login
-
-### 3. Is registration of new users needed?
-
-If the test cases require creating new accounts —
-prepare an email template and default data for registration.
-
-## Setup order
-
-### Step 1: references/login-config.md — login (REQUIRED)
-
-This is the only file that requires configuration.
-Replace all `<placeholders>` with real values:
-
-- The login URL
-- Descriptions of the login form fields
-- Credentials for each role
-- The success indicator after login
-- Actions after login (if any)
-
-If registration is not needed — delete the Registration section
-and the Default data section.
-
-### Step 2: navigation_paths.json — navigation memory
-
-The file is already present as an empty structure `{"navigation_paths": {}}`.
-Nothing needs to be changed — the skill will fill it in itself
-during the first run when it learns the paths to the pages.
-
-### Step 3 (optional): SKILL.md — name of the previous skills
-
-If your chain of skills is named differently from
-`expl1-6-code-review` and `expl1-4-qa-test-cases` — update the references
-to these skills in the "Input" section of SKILL.md.
-
-## Check after setup
-
-- [ ] references/login-config.md contains no `<placeholders>`
-- [ ] The login URL is specified
-- [ ] Credentials are specified for all roles
-- [ ] The success indicator is specified
-- [ ] The source of credentials is specified (hardcoded / .env / other)
+- `references/login-config.md` — optional app settings (base URL, notes). Empty is fine.
+- `navigation_paths.json` — navigation memory. Already present as an empty structure;
+  the skill fills it in during the first run.
+- If your chain of skills is named differently from `expl1-6-code-review` and
+  `expl1-4-qa-test-cases`, update the references in the "Input" section of SKILL.md.
 
 ## Skill files
 
@@ -72,8 +43,8 @@ expl1-8-web-testing/
   SKILL.md                         — skill instructions
   navigation_paths.json            — memory of navigation paths
   references/
-    login-config.md                — login configuration (configure this!)
-    browser-rules.md               — browser interaction rules
+    login-config.md                — optional app settings (login is manual)
+    browser-rules.md               — playwright-cli interaction rules
     output-template.md             — output file template
   setup-guide.md                   — this guide
 ```

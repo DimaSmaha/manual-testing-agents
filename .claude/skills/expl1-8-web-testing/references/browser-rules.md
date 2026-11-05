@@ -1,163 +1,135 @@
-# Browser interaction rules
+# Browser interaction rules (playwright-cli)
 
-The skill uses the Claude in Chrome extension for all
-browser actions. These rules are mandatory for every
-interaction with a page.
+The skill drives the browser with `playwright-cli`. These rules are mandatory for every
+interaction with a page. Command reference: the `playwright-cli` skill.
 
 ## General principle
 
 Behave like a real user. Do not rush.
 Wait for loading before acting. Wait for the result
-after an action.
+after an action. The browser is visible to the user — they may click in it too, so
+always re-read the page state before acting.
 
-## Tools
+## Session and mode
 
-Names of the Claude in Chrome extension tools:
+- Every command: `playwright-cli -s=<SESSION> <command>` where `<SESSION>` = `qa-<ISSUEKEY>`
+  (the session tag, for example `qa-TASK-114`).
+- Open once, headed, persistent profile:
+  `playwright-cli -s=<SESSION> open <URL> --headed --persistent`
+- `playwright-cli list` shows running sessions. Reuse a running session; do not open a second one.
+- Close: `playwright-cli -s=<SESSION> close` (only at the end, after asking the user).
+- On Windows a URL with `&` must be escaped: in PowerShell use `--%`
+  (`playwright-cli --% -s=<SESSION> goto "https://host/?a=1&b=2"`).
+- One simple command per call: no `cd`, no `&&`/`;` chains, no env-var prefixes.
 
-| Tool | Purpose |
-|------|---------|
-| `navigate` | Go to a URL |
-| `find` | Find an element by a description in natural language |
-| `read_page` | Page structure (accessibility tree) |
-| `computer` action: `screenshot` | Screenshot (only for FAIL evidence) |
-| `computer` action: `left_click` | Click by coordinates or ref |
-| `computer` action: `type` | Type text |
-| `computer` action: `key` | Press a key |
-| `computer` action: `scroll` | Scroll |
-| `computer` action: `scroll_to` | Scroll to an element by ref |
-| `form_input` | Set the value of a form field by ref |
-| `get_page_text` | Get the page text |
-| `tabs_context_mcp` | List of tabs |
-| `tabs_create_mcp` | Create a new tab |
+## Commands used by this skill
+
+| Purpose | Command |
+|---------|---------|
+| Open the browser | `open <url> --headed --persistent` |
+| Go to a URL | `goto <url>` |
+| Page state with element refs | `snapshot` |
+| Search the page for text | `find "<text>"` / `find --regex "<re>"` |
+| Click / fill / select | `click <ref>` / `fill <ref> "<value>"` / `select <ref> "<value>"` |
+| Press a key | `press <key>` |
+| Browser Back / Forward / Reload | `go-back` / `go-forward` / `reload` |
+| Read a value, size, style | `eval "el => ..." <ref>` |
+| New tab / switch | `tab-new <url>` / `tab-list` / `tab-select <n>` |
+| Dialogs | `dialog-accept` / `dialog-dismiss` |
+| Screenshot (FAIL evidence only) | `screenshot --filename=<path>` |
+| Console / network (for findings) | `console` / `requests` |
 
 ## Interaction pattern
 
-For every action (click, input, selection) follow
-this sequence:
+For every action (click, input, selection) follow this sequence:
 
-1. **See** — `read_page` or `find` to see the
-   current state of the page and find the element.
-2. **Locate** — make sure the target element is visible.
-   If it is not visible — `computer scroll` and repeat the search.
-3. **Act** — `computer left_click`, `computer type`,
-   `form_input`, etc.
-4. **Verify** — `find` or `read_page` or
-   `get_page_text` to see the result of the action.
+1. **See** — `snapshot` (or `find`) to see the current state and get fresh refs.
+   Refs change after the page changes — never reuse an old ref after navigation or a re-render.
+2. **Locate** — make sure the target element is in the snapshot.
+   If it is not — scroll (`mousewheel 0 300`) or open the needed section and snapshot again.
+3. **Act** — `click` / `fill` / `select` / `press`.
+4. **Verify** — a new `snapshot`, `find`, or `eval` to see the result of the action.
 
 Never skip steps 1 and 4.
 
 ## Waiting
 
-- After `navigate` to a new page — `find` a key
-  element that confirms the page has loaded.
-  Do not start actions before confirmation.
-- After a click that opens a modal, dropdown, or menu —
-  `find` the element that appears before the next action.
-- After submitting a form — `find` the success message,
-  the validation error, or check `navigate` to a new URL.
-- Do not use `computer wait` with fixed
-  seconds. Always wait for a specific element or text.
+- After `goto` / a click that navigates — `snapshot` and look for a key element
+  of the new page (title, heading, main control). Do not act before it appears.
+- After a click that opens a modal, dropdown, or menu — `snapshot` and find the element
+  that appears before the next action.
+- Do not use fixed sleeps. Wait for a specific element or text: repeat `snapshot`/`find`
+  (at most 2 extra attempts), then ask the user.
 
 ## Finding elements
 
 Priority:
-1. `find` with a description in natural language — the most reliable.
-   Examples: `find "Save button"`, `find "Email input field"`,
-   `find "dropdown with label Region"`.
-2. `read_page` with `filter: "interactive"` — to review
-   all interactive elements.
-3. `read_page` with `ref_id` — to focus
-   on a specific part of the page.
+1. Refs from the latest `snapshot`.
+2. `find "<text or role name>"` to locate an element in a large page.
+3. Playwright locators when refs are unreliable:
+   `click "getByRole('button', { name: 'Add to cart' })"`.
+4. CSS selectors as a last resort.
 
-If the element is not found on the first attempt:
-- `computer scroll` down and try `find` again.
-- `read_page` to check whether the page has loaded.
-- After 2 failed attempts — BLOCKED for this test case.
+If the element is not found on the first attempt: scroll, take a fresh `snapshot`, retry.
+After 2 failed attempts — ask the user for help; if none, BLOCKED.
 
 ## Entering data
 
-- For text fields: `find` the field → `form_input` with ref
-  and value. Or `computer triple_click` to select
-  → `computer type` with the new text.
-- Before typing into a filled field — clear it:
-  `computer triple_click` → `computer type` with the new
-  value.
-- For dropdowns: `find` the dropdown → `computer left_click`
-  → `find` the option → `computer left_click`.
-  Or `form_input` with a value if it is an HTML select.
-- For checkboxes: `find` the checkbox → check the
-  current state → `computer left_click` only if
-  it needs to be changed.
+- `fill <ref> "<value>"` replaces the field content. Add `--submit` only if the test case
+  step says to submit.
+- Dropdowns: `select <ref> "<value>"` for a native `<select>`;
+  for custom dropdowns click the control and then the option.
+- Checkboxes: `check <ref>` / `uncheck <ref>`.
 
 ## Verifying expected results
 
-Methods for verifying the expected result:
+1. **Text on the page** — `find "<text>"` or read the `snapshot`.
+2. **Presence of an element** — present in the `snapshot`.
+3. **State of an element** — the snapshot shows attributes (disabled, checked, selected);
+   for anything else use `eval "el => el.<prop>" <ref>`.
+4. **Absence of an element** — not in the `snapshot` / `find` returns no match.
+5. **URL** — the `Page URL` line printed after each command, or `eval "location.href"`.
+6. **Size / styling** — `eval "el => { const r = el.getBoundingClientRect(); return r.width + 'x' + r.height }" <ref>`
+   and `eval "el => getComputedStyle(el).fontFamily" <ref>` (or `color`, `fontSize`, ...).
 
-1. **Text on the page** — `find` with the text
-   or `get_page_text` and look for a substring.
-   Example: "Record saved" is expected → `find "Record saved"`.
-
-2. **Presence of an element** — `find` the element by description.
-   Example: a new field is expected → `find "new field label"`.
-
-3. **State of an element** — `read_page` and check
-   the attributes (disabled, checked, selected).
-
-4. **Absence of an element** — `find` returns
-   an empty result. Or `get_page_text` and check
-   that the text is NOT present.
-
-5. **URL changed** — after navigation check
-   the current URL via `read_page` or `get_page_text`.
-
-If the expected result cannot be verified by
-any method — mark BLOCKED with a description of what exactly
-cannot be verified.
+If the expected result cannot be verified by any method — ask the user to look at the
+screen; if they cannot, mark BLOCKED with a description of what exactly cannot be verified.
 
 ## Screenshots
 
 - Take a screenshot only for FAIL and FAIL CONFIRMED —
-  as evidence of the discrepancy.
-- Do not take screenshots for PASS, BLOCKED, FAIL REJECTED,
-  OBSERVATION.
-- Do not show screenshots to the user in the chat — they are
-  only for the agent's internal analysis.
+  as evidence of the discrepancy:
+  `screenshot --filename=.workflow-artifacts/<ISSUEKEY>/web-testing/<TC-ID>.png`.
+- Do not take screenshots for PASS, BLOCKED, FAIL REJECTED, OBSERVATION.
 
-## Login
+## Login (human-assisted)
 
-Login sequence:
-1. `navigate` to the login URL from login-config.md.
-2. `find` the username/email field — wait for it.
-3. `form_input` or `computer type` — enter the username.
-4. `find` the password field.
-5. `form_input` or `computer type` — enter the password.
-6. `find` the login button.
-7. `computer left_click` on the button.
-8. `find` an element that confirms a successful login
-   (dashboard, welcome message, user avatar).
+The user logs in themselves in the headed window:
+1. Open the app (`open ... --headed --persistent`) and `snapshot`.
+2. If the page is a login page — ask the user to log in in the browser window and tell you when done.
+3. After "done" — `snapshot` and confirm the logged-in state (for example the inventory page).
+4. The persistent profile keeps the session, so next runs normally skip this.
 
-Credentials are taken from the source specified
-in login-config.md (environment variables, .env file, etc.).
+Never type credentials unless the user gave them in the chat for this run
+or `login-config.md` explicitly allows it.
 
-## Registration
+## Asking for help
 
-If a test case needs a new user:
-1. Read the registration instructions from login-config.md.
-2. Perform the registration steps.
-3. Save the new user's credentials in the context
-   for the following test cases.
+When something is blocked or unclear, stop and ask a short question in chat saying what
+you need and what you will do next. After the user acts in the browser, take a new `snapshot`
+and continue. See "Asking the user for help" in SKILL.md.
 
 ## New tabs
 
 If a click opens a new tab:
-1. `tabs_context_mcp` — check the list of tabs.
-2. Switch to the new tab.
-3. `find` a key element — wait for loading.
+1. `tab-list` — check the list of tabs.
+2. `tab-select <index>` — switch to the new tab.
+3. `snapshot` — wait for a key element.
 4. Continue working in the new tab.
 
 ## Navigation memory
 
-The file `navigation_paths.json` stores the paths
+The file `navigation_paths.json` (in the skill directory) stores the paths
 to the product pages.
 
 Format:
