@@ -2,6 +2,7 @@
 
 Source: <task URL in the tracker>
 Type: <task type>
+Severity: <bug severity — bugs only, omit for stories>
 Generated: <YYYY-MM-DD>
 
 ## Goal
@@ -38,6 +39,6 @@ Section rules:
 - Attachments — only when there is data.
 
 Formatting rules:
-- Metadata (Source, Type, Generated) — each on its own line.
+- Metadata (Source, Type, Severity for bugs, Generated) — each on its own line.
 - Each requirement is a separate bullet.
 - Do not merge text into one line.

@@ -1,5 +1,10 @@
 # Setup guide for the Task Context skill
 
+> ✅ **Current state:** configured for the REST issue tracker (tasks and bugs).
+> Tracker access, base URL, and error handling: `references/issue-tracker.md`.
+> Field map: `references/field-maps.md`. The steps below are for switching
+> to a real tracker (Jira, Linear, GitHub, ...) later.
+
 This skill collects task data from the tracker and produces
 a structured context file. Before use, it must be
 configured for your tracker and project.

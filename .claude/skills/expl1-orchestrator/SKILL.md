@@ -39,7 +39,12 @@ assigned at stage 2 and stay the same through all following stages.
 ## Input
 
 Collect from the user before starting (ask only for what is missing):
-1. The task URL or key (needed for stage 1; also gives `<ISSUEKEY>` for all file names).
+1. The task or bug URL or key (needed for stage 1; also gives `<ISSUEKEY>` for all file names).
+   Keys: `TASK-<id>` (story) or `BUG-<id>` (bug, for retesting); `<ISSUEKEY>` = the key
+   (for example `TASK-112-context.md`, `BUG-114-context.md`). A URL has the form
+   `<BASE>/tasks/<id>` or `<BASE>/bugs/<id>`; the default `<BASE>` is `http://localhost:3000`.
+   Tasks and bugs have separate id spaces — if the kind is unclear, ask.
+   Details: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`.
 2. The PR URL or branch name (needed for stages 5 and 6).
 3. Which stages to run. Default: all, in order. The user may also ask to start from
    a given stage (for example "continue from stage 4") or to run a single stage.
@@ -60,6 +65,22 @@ Collect from the user before starting (ask only for what is missing):
   if its output changed.
 - If a stage skill stops with a blocker (missing integration, missing input, unconfigured
   `⚠️ CONFIGURE` block) — show the blocker to the user and wait. Do not work around it.
+
+## Pre-flight (once per pipeline run, before stage 1)
+
+Check that the issue tracker is reachable (one simple command, no `cd`/`&&`):
+
+```
+curl -s --max-time 5 <BASE>/
+```
+
+A non-empty response means it is up. If the output is empty or the command fails —
+tell the user the tracker is not reachable (and ask for the correct base URL if needed)
+and wait. Do not work around it. Skip the pre-flight when resuming from stage 2 or later.
+
+Locations: stage artifacts (`<ISSUEKEY>-*.md`) go to the working directory;
+scratch files (tracker responses, helper scripts and their output) go to
+`.workflow-artifacts/` (git-ignored) and are deleted when the run is finished.
 
 ## Handoff checks before each stage
 

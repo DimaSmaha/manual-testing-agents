@@ -9,3 +9,5 @@ node_modules/
 
 
 TODO
+# Workflow scratch (tracker responses, helper scripts)
+.workflow-artifacts/

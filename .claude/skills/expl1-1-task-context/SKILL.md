@@ -12,10 +12,6 @@ description: >
 
 # Task Context
 
-> ⚠️ **CONFIGURE:** edit the trigger phrases in `description` (frontmatter above) —
-> replace "pull the context from the tracker" and the other phrases with
-> the ones your team uses.
-
 > ⚙️ Recommended settings: **Sonnet · Effort: Medium · Extended thinking: Off**
 
 **MANDATORY before starting work** — show the user
@@ -36,11 +32,13 @@ for the following skills in the chain.
 ## Input
 
 Required from the user:
-1. Task URL or key in the tracker
+1. Task or bug URL or key in the tracker
 
-> ⚠️ **CONFIGURE:** specify the task key format in your tracker.
-> For example: `PROJ-1234` for Jira, `#1234` for GitHub Issues,
-> `ENG-123` for Linear, etc.
+Keys: `TASK-<id>` for tasks, `BUG-<id>` for bugs (bugs are read for retesting).
+URL forms: `<BASE>/tasks/<id>`, `<BASE>/bugs/<id>`; extract the kind, the id, and the
+base URL from it. Tasks and bugs have separate id spaces — if a bare number has no
+kind, ask the user. `<ISSUEKEY>` in all file names = the key (`TASK-112`, `BUG-114`).
+Details: `references/issue-tracker.md`.
 
 ## Rules
 
@@ -55,44 +53,34 @@ Required from the user:
 
 ## Tracker access
 
-> ⚠️ **CONFIGURE:** describe how the skill gets access to your tracker.
->
-> Examples:
-> - **Jira Cloud** → Atlassian MCP: use getJiraIssue
->   with a specific list of fields and responseContentFormat: "markdown"
-> - **Linear** → Linear MCP: use the corresponding tools
-> - **GitHub Issues** → gh CLI: `gh issue view <number> --json title,body,comments,labels`
-> - **Azure DevOps** → the corresponding MCP or REST API
-> - **No integration** → the user copies the task description into the chat manually
->
-> Be sure to add a rule: if the integration is unavailable —
-> stop and notify the user. Do not use workarounds
-> (browser, web search) as a replacement.
+The tracker is a REST API (HTTP, no auth), read with `curl`.
+All commands, the base URL, response shapes, and error handling are in
+`references/issue-tracker.md` — follow it exactly.
+
+If the tracker is unreachable (health check fails) — stop and tell the user.
+Do not use workarounds (browser, web search, guessing the content) as a replacement.
 
 ### Efficient usage
 
-> ⚠️ **CONFIGURE:** describe the optimal way to query your tracker.
-> Goal: do not load full payloads, query
-> only the required fields. Specify concrete commands or
-> MCP tools for your tracker.
+An item record is small: one request per item is enough. Save the response to
+`.workflow-artifacts/tracker/<ISSUEKEY>.json` and read it with the Read tool.
+Always use the retry flags from the reference file.
 
 ### Recommended flow
 
-> ⚠️ **CONFIGURE:** describe the step-by-step flow for getting data
-> from your tracker. For example:
-> 1. Parse the URL → extract the task key
-> 2. Get the task data with the required fields
-> 3. If the first method failed — fallback
-> 4. Linked tasks — read for context, but process
->    only the current task's data
+1. Parse the input → extract the kind (task/bug), the id, and the base URL if a URL was given.
+2. Run the health check from the reference file.
+3. Read the item (`GET /tasks/<id>` or `GET /bugs/<id>`) with retries.
+4. 404 → tell the user the item does not exist and stop. Persistent 5xx or empty
+   response → report the blocker and stop.
+5. Comments, attachments, and linked items are not available from the tracker — skip those steps.
 
 ## Task types and fields
 
-> ⚠️ **CONFIGURE:** specify which task types are used
-> in your project (for example: Story, Task, Bug, Epic, Subtask)
-> and how to determine the type from the tracker response.
+Item types in this project: `story` (from `/tasks`) and `bug` (from `/bugs`).
+The kind is determined by the endpoint the item was read from.
 
-1. Determine the task type from the tracker response.
+1. Determine the item kind (task or bug).
 2. Load the field map for that type from references/field-maps.md.
 3. Read only the fields listed in the map. Ignore other fields.
 4. Do not reopen the field maps every time —
@@ -103,14 +91,21 @@ Required from the user:
 The required field for processing is the task description
 (per references/field-maps.md).
 
-> ⚠️ **CONFIGURE:** specify which field is required for each
-> task type. For example:
-> - Story/Task: description
-> - Bug: steps to reproduce or bug description
+- story: description
+- bug: description (bug description)
 
 If the required field is empty or missing — stop
 and tell the user there is nothing to process and that a description
 must be added to the ticket.
+
+## Bugs (retest)
+
+A bug is processed the same way as a story, with these rules:
+- Header: `Type: bug`, plus a `Severity: <value>` line (from the `severity` field).
+- The bug description goes into the Requirements section as-is, as the problem
+  to be verified as fixed. Do not invent steps to reproduce, expected results,
+  or a fix — only what is in the bug record.
+- Goal: retest of the bug (verify the described problem no longer occurs).
 
 All other fields are optional. Collect everything that is filled in,
 skip empty ones. The full list of fields for each task type
@@ -118,10 +113,9 @@ is in references/field-maps.md.
 
 ## Attachments
 
-> ⚠️ **CONFIGURE:** describe how your tracker/MCP provides attachments.
-> Some MCPs return only metadata (name, type, size)
-> without the file itself — in that case you need to ask the user to
-> upload the files to the chat. Some give direct access to files.
+The tracker provides no attachments, so for now this section does not apply:
+do not ask the user for uploads and do not create an Attachments section. If the
+user attaches files to the chat on their own (screenshots, md, PDF), use the flow below.
 
 Flow:
 1. Collect the list of attachments from the task metadata.
