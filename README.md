@@ -4,8 +4,8 @@ A collection of **AI agents (Claude Code skills) that automate manual QA flows**
 
 The repo is meant to grow. Each flow is a self-contained family of skills with its own prefix. Right now there is one flow:
 
-| Flow | Prefix | What it does | Status |
-|------|--------|--------------|--------|
+| Flow           | Prefix    | What it does                                                                                                                               | Status  |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
 | **Explorer 1** | `expl1-*` | End-to-end QA pipeline for one task or bug: ticket → requirements → checklist → test cases → PR review → impact analysis → browser testing | Working |
 
 More flows will be added next to it under `.claude/skills/`.
@@ -75,14 +75,14 @@ The `expl1-orchestrator` skill runs the stages in order, verifies the handoff fi
 
 ## Prerequisites
 
-| Tool | Needed for | Notes |
-|------|-----------|-------|
-| [Claude Code](https://claude.ai/code) | Running all skills | Skills are loaded from `.claude/skills/` |
-| `curl` | Stage 1 and the orchestrator pre-flight | Reads the issue tracker REST API |
-| [`gh` CLI](https://cli.github.com/) | Stages 5, 6, 7 | Authenticate with `gh auth login`; used as the only source of PR code |
-| `playwright-cli` | Stage 8 | `npm install -g @playwright/cli@latest` (the stage asks before installing) |
-| Node.js | Playwright tooling | Optional `npm install` for the stock Playwright scaffold in the root |
-| A running issue tracker | Stage 1 | Default `http://localhost:3000` (see [Issue tracker integration](#issue-tracker-integration)) |
+| Tool                                  | Needed for                              | Notes                                                                                         |
+| ------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- |
+| [Claude Code](https://claude.ai/code) | Running all skills                      | Skills are loaded from `.claude/skills/`                                                      |
+| `curl`                                | Stage 1 and the orchestrator pre-flight | Reads the issue tracker REST API                                                              |
+| [`gh` CLI](https://cli.github.com/)   | Stages 5, 6, 7                          | Authenticate with `gh auth login`; used as the only source of PR code                         |
+| `playwright-cli`                      | Stage 8                                 | `npm install -g @playwright/cli@latest` (the stage asks before installing)                    |
+| Node.js                               | Playwright tooling                      | Optional `npm install` for the stock Playwright scaffold in the root                          |
+| A running issue tracker               | Stage 1                                 | Default `http://localhost:3000` (see [Issue tracker integration](#issue-tracker-integration)) |
 
 ---
 
@@ -113,16 +113,16 @@ All output lands in `.workflow-artifacts/<ISSUEKEY>/`.
 
 Each skill declares its own recommended settings and shows them before it starts. Stage 1 will not begin until you confirm them.
 
-| Stage | Model | Effort | Extended thinking |
-|-------|-------|--------|-------------------|
-| 1 Task context | Sonnet | Medium | Off |
-| 2 Requirements grooming | Opus | High | On |
-| 3 QA checklist | Sonnet | Medium | Off |
-| 4 Test cases | Sonnet | High | Off |
-| 5 PR summary | Sonnet | Medium | Off |
-| 6 Code review | Opus | High | On |
-| 7 Impact analysis | Opus | High | On |
-| 8 Web testing | Sonnet | High | Off |
+| Stage                   | Model  | Effort | Extended thinking |
+| ----------------------- | ------ | ------ | ----------------- |
+| 1 Task context          | Sonnet | Medium | Off               |
+| 2 Requirements grooming | Opus   | High   | On                |
+| 3 QA checklist          | Sonnet | Medium | Off               |
+| 4 Test cases            | Sonnet | High   | Off               |
+| 5 PR summary            | Sonnet | Medium | Off               |
+| 6 Code review           | Opus   | High   | On                |
+| 7 Impact analysis       | Opus   | High   | On                |
+| 8 Web testing           | Sonnet | High   | Off               |
 
 After stage 4, the pipeline recommends continuing stages 5 and onward in a **new chat** with the test-cases and checklist files, to keep context small. Upload the needed artifacts there and tell the orchestrator which stage to resume from.
 
@@ -173,12 +173,12 @@ Reads the PR through the `gh` CLI/API and writes a structured summary of what ch
 
 Checks every test case against the PR code and gives it a status:
 
-| Status | Meaning |
-|--------|---------|
-| `PASS` | The code satisfies the test case |
+| Status | Meaning                                                                        |
+| ------ | ------------------------------------------------------------------------------ |
+| `PASS` | The code satisfies the test case                                               |
 | `FAIL` | The code contradicts the expected result (with file, line, expected vs actual) |
-| `QA` | Cannot be verified from code; needs the UI |
-| `N/A` | Not applicable to this PR |
+| `QA`   | Cannot be verified from code; needs the UI                                     |
+| `N/A`  | Not applicable to this PR                                                      |
 
 - **Input:** `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`, PR URL or branch
 - **Output:** `<ISSUEKEY>-6-code-review.md`
@@ -225,14 +225,14 @@ Executes the `QA` and `FAIL` items from the code review, plus `Browser` retest r
 - **Navigation memory.** Paths to pages are stored in `.claude/skills/expl1-8-web-testing/navigation_paths.json` so the next run does not ask again.
 - **Statuses** in the final report:
 
-  | Status | Meaning |
-  |--------|---------|
-  | `PASS` | UI matches the expected result |
-  | `FAIL` | UI differs from expected (for items that came as `QA` or `IMPACT`) |
-  | `FAIL CONFIRMED` | A code-review `FAIL` that the UI confirms |
-  | `FAIL REJECTED` | A code-review `FAIL` that the UI does not show |
-  | `BLOCKED` | Could not be executed (with the reason) |
-  | `OBSERVATION` | Passed, but something outside the requirements looked wrong |
+  | Status           | Meaning                                                            |
+  | ---------------- | ------------------------------------------------------------------ |
+  | `PASS`           | UI matches the expected result                                     |
+  | `FAIL`           | UI differs from expected (for items that came as `QA` or `IMPACT`) |
+  | `FAIL CONFIRMED` | A code-review `FAIL` that the UI confirms                          |
+  | `FAIL REJECTED`  | A code-review `FAIL` that the UI does not show                     |
+  | `BLOCKED`        | Could not be executed (with the reason)                            |
+  | `OBSERVATION`    | Passed, but something outside the requirements looked wrong        |
 
 - **Evidence.** Screenshots for `FAIL` and `FAIL CONFIRMED` are saved under `.workflow-artifacts/<ISSUEKEY>/web-testing/`.
 - **Manual follow-up.** `Manual` rows from the impact analysis are not executed; they are listed in the report for a person to check.
@@ -244,10 +244,10 @@ Executes the `QA` and `FAIL` items from the code review, plus `Browser` retest r
 
 The pipeline reads from a simple REST API (HTTP, no auth) using `curl`.
 
-| Kind | Endpoint | Key |
-|------|----------|-----|
+| Kind         | Endpoint                | Key         |
+| ------------ | ----------------------- | ----------- |
 | Task (story) | `GET <BASE>/tasks/<id>` | `TASK-<id>` |
-| Bug | `GET <BASE>/bugs/<id>` | `BUG-<id>` |
+| Bug          | `GET <BASE>/bugs/<id>`  | `BUG-<id>`  |
 
 - Tasks and bugs have **separate id spaces**: the same number can exist in both, so the kind must always be known.
 - Default `<BASE>` is `http://localhost:3000`; an ngrok URL can be used instead.
@@ -341,7 +341,7 @@ Local-only, git-ignored files: `.workflow-artifacts/`, `.playwright-cli/`, `.cla
 
 ## Sources and credits
 
-Explorer 1 is based on the ideas and workflow shown in:
+Explorer 1 is based on the ideas and workflow shown in. Thanks a lot Anna ;) :
 
 - DOU forum post: <https://dou.ua/forums/topic/59970/>
 - Live stream: <https://www.youtube.com/live/YwTP0yveYzU>
