@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Not an application. It is a **Claude Code skill pipeline for manual QA of one task/bug at a time**. All the real content lives in `.claude/skills/` as Markdown skills (`SKILL.md` + `references/` + `setup-guide.md`). The only code is the stock Playwright scaffold (`playwright.config.ts`, `tests/example.spec.ts`), which is not part of the pipeline. `package.json` has no scripts; the only dependencies are `@playwright/test` and `@types/node`.
+Not an application. It is a **Claude Code skill pipeline for manual QA of one task/bug at a time**. All the real content lives in `.claude/skills/` as Markdown skills (`SKILL.md` + `references/` + `setup-guide.md`). The only code is the stock Playwright scaffold (`playwright.config.ts`, `tests/example.spec.ts`), which is not part of the pipeline, plus the Flow 2 runner (`scripts/expl-bot-run.ts`, scripts `expl-bot:run` / `expl-bot:typecheck`) and the Flow 3 config (`explorbot.config.mjs`). Dependencies: `@playwright/test`, `@types/node`, `@anthropic-ai/claude-agent-sdk`, `dotenv`, `tsx`, `typescript`, and `explorbot` (dev).
 
 ## The pipeline
 
@@ -29,6 +29,60 @@ Cross-stage contracts that span several skills (read the orchestrator `SKILL.md`
 - **Stage 8 scope** = `QA` and `FAIL` rows from stage 6, plus the rows of stage 7's "Retest in stage 8" section (source `IMPACT`; live-app browser checks only, code/CI/npm results get no row). `PASS`/`N/A` rows from the code review are not browser-tested. FAIL items from the code review may only end as `FAIL CONFIRMED` or `FAIL REJECTED`.
 - Each stage skill declares a recommended model/effort/thinking setting (Opus + thinking for stages 2, 6, 7; Sonnet otherwise). Stage 1 blocks until the user confirms those settings.
 - Stages 1–4 are tracker/requirements work; stages 5–7 need a PR URL or branch and use the `gh` CLI (`gh pr view`, `gh api repos/.../compare/...`) as the only code source; stage 8 uses the browser only.
+
+## The `expl-bot-*` flow (exploratory testing, separate from `expl1-*`)
+
+A port of the explorbot crew (`C:\qa\work\explorbot`) to Claude Code: Claude Code is the brain, `playwright-cli`
+the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from <ISSUEKEY>` only **reads**
+`<ISSUEKEY>-2-requirements.md` / `-4-test-cases.md`).
+
+| Skill / agent | Role (explorbot) |
+|---|---|
+| `expl-bot-orchestrator` | Captain; launches the stage skills, asks before advancing; never edits their files |
+| `expl-bot-research` + subagent `expl-bot-researcher` (`.claude/agents/`) | Researcher: UI map with tested locators |
+| `expl-bot-plan` | Planner: styles normal/curious/psycho, user approves the plan |
+| `expl-bot-test` + subagent `expl-bot-tester` | Tester; the main session is the Pilot (`STUCK` → `PROGRESS:`/`NEXT:`, resume ≤ 2) |
+| `expl-bot-report` | Analyst (+ Historian: `tests/expl-bot/*.spec.ts` drafts) |
+| `expl-bot-learn` | knowledge / experience / compaction |
+| `expl-bot-core` | Shared references and `run-code` scripts; not a stage, writes no artifacts |
+
+- Data lives in `.workflow-artifacts/expl-bot/` (`sites/<host>/{knowledge,experience,research}`, `state.json`,
+  `runs/<RUN_ID>/{plan.md,test-cases.md,results/,report.md,screenshots/,scripts/,out/}`). `RUN_ID` = `eb-YYMMDD-HHMM`. Knowledge
+  and plan formats are explorbot-compatible (Flow 3 reads them).
+- **Flow 1 offers every optional feature** (deep research, style, runnable `tests/expl-bot/` drafts, knowledge,
+  another round, saving the login, closing the browser): the orchestrator's "Optional features" table lists
+  what to ask and when; declines are recorded in `RUN/meta.md`. Flow 2 never asks and keeps `--deep`,
+  `--style`, `--tests` as explicit flags. Keep the table, the stage skills and `README.md` in step.
+- **Own data only**: a run creates/edits/deletes only records it created itself, named with the RUN_ID.
+  Pre-existing data is never touched (`expl-bot-core/references/data-protection.md`). Preserve this rule when
+  editing the skills and agents.
+- Browser: `playwright-cli`, headed, `-s=expl-<host>`, `--persistent`. Subagents cannot spawn subagents and share
+  one browser, so testers run one at a time. Subagents never ask the user; they return `NEEDS_USER: …` and the
+  calling skill asks.
+- Heavy snapshots stay in subagents; the main context gets the compact result block
+  (`expl-bot-core/references/tester-loop.md`, "Result block"). Changes to a block's shape must be matched in
+  `expl-bot-test`, `expl-bot-report`, `expl-bot-learn` and the two agents.
+- Scripts in `expl-bot-core/scripts/` are `run-code` files; run them with `--raw` and absolute-or-repo-relative
+  paths, one simple command, output into `runs/<RUN_ID>/out/`.
+- **Flow 2, `expl-bot-independent-orchestrator`** (explicit invocation only) is the unattended twin. It never asks
+  the user, uses the same stage skills with `--independent` (overrides: `run-context.md`, "Independent mode"),
+  and emits `<!-- PHASE COMPACT: … -->` JSON blocks that `scripts/expl-bot-run.ts` (Agent SDK, `permissionMode:
+  "dontAsk"` + `allowedTools` whitelist, never `bypassPermissions`) parses. Run: `npm run expl-bot:run -- <url>`.
+  Credentials only via `EXPL_BOT_AUTH` (env, in memory) or `sites/<host>/auth.json` (written only with the user's
+  yes in Flow 1); never print them. The Express server (SSE, batch jobs) and Docker are written up as "Future
+  updates — run pipeline" in `README.md` and are **not built**; do not add them unprompted. Changing a compact's
+  fields means changing `colors.ts` (`printFinalSummary`) and the orchestrator skill together.
+- **Flow 3, `explorbot-run`** wraps the real explorbot CLI (`explorbot@0.6.2`, dev dependency; its own models and
+  `OPENROUTER_API_KEY` in `.env`, billed by the provider — not Claude Code). Config is `explorbot.config.mjs`
+  (`.mjs`: the package is CommonJS and an ES-module `.js` config does not load). Its `dirs.knowledge` points at
+  `.workflow-artifacts/expl-bot/sites/<host>/knowledge` so Flow 1 and Flow 3 share human facts; `experience` and
+  `output` live in `.workflow-artifacts/explorbot/`. Use only non-TUI commands on Windows; never trust the exit
+  code for pass/fail (read `reports/<mode>-<session>.md`); never read or print `.env`; credentials only via
+  `--auth` for one run. Every explorbot command needs the key at startup. Bridge mode runs a Flow 1 `plan.md`
+  with `explorbot test`; keep the plan format explorbot-compatible when editing `expl-bot-plan`.
+- Status: the skills were written against explorbot's sources and the three scripts were run against a local
+  test page; a full end-to-end run on a real app has not been done yet. Flow 3 was verified only up to
+  `explorbot config --json` (models and dirs resolve); running its commands needs the user's OpenRouter key.
 
 ## External dependencies
 
