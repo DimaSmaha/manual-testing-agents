@@ -59,6 +59,7 @@ to `--max-pages` (default 8). With no `--scope` and no `--pages` the orchestrato
 | Style: `normal` / `curious` / `psycho` (or the next one in rotation) | Step 1 | Next in rotation (`state.json`); first run `normal` |
 | Runnable Playwright drafts (`expl-bot-report --tests`, writes `tests/expl-bot/*.spec.ts`, new tracked files) | Step 1; again in Step 5 if not chosen | Yes |
 | Focus, `--max-tests`, `--max-pages`, `--pages`, `--from <ISSUEKEY>` | Step 1, as one line the user can ignore ("Also available: …") | None (`--max-pages` 8) |
+| Seed test data (`qa-data-seeder`, **creates marked records in a live non-production environment**; writes `RUN/seed.md`; the skill asks its own confirmation and approval gate) | After plan approval (Step 3), only when the approved scenarios need data that does not exist and the focus is not read-only | Ask; default No; never in Flow 2 |
 | Human knowledge to store (`expl-bot-learn knowledge`) | Step 6 | Ask |
 | Another round with the next style (new run, research reused while fresh) | Step 7 | Offer |
 | Save login state (`auth.json`) | Step 7 | Ask; never without a yes |

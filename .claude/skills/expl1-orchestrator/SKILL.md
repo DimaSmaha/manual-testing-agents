@@ -118,6 +118,29 @@ that stage first. If the chat is new, the user can upload the files instead.
   status `QA` or `FAIL` and `<ISSUEKEY>-7-impact-analysis.md` is absent or has no
   retest rows, the stage has nothing to do — say so and skip it.
 
+## Optional helpers (not stages)
+
+Four helper skills (adapted from testomatio/skills) can be offered at fixed points. They are not
+pipeline stages: they are never required, never block the next stage, and are not part of the handoff
+checks. Offer each one in one short line, run it only if the user says yes, and note a "no" in the final
+report. They write `<ISSUEKEY>-x-*.md` files into `.workflow-artifacts/<ISSUEKEY>/` and edit nothing else.
+
+| Offer after | Helper | Output | What it does |
+|-------------|--------|--------|--------------|
+| stage 2 | `qa-thinking` | `<ISSUEKEY>-x-risk-questions.md` | up to 5 "What if" questions and 5 risk scenarios on the groomed requirements |
+| stage 4 | `qa-detect-useless-tests` | `<ISSUEKEY>-x-test-pruning.md` | read-only list of test cases to merge, simplify or drop (it edits nothing) |
+| before stage 8, only if QA/FAIL or retest rows need data that is missing | `qa-data-seeder` | `<ISSUEKEY>-x-seed-data.md` | **creates marked records in a live non-production environment**; it asks the user itself (Step 0) and again before writing; stage 8 may use only the records it lists |
+| stage 8 (or when the pipeline stops after 6/7) | `qa-review-pr` | `<ISSUEKEY>-x-pr-verdict.md` | short PR verdict: is it done, merge risks, what must be verified; needs the PR (stage 5) |
+
+Rules for the helpers:
+- Offer `qa-review-pr` only if the task has a PR or branch. It reads stage 2 and stages 5–8 when they exist.
+- If the helper's output points at a problem in an earlier artifact (for example the pruning list wants a
+  test case merged), tell the user which stage to rerun. Do not edit the artifact yourself.
+- `qa-data-seeder` is the only helper that writes to the application. Offer it with its warning in one line
+  ("it creates marked records in a live environment, not production"), never run it without a yes, and let the
+  skill ask its own Step 0 question. Do not offer it when the data can be set up by plain UI steps in the test case.
+- `qa-explain-behavior` is not offered here. It is an on-demand skill the user starts in chat.
+
 ## Settings and context hygiene
 
 - Before each stage, mention the recommended model/effort/thinking from the pipeline
@@ -143,6 +166,9 @@ run / skipped / not run, its output file path, and its key counters:
 | 6 expl1-6-code-review | run | `<ISSUEKEY>-6-code-review.md` | PASS / FAIL / QA / N/A counters |
 | 7 expl1-7-impact-analysis | run | `<ISSUEKEY>-7-impact-analysis.md` | PASS / FAIL / QA / N/A counters |
 | 8 expl1-8-web-testing | run | `<ISSUEKEY>-8-web-testing.md` | counters + verdict |
+
+If any optional helper ran, add one line per helper under the table (`qa-thinking` /
+`qa-detect-useless-tests` / `qa-data-seeder` / `qa-review-pr`: run or declined, output path, one counter such as the verdict).
 
 (The table above is an example — report the real values.)
 

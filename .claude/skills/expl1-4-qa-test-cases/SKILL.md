@@ -173,6 +173,11 @@ After generating the test cases and before saving the file:
 - The order of requirements matches the order in the checklist file.
 - There is no duplication: the same scenario does not appear twice.
   Two test cases from the same equivalence class are a duplicate.
+  A test case whose steps are a strict subset of another test case's steps
+  is also a duplicate: merge it into the longer one.
+- Scenario names follow the "Writing rules" in references/test-case-design-rules.md
+  (no "Verify that", no "and/then", no ids). Steps are mechanical and carry
+  no assertions; every condition sits in the expected result, one per line.
 - Every test case has a precondition, steps, test data,
   and an expected result. If any part is empty —
   remove the test case or complete it.

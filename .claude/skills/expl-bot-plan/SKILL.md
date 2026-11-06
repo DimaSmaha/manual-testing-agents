@@ -54,8 +54,8 @@ the same scenarios), and the style/state bookkeeping.
 4. **Inputs for dedup/curious**: load FLOW titles and `>` discoveries from the experience file, and
    `testedScenarios[<page-key>]` from `state.json` — for every page in scope, each page against its own history.
 5. **`--from <ISSUEKEY>`**: read `-2-requirements.md` and `-4-test-cases.md` read-only; ~70% of scenarios
-   exercise documented behaviour (cite `REQ-N` / `TC-N` under `## Requirements` after the URL), the rest explore
-   beyond. If the files are missing say so in one line and continue without them.
+   exercise documented behaviour (cite `REQ-N` / `TC-N` in the `covers:` comment line of step 7 — never under
+   `## Requirements`, which holds only the URL), the rest explore beyond. If the files are missing say so in one line and continue without them.
 6. **Write the scenarios** per `planner-rules.md`: 3–12 (default 6 or `--max-tests`) for one page; with `--pages`
    about 3 per page, at least 1 for every page that has actionable features, at most 24 or `--max-tests`. Ranked
    by outcome strength across the whole run, ≤ 2 per feature area (per page), data-changing first, each
@@ -65,6 +65,7 @@ the same scenarios), and the style/state bookkeeping.
 7. **Write `RUN/plan.md`** in the explorbot format (`memory-formats.md`) with the real `RUN_ID`, the style and
    the focus in the title/comments. Add under each test an HTML comment line
    `<!-- area: <feature area> · outcome: data|state|ui · covers: REQ-3,TC-7 -->` (explorbot ignores comments).
+   Put that line between the `<!-- test … -->` block and the `#` heading, never inside a `##` section.
    In a multi-page plan each test's `## Requirements` is the URL of the page it starts on, and the suite
    `### Prerequisite` is the start page.
    Then **write `RUN/test-cases.md`** from the same scenarios per `test-cases-format.md` (IDs `TC-S<n>`, step /
@@ -81,7 +82,13 @@ the same scenarios), and the style/state bookkeeping.
 
 ## Output checks (before showing the plan)
 
-- Every scenario heading is a business outcome, every `## Expected` item is verifiable.
+- Every scenario heading is a business outcome, every `## Expected` item is verifiable on its own (a change
+  that can be observed, not a restated step).
+- Plan format is valid for `explorbot test` (Flow 3 compatibility), checked with Grep on `plan.md`:
+  the suite has a `* URL: /…` or `* URL: http…` bullet under `### Prerequisite`; every test has a
+  `<!-- test` block, a `#` heading, and a `## Requirements` section with exactly one non-empty line that is a
+  `/path` or URL; no `REQ-`/`TC-` text under `## Requirements`; `## Steps` and `## Expected` items start with
+  `* `. Fix any miss before showing the plan.
 - No scenario touches pre-existing data or the entity under the page URL; no sign-in/sign-up/password pages.
 - Not more than 2 scenarios per feature area; no scenario duplicates an earlier one.
 - Priorities use only `critical|important|high|normal|low`.

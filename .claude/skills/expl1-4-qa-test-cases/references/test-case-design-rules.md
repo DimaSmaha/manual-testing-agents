@@ -60,6 +60,39 @@ Every behavioral requirement has at least one test case.
 focus of verification. Do not combine several independent
 checks in one test case.
 
+## Writing rules
+
+Adapted from the testomatio writing rules; the format and the IDs stay those of this stage.
+
+**Scenario name.** Business outcome in the shape `<who> <action> <object> <qualifier>`:
+"User can not edit a comment it does not own", "Guest sees the empty cart message".
+Do not start with "Verify that", "Check", "Should". Do not join two outcomes with "and" / "then".
+Do not put the TC or REQ id into the name (the id is in the heading already).
+
+**Precondition is not a step.** State, role and data needed before the first action go to the
+precondition, not to step 1. Do not add "the service is running" or "the user opens the browser".
+
+**Steps are mechanical.** One simple sentence, one action: open, click, enter, select, read.
+No judgement words in a step ("verify", "make sure"): the assertion lives only in the expected result.
+
+**Expected result.** One verifiable condition per line. If a step has several conditions,
+write them as separate lines in the cell. Each condition must be checkable on its own.
+
+**Literal values.** Replace "small", "long", "known", "some", "e.g.", "around" with an exact
+value: the requirement value, or a realistic `[test data]` value. No `${placeholders}`
+or `<value>` markers in a finished test case.
+
+**Black-box first.** Describe the scenario through the UI (and the public API only if the
+requirement is about it). Do not write internal names, tables or code.
+
+**Plain wording.** No filler: "seamless", "robust", "ensure", "leverage", hedges ("might",
+"should be able to"), "not only … but also". State the action and the result.
+
+**Scope.** Only the behavior under test. Do not add steps for neighbor features.
+
+**IDs.** Keep `TC-REQ-N.N` exactly as numbered by this stage. Do not copy ids or intent from
+examples you saw elsewhere.
+
 ## EP rules
 
 - One representative from each class is sufficient.
@@ -98,3 +131,8 @@ checks in one test case.
 - Two test cases from the same EP class → remove the duplicate
 - A test case for behavior absent from the requirement → do not generate
 - A test case without a REQ-ID → do not generate
+- A test case whose steps are a strict subset of another test case's steps → remove it, or
+  merge it into the longer one, and keep the longer one's id
+- A test case that checks exact message wording or a cosmetic detail that no requirement
+  states → do not generate
+- A step that holds an assertion ("verify …") or an expected result that restates the step → rewrite

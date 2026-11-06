@@ -220,6 +220,20 @@ Executes the `QA` and `FAIL` items from the code review, plus `Browser` retest r
 - Stage 7 is optional; skip it if you want.
 - Stage 8 has nothing to do (and is skipped) if the code review has no `QA`/`FAIL` rows and the impact analysis has no `Browser` rows.
 
+### Optional helpers
+
+Small skills adapted from [testomatio/skills](https://github.com/testomatio/skills) (MIT). They are not stages: the orchestrator offers them, you can say no, and they never edit a stage artifact. Their files are named `<ISSUEKEY>-x-*.md` and sit outside the handoff checks.
+
+| Helper | Offered after | Output | What it does |
+|--------|---------------|--------|--------------|
+| `qa-thinking` | stage 2 | `<ISSUEKEY>-x-risk-questions.md` | up to 5 "What if" questions and 5 risk scenarios on the groomed requirements |
+| `qa-detect-useless-tests` | stage 4 | `<ISSUEKEY>-x-test-pruning.md` | read-only list of test cases to merge, simplify or drop |
+| `qa-data-seeder` | before stage 8 (and in the `expl-bot` flow after plan approval), only if data is missing | `<ISSUEKEY>-x-seed-data.md` (expl-bot: `seed.md`) | **writes to the app:** creates marked test records in a non-production environment. Asks you first, and again before creating anything; only the records it lists are treated as the run's own data. Never used in the unattended flow |
+| `qa-review-pr` | stage 8 | `<ISSUEKEY>-x-pr-verdict.md` | short PR verdict: is it done, merge risks, what must be verified |
+| `qa-explain-behavior` | on demand only | chat answer | explains what the product does, from the PR or the scratch clone |
+
+The rest of the imported set stays in `.claude/skills-archive/testomat-skills/`. Rules from several of those skills were merged into stages 2–7 and the explorbot skills instead (for example the test-case writing rules in stage 4 and the plan checks in `expl-bot-plan`).
+
 ---
 
 ## Stage 8: web testing in detail
@@ -474,6 +488,11 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 │   │   ├── expl1-6-code-review/
 │   │   ├── expl1-7-impact-analysis/
 │   │   ├── expl1-8-web-testing/
+│   │   ├── qa-thinking/           Optional helpers (see "Optional helpers"):
+│   │   ├── qa-detect-useless-tests/ adapted from testomatio/skills
+│   │   ├── qa-review-pr/
+│   │   ├── qa-data-seeder/
+│   │   ├── qa-explain-behavior/
 │   │   ├── expl-bot-orchestrator/ Exploratory flow (semi-auto), see above
 │   │   ├── expl-bot-{research,discover,plan,test,report,learn}/
 │   │   ├── expl-bot-independent-orchestrator/  Unattended twin (Flow 2)

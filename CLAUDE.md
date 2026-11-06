@@ -29,6 +29,16 @@ Cross-stage contracts that span several skills (read the orchestrator `SKILL.md`
 - **Stage 8 scope** = `QA` and `FAIL` rows from stage 6, plus the rows of stage 7's "Retest in stage 8" section (source `IMPACT`; live-app browser checks only, code/CI/npm results get no row). `PASS`/`N/A` rows from the code review are not browser-tested. FAIL items from the code review may only end as `FAIL CONFIRMED` or `FAIL REJECTED`.
 - Each stage skill declares a recommended model/effort/thinking setting (Opus + thinking for stages 2, 6, 7; Sonnet otherwise). Stage 1 blocks until the user confirms those settings.
 - Stages 1–4 are tracker/requirements work; stages 5–7 need a PR URL or branch and use the `gh` CLI (`gh pr view`, `gh api repos/.../compare/...`) as the only code source; stage 8 uses the browser only.
+- **Optional helpers** (adapted from `testomatio/skills`, MIT; not stages, never required): `qa-thinking` (offered after
+  stage 2 → `<ISSUEKEY>-x-risk-questions.md`), `qa-detect-useless-tests` (after stage 4 → `-x-test-pruning.md`, read-only),
+  `qa-review-pr` (after stage 8 → `-x-pr-verdict.md`, needs the PR), `qa-data-seeder` (before stage 8 →
+  `-x-seed-data.md`; expl-bot: `runs/<RUN_ID>/seed.md`). **`qa-data-seeder` is the only one that writes to the app**: it
+  carries an "aware" block, asks the user first (Step 0) and again at its count-approval gate, seeds only non-production,
+  marks every record with the ISSUEKEY/RUN_ID, and its listed records are the only seeded data later steps may touch
+  (`data-protection.md`, rule 3). Never used by Flow 2 or under read-only focus. The orchestrators offer the helpers
+  (tables "Optional helpers" / "Optional features") and never edit their files; the others edit no stage artifact. `qa-explain-behavior` is on-demand only (chat answer,
+  code through `gh` or the scratch clone). The `-x-` files are outside the handoff checks and the Stage 8 scope. They are
+  not orchestrators, so `GROUP_SKILLS` is unchanged and their cost lands in the stage window they run in.
 
 ## The `expl-bot-*` flow (exploratory testing, separate from `expl1-*`)
 
@@ -87,7 +97,11 @@ the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from 
   `output` live in `.workflow-artifacts/explorbot/`. Use only non-TUI commands on Windows; never trust the exit
   code for pass/fail (read `reports/<mode>-<session>.md`); never read or print `.env`; credentials only via
   `--auth` for one run. Every explorbot command needs the key at startup. Bridge mode runs a Flow 1 `plan.md`
-  with `explorbot test`; keep the plan format explorbot-compatible when editing `expl-bot-plan`.
+  with `explorbot test`; keep the plan format explorbot-compatible when editing `expl-bot-plan`. Verified against the
+  installed parser (`node_modules/explorbot/src/utils/test-plan-markdown.ts`): every non-empty line under a test's
+  `## Requirements` is read as its start URL and the last one wins, so that section holds the URL only; `REQ-`/`TC-`
+  references go in the `<!-- area … covers: … -->` comment between the `<!-- test -->` block and the `#` heading.
+  `explorbot-run` also checks for `TESTOMATIO` in `.env` before a run (the reporter would upload it).
 - Status: the skills were written against explorbot's sources and the three scripts were run against a local
   test page; a full end-to-end run on a real app has not been done yet. Flow 3 was verified only up to
   `explorbot config --json` (models and dirs resolve); running its commands needs the user's OpenRouter key.
@@ -130,6 +144,7 @@ window of the main session, not a subagent). Rules to keep when editing:
 ## Editing skills
 
 - `.claude/skills/` is the only folder Claude Code loads. `.claude/skills-archive/` holds retired versions (currently the Claude Desktop variant of stage 8) and is inert. To restore one, copy it into `skills/` under a non-clashing name.
+- `.claude/skills-archive/testomat-skills/` is the imported `testomatio/skills` set. Five were promoted (moved out: `qa-thinking`, `qa-review-pr`, `qa-explain-behavior`, `qa-detect-useless-tests` (renamed from `detect-useless-tests`), `qa-data-seeder`); useful rules from `qa-write-test-cases`, `epic-requirement-reviewer`, `write-user-story`, `pull-request-diff-analyzer`, `wiki-from-code`, `detect-product-mismatches`, `qa-pr-requirements-analyzer`, `detect-duplicate-test-cases` and the three `explorbot-*` skills were merged into stages 2–7 and the explorbot flow (the archive copies stay). The rest are Testomat/TMS- or automation-tied and are not used. Do not import their `.test.md` format, ids, `.testeiya/` folder or "never generate IDs" rule: they conflict with `REQ-N` / `TC-REQ-N.N` and the artifact layout.
 - Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks.
 - `setup-guide.md` in each stage records how to reconfigure that stage for another tracker or project. Stages 1 and 7 also keep `references/configure-blocks-original.md` with the original `⚠️ CONFIGURE` placeholder blocks.
 - Skill text is written in English, with short chat messages and no invented data. Several skills have hard "do not" rules (do not reword requirements, do not invent test data, uncovered files never get FAIL). Preserve them when editing.

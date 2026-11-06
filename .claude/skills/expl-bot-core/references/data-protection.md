@@ -24,6 +24,10 @@ there is no rage mode.
 3. A scenario that needs to edit or delete something must **first create its own target** in the same
    scenario (or in a preceding scenario of the same run), then act on that specific target. Locate it by the
    RUN_ID name, never "the first row".
+   **Seeded data:** records created by the `qa-data-seeder` skill in this same run, listed in
+   `runs/<RUN_ID>/seed.md`, count as the run's own data. A scenario may edit or delete them, still located by
+   the RUN_ID name and never "the first row". The seeder runs only after the user said yes and approved the
+   exact count; it is never used by Flow 2 (`--independent`) or under a read-only focus (rule 5).
 4. The resource that the current page URL represents is "under test". Never destroy it. Do not propose or
    perform delete/remove/archive on the entity that owns the current URL. Destroy only children created in
    the scenario itself.

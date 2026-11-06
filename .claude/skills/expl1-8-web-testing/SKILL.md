@@ -278,7 +278,9 @@ Precondition, Steps and Expected of the impact-analysis row; handle them in the 
      "Product B is in the cart") and this state is absent — set it up only
      with actions that are plain UI steps the test case implies (for example adding a
      product to the cart); if it is unclear how, ask the user. Do not create
-     data on your own without the user's instructions.
+     data on your own without the user's instructions. If `<ISSUEKEY>-x-seed-data.md` exists
+     (written by the optional `qa-data-seeder` with the user's approval), the records it lists
+     may be used for this; nothing else is touched.
    - If the next test case needs a different
      page — go to it (check memory
      or ask the user).

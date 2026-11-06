@@ -26,6 +26,9 @@ The main context only ever sees the compact result blocks.
 - **Sequential**: one tester at a time (shared browser). Subagents cannot spawn subagents.
 - Pilot answers are exactly `PROGRESS:` / `NEXT:`. Stage skills ask the user; never answer for them.
 - A scenario that would touch pre-existing data is `BLOCKED`, not retried (`data-protection.md`).
+- If `RUN/seed.md` exists (written by `qa-data-seeder` with the user's approval), the records it lists are the
+  run's own data: tell the tester where to find them (name with the RUN_ID) and pass the file path in its
+  prompt. Nothing outside that list and the tester's own `CREATED:` records may be edited or deleted.
 - Never type credentials unless the user gave them in chat; login → ask the user.
 - English, short chat. No invented data. Stop after the run summary.
 - With `--independent`: follow "Independent mode" in `run-context.md` — a `NEEDS_USER` gets one unblock
