@@ -55,6 +55,7 @@ standout problem is. No counts, no "N tests run". Talk about the product, not th
 ## Coverage
 - Pages: <paths>
 - Features: <capabilities>
+- Not covered: <page — reason; only when RUN/pages.md exists and has such rows>
 
 ## What works
 - **<feature>** — `S2 <title>`, `S7 <title>`
@@ -77,6 +78,18 @@ Evidence: <one short observation, screenshot path if any>
 ## Data created by this run
 - <name> — removed | left in place
 ```
+
+## Multi-page runs
+
+When `RUN/pages.md` exists:
+
+- *Coverage → Pages* lists every page that had at least one executed scenario (path only).
+- *Coverage → Not covered* has one entry per row with status `skipped-cap`, `unselected` or `needs-data`, as
+  `<page-key> — <reason>` (for example `checkout-step-two — needs a form submit`, `about — over the page limit`).
+  `external` and `ignored` rows are not listed. A page that was researched but whose scenarios were all
+  `BLOCKED`/not executed is listed under *Execution Issues*, not under *Not covered*.
+- *What works* groups by feature, not by page; one entry may cite scenarios from several pages.
+- Defect titles name the feature, and `Reproduce` names the page where it happened.
 
 ## Brevity rules
 
@@ -104,6 +117,21 @@ For each `PASSED` scenario, `expl-bot-report` may write `tests/expl-bot/<scenari
 - Record each verified expected result as an `expect(...)` that mirrors the check you ran. If a check cannot be
   expressed in Playwright, add `// NOT VERIFIED: <expected>` instead of a weaker assertion.
 - Names that carry the RUN_ID become `\`${runId}\`` or a const at the top; the test must create its own data.
+- **A PASSED scenario that exposed a defect** (it is named in a `### [Severity]` entry of the same report under
+  `Affects:`, or its `NOTES` describe the bug behind that entry) must **not** assert the buggy behaviour: such a
+  test would pass today and break when the bug is fixed. Write the steps that ran, then assert what the app
+  **should** do. The scenario's own `EXPECTED` lines that passed and are not about the bug stay as they are.
+  Mark the test as a known failing test and point to the report:
+  - header comment: `// Defect: "<Defect title>" — .workflow-artifacts/expl-bot/runs/<RUN_ID>/report.md, Defects`
+  - first line of the test body: `test.fail(true, 'Known defect: <Defect title> (see report.md)');`
+    (Playwright then counts the run green while the bug exists and flags it as soon as the test starts to pass;
+    deleting that line makes the test a plain red test.)
+  - the expected behaviour must come from the report entry or the run's evidence (an error message shown, the
+    URL unchanged). Do not invent a message text the run never saw; assert only that an error element is
+    visible and the URL did not change, and mark the rest `NOT VERIFIED`.
+  - never click a control that places an order or ends the session to "finish" the flow; if the test fails at the
+    defect assertion, nothing after it runs, so write steps that leave nothing behind.
+  List these drafts in the final response as "expected to fail".
 - Never include credentials. Use `process.env.<NAME>` placeholders and a comment. Put the login in one shared
   `tests/expl-bot/helpers.ts` (with the other locator helpers) instead of repeating it in every spec; a locator
   the result blocks did not record is marked `NOT VERIFIED` in a comment at the top of the spec.

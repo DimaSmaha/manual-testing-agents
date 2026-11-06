@@ -58,6 +58,9 @@ regenerated with the context-collection skill.
   or additional requirements.
 - Do not generate findings artificially. If a requirement is clear and covered —
   it is covered.
+- A closed or done status of a linked task, or a note that something "passed",
+  is not proof that the behavior works. It does not make a requirement covered
+  and it does not answer a question.
 - After saving the file — stop. Do not continue into the checklist,
   test cases, or planning.
 
@@ -112,7 +115,8 @@ For each requirement from the context file, go through four questions:
 
 Broad or vague wording is a signal to check deeper.
 Examples: "where applicable", "all places", "update the wording",
-"appropriate messages", "handle", "support".
+"appropriate messages", "handle", "support", "fast", "relevant",
+"user-friendly", "should work", "as needed".
 
 ### Application rules
 
@@ -129,6 +133,20 @@ Examples: "where applicable", "all places", "update the wording",
 - Record only what really affects implementation,
   testing, or acceptance of the task. A question that will change
   neither code, nor test, nor the acceptance result — do not record.
+  A question is worth asking only if its answer could materially change
+  user behavior, scope, permissions, dependencies, or acceptance.
+- Before recording a question, check that nothing else in the context file
+  (another requirement, a linked item, the goal) already answers it.
+- Check that the acceptance wording covers the empty, error, and permission
+  paths of a behavior, not only the happy path. A missing path is an
+  "Uncovered requirement" or a "Question" — only if the requirement
+  describes that behavior at all.
+- Keep each chat category to one purpose: a question is an unresolved
+  decision, a potential bug is a described behavior that looks wrong, a risk
+  is a consequence if it stays as is. Do not restate one finding in
+  several categories unless it is a different aspect of the requirement.
+- Phrase a question as "What if <situation>?" when it helps to make
+  the missing behavior concrete.
 - Do not generate questions about:
   - implementation details that the developer decides (architecture,
     libraries, cache, performance) unless it is stated

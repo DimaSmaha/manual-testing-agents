@@ -26,6 +26,9 @@ The main context only ever sees the compact result blocks.
 - **Sequential**: one tester at a time (shared browser). Subagents cannot spawn subagents.
 - Pilot answers are exactly `PROGRESS:` / `NEXT:`. Stage skills ask the user; never answer for them.
 - A scenario that would touch pre-existing data is `BLOCKED`, not retried (`data-protection.md`).
+- If `RUN/seed.md` exists (written by `qa-data-seeder` with the user's approval), the records it lists are the
+  run's own data: tell the tester where to find them (name with the RUN_ID) and pass the file path in its
+  prompt. Nothing outside that list and the tester's own `CREATED:` records may be edited or deleted.
 - Never type credentials unless the user gave them in chat; login → ask the user.
 - English, short chat. No invented data. Stop after the run summary.
 - With `--independent`: follow "Independent mode" in `run-context.md` — a `NEEDS_USER` gets one unblock
@@ -41,7 +44,9 @@ The main context only ever sees the compact result blocks.
 3. **Per scenario** (in plan order):
    a. Compute `START_URL` (base URL from `SITE`/`meta.md` + the scenario's `## Requirements` path, else the
       suite's prerequisite).
-   b. Find the page's `page-key`; collect `RESEARCH`, `KNOWLEDGE` paths, `EXPERIENCE` path.
+   b. Find the page's `page-key`; collect `RESEARCH`, `KNOWLEDGE` paths, `EXPERIENCE` path. In a multi-page plan
+      every scenario gets the research / experience of **its own** page (its `## Requirements` URL); if the
+      scenario crosses to another researched page, add that page's `RESEARCH` path too.
    c. Launch the subagent: `Agent` with `subagent_type: expl-bot-tester` and a prompt containing `SESSION`,
       `RUN_ID`, `HOST`, `N`, `START_URL`, the scenario block verbatim, and the three paths. Remember the agent
       id for a possible resume.
@@ -58,7 +63,8 @@ The main context only ever sees the compact result blocks.
         If the user says skip → keep `BLOCKED` with the reason.
       - `BLOCKED` otherwise (capability missing, precondition unmet, pre-existing data) → keep it, move on.
    f. After each scenario print one line: `S<n> <STATUS> — <title>`.
-4. **Bookkeeping** (once, after the loop): append to `SITE/state.json` → `testedScenarios[<page-key>]`:
+4. **Bookkeeping** (once, after the loop): append to `SITE/state.json` → `testedScenarios[<page-key>]` (the key
+   of the page each scenario started on):
    title, area, outcome (from the plan comment), status, the steps that ran. Only the main session writes this
    file.
 5. **Browser state check**: `snapshot` to see where the browser ended up; if a modal of the last scenario

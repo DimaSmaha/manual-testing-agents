@@ -20,11 +20,13 @@ Usage: `/explorbot-run <command> [args]`, where `<command>` is one of:
 |---|---|---|
 | `config` | `npx explorbot config --json` | none (works without a key) |
 | `context <path>` | `npx explorbot context <path>` | none, but it refuses to start without the key (the bundled decision model needs `OPENROUTER_API_KEY`) |
+| `knows [path]` | `npx explorbot knows [path]` — list the stored knowledge, or the files matching a URL | none |
+| `learn <path> "<note>"` | `npx explorbot learn <path> "<note>"` — store a fact in the knowledge folder (user-approved text only) | none |
 | `navigate <path>` | `npx explorbot navigate <path>` (exit 1 = unreachable) | little |
 | `research <path> [--deep]` | `npx explorbot research <path>` | yes |
 | `plan <path> --focus "…" [--style s]` | `npx explorbot plan …` | yes |
 | `explore <path> [--focus "…"] [--max-tests N] [--max-duration M]` | `npx explorbot explore …` | yes, the most |
-| `test <plan.md> ['*'\|n\|n-m]` | `npx explorbot test <plan.md> '*'` | yes |
+| `test <plan.md> ['*'\|n\|n-m\|n,m,k]` | `npx explorbot test <plan.md> '*'` (selection forms: `1-5`, `1,3,7`) | yes |
 | `rerun <file> [n]` | `npx explorbot rerun …` | yes (healing) |
 | `bridge <RUN_ID>` | `npx explorbot test .workflow-artifacts/expl-bot/runs/<RUN_ID>/plan.md '*'` | yes |
 
@@ -42,7 +44,16 @@ It is **not** a stage of any pipeline and does not touch `expl1-*` or the `expl-
 - Never print, echo or read back the content of `.env`. To check that a key is set, use Grep with
   `output_mode: count` on `^OPENROUTER_API_KEY=.+` in `.env`.
 - Never invent credentials. Login details come from the user in chat: pass them with `--auth '<text>'` for that
-  one run (kept in memory by explorbot, never written to disk) — do not put them in `.env` or knowledge files.
+  one run (kept in memory by explorbot, never written to disk — `docs/reference/commands.md`, `--auth`) — do not
+  put them in `.env` or knowledge files. To make a login repeatable without storing a secret, a knowledge file may
+  name the credentials as `${env.NAME}` placeholders (explorbot resolves them from the environment); write such a
+  file only with the user's yes, and no selectors in it.
+- Flags and commands: answer questions about them from `npx explorbot --help` / `npx explorbot help-json
+  <command>` and `node_modules/explorbot/docs/index.json`, not from memory or from this file. If `--help` does not
+  show a flag, it does not exist.
+- Targets are `/path` (needs the base URL from config or `EXPLORBOT_URL`) or a full `http(s)://` URL. Explorbot
+  works on apps with create/edit/delete flows; landing pages, blogs and plain content sites give it little to do —
+  say so before a costly run on one.
 - Tell the user before an AI-heavy command (`explore`, `test`, `rerun`, `research --deep`): it costs tokens on
   their provider account. Ask once, unless the user already said to run it.
 - Data policy: explorbot has its own `dataProtectionRules`, but it is not our own-data-only policy. For a site
@@ -60,8 +71,17 @@ It is **not** a stage of any pipeline and does not touch `expl1-*` or the `expl-
    the models and the three directories (knowledge / experience / output). Report them in two lines.
 4. Target URL: from the user, else `EXPLORBOT_URL` / `EXPL_BOT_URL` in `.env` (look with Grep, show only the
    URL). Unknown → ask.
-5. Reachability: `npx explorbot navigate <path>`; exit 1 → stop and report (do not work around it, do not
-   start the app, do not guess another URL).
+5. Cloud-reporter leak check: explorbot reports through `@testomatio/reporter`, and if `TESTOMATIO` is set it
+   uploads the run to that Testomat.io project. Grep count on `.env` for `^TESTOMATIO=.+`, and on
+   `explorbot.config.mjs` for `runGroup|cloud`. If anything matches — tell the user the run would be uploaded
+   and ask before going on. Never print the key.
+6. Reachability, in this order, stopping at the first failure (do not work around it, do not start the app, do
+   not guess another URL):
+   1. `curl -s -o /dev/null -w "%{http_code}" <base-url>` — `000` means DNS or VPN, `5xx` means the app itself.
+   2. `curl -sIL <base-url>` — if a 3xx, 401 or 403 ends on a login URL, the page needs a login: ask the user
+      for it (see `--auth`), do not guess.
+   3. `npx explorbot navigate <path> --session` — exit 1 → read `<output dir>/explorbot.log` first (the output
+      dir is in `config.out`); `--session` saves the cookies to `<output dir>/session.json` for later commands.
 
 ## Running
 
@@ -73,8 +93,8 @@ It is **not** a stage of any pipeline and does not touch `expl1-*` or the `expl-
    `explore-WiseFox42.md`) and, if enabled, `…-tests.md` / `.html`. Use Glob on
    `.workflow-artifacts/explorbot/output/reports/*` and take the newest file. Read it.
 4. Summarise (≤ 15 lines): headline, Coverage, What works, Defects with severity, UX issues, Execution Issues —
-   in the report's own words, nothing added. Give the report path. If no report was written, say that, show the
-   last lines of the log, and stop.
+   in the report's own words, nothing added. Give the report path. If no report was written, say that, read
+   `<output dir>/explorbot.log` (start here on any failure), show the last lines, and stop.
 
 ## Bridge mode (`bridge <RUN_ID>`)
 

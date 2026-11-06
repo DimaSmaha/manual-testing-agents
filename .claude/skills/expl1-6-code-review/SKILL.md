@@ -186,6 +186,13 @@ For each test case (TC-REQ-X.Y):
 - Removal: whether what was supposed to be removed was really removed.
 - UI binding: whether the element is connected to the correct
   template, route, component, screen.
+- Unfinished or gated paths: feature flags that keep the behavior off,
+  TODO / commented-out branches, actions reachable only through the API
+  with no UI, behavior limited to certain plans or roles. These usually mean
+  `QA` or `FAIL` with the exact condition, not `PASS`.
+- Permissions: whether a block exists in the UI only, on the server only,
+  or in both. A block that exists only in the UI does not prove the
+  restriction — say which one the code shows.
 
 ### FAIL vs absence in the diff
 
@@ -197,6 +204,21 @@ from the PR branch through the CLI or API.
 FAIL only when there is concrete evidence:
 - the code does something different from what the test case expects
 - the code removes or breaks something that should work
+
+If the PR clearly delivers only a part of the task (a slice), a test case for a part
+that is absent from the PR is `N/A` with that reason, not `FAIL`.
+
+### Not a mismatch
+
+Do not mark FAIL for:
+- the same behavior written in other words than the test case
+- a detail the code does not mention while the behavior itself matches
+  (silence on a detail is not a contradiction)
+- an item you could not read: a file you cannot access is "blocked", not "absent" — use `QA`
+  and name what was not readable; do not replace it with a guess from other code
+
+If the PR summary says `Behavior change: No`, treat it only as a navigation hint:
+still check each test case against the code.
 
 ## Classification
 
@@ -245,6 +267,9 @@ Before saving, check:
 - Every N/A has a corresponding entry in Findings with the reason.
 - There is no FAIL without evidence from the code.
 - There is no N/A without evidence from the code.
+- Re-read the cited lines of every FAIL once more, as if you had not written it, and
+  confirm the code really contradicts the expected result. If it does not — change the
+  status to `QA` (or `PASS` if the code confirms the behavior) and fix the finding.
 
 ## Final response
 

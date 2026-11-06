@@ -2,6 +2,9 @@
 
 PR: <URL>
 Branch: <head branch name>
+Type: <feature | fix | refactor | mixed | unclear>
+Behavior change: <Yes | No — only docs/tests/CI/dependencies: <files>>
+Changes: <one sentence: what the PR does, from the diff>
 
 ## Changed files
 

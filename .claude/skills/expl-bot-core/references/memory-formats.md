@@ -11,6 +11,7 @@ plan use **explorbot's own formats** so Flow 3 (`npx explorbot`) reads the same 
   sites/<host>/state.json                 style rotation + tested scenarios
   sites/<host>/auth.json                  optional playwright-cli state-save (cookies = a login secret; only with the user's yes)
   runs/<RUN_ID>/plan.md  test-cases.md  results/<n>.md  report.md  screenshots/  scripts/  out/
+  runs/<RUN_ID>/pages.md                  pages of a multi-page run (site-scope.md)
 ```
 
 `<host>` = hostname with the port when not default (`localhost-3000`). `<page-key>` is defined in
@@ -46,6 +47,17 @@ Rules:
   `EXPL_BOT_AUTH` (kept in memory only).
 - Load every file whose pattern matches the current URL before researching / planning / testing, and also the
   `*` ones. Matching knowledge is given to the researcher, planner and tester as a short "Known facts" block.
+- Flow 3 (`explorbot-run`) reads this same folder, so these explorbot rules apply to the files
+  (checked against the installed `explorbot@0.6.2` docs, `docs/workflow/knowledge.md`):
+  - `${env.NAME}` in a knowledge file is resolved by explorbot from the environment, so a file can name a
+    secret without containing it ("email: ${env.LOGIN}"). Flow 1 reads it as plain text: never resolve it, never
+    print the value, and ask the user if a scenario needs the real value and `EXPL_BOT_AUTH` is not set.
+  - The frontmatter scope key is `url:` for pages. `endpoint:` scopes a file to API endpoints (explorbot's API
+    mode); a file with neither applies to both. Flow 1 has no API mode, so it ignores `endpoint:` files.
+  - Frontmatter must be a real `---` block at the top of the file. A bare `url: /login` line without the dashes
+    is body text and scopes nothing.
+  - When teaching a login, name only the credentials and facts, no selectors. If it still fails, add one
+    sentence rather than rewriting the file.
 
 ## Experience (what worked on this page)
 
@@ -111,11 +123,15 @@ await page.getByRole('button', { name: 'Close' }).click();
         "outcome": "data", "status": "PASSED", "steps": ["Click 'New product'", "Fill 'Name'", "Click 'Save'"] }
     ]
   },
-  "researchedAt": { "products": "2026-11-06T14:32:00Z" }
+  "researchedAt": { "products": "2026-11-06T14:32:00Z" },
+  "pages": {
+    "products": { "url": "/products", "title": "Products", "discoveredAt": "2026-11-06T14:30:00Z" }
+  }
 }
 ```
 
-Updated by the orchestrator after each run (not by subagents). `outcome` is `data | state | ui`.
+Updated by the orchestrator after each run (not by subagents). `outcome` is `data | state | ui`. `pages` is
+written by `expl-bot-discover` (a record of the pages found; optional, older files do not have it).
 
 ## Plan file (`runs/<RUN_ID>/plan.md`) — explorbot test-plan format
 
@@ -154,7 +170,15 @@ priority: normal
 Rules:
 - Valid priorities: `critical`, `important`, `high`, `normal`, `low`.
 - The suite URL is relative to the base URL (starts with `/`). Each test has its own `## Requirements` URL.
+- **`## Requirements` holds the URL and nothing else.** explorbot's parser (`src/utils/test-plan-markdown.ts`)
+  takes every non-empty line under that heading as the start URL, and the last one wins. A `REQ-3, TC-7` line
+  or an HTML comment there becomes the start URL and breaks `explorbot test`. Requirement and test-case
+  references go in the HTML comment line described below.
+- Extra metadata (`area`, `outcome`, `covers`) goes in an HTML comment line placed between the
+  `<!-- test … -->` block and the `#` heading. Explorbot ignores it there. Never inside `## Requirements`,
+  `## Steps` or `## Expected`.
 - `#` scenario heading = a business outcome sentence, not a click path.
+- To continue a step or an expected item on the next line, indent the continuation line by two spaces.
 - `## Steps` are guidance; `## Expected` items must be verifiable (a data change, a state change, or a UI
   change with a side effect).
 - Scenarios are numbered `S1…Sn` by order for the report and results files (`results/<n>.md`); the number is not

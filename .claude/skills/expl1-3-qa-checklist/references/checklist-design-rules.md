@@ -64,8 +64,8 @@ They make a check ambiguous — do not use:
 - "relevant", "adequate", "acceptable"
 - "if needed", "if necessary"
 - "several", "some", "enough"
-- "quickly", "smoothly", "conveniently"
-- "looks good", "works fine"
+- "quickly", "smoothly", "conveniently", "fast", "user-friendly"
+- "looks good", "works fine", "should work", "as needed"
 
 Instead of them — a specific value, state, text, number.
 
@@ -124,6 +124,20 @@ Only when the requirement contains several independent conditions.
 
 **UI conformance** — labels, texts, placement. Only when
 the requirement describes a specific text or position.
+
+### Prompt list for negative and edge checks (optional)
+
+Use only as a prompt to look for what the requirement really describes. Add an item
+only when the requirement states the behavior, and never to fill the list:
+
+- empty input or empty state
+- duplicate (the same value or record submitted twice)
+- too large (over a stated maximum)
+- wrong format
+- expired or no longer valid
+- not allowed for the role
+- concurrent change (the state changed while the user was on the page)
+- external failure — only when the requirement is about it
 
 ### Checks at the joints between requirements
 

@@ -152,10 +152,25 @@ For each changed file determine:
 If several files change one entity (component +
 its styles + its test) — group them under that entity.
 
+## PR type and behavior-change triage
+
+From the diff alone (not from requirements) determine two header lines:
+
+- **Type:** `feature` (new files, endpoints, components, or new behavior in existing ones),
+  `fix` (the diff corrects existing behavior), `refactor` (same behavior, changed structure),
+  or `mixed`. If the diff does not show it — `unclear`. Do not guess from the PR title alone.
+- **Behavior change:** `Yes` or `No`. `No` only when every changed file is documentation, tests,
+  CI or build configuration, lint or format configuration, or a dependency version bump
+  (list the files that show it). Anything else is `Yes`.
+
+Still list every file in the table: the triage is a hint for the next stages, not a reason to
+shorten the summary. Do not write acceptance criteria or test ideas.
+
 ## Verification before saving
 
 Before saving, check:
 
+- Type and Behavior change are filled in, with a one-sentence "Changes" line.
 - Every changed file from the PR is present in the summary.
   Compare the number of files in the list of changes with the number
   of files in the summary.

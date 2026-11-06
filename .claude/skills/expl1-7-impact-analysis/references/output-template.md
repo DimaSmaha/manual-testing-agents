@@ -61,6 +61,14 @@ Section rules:
   PASS or FAIL, and none for code, CI, npm scripts, build output or Storybook results.
   Steps and Expected come only from the dependent's own flow, a finding, or a test case.
   If there are no such rows — the section is not created.
+- Wording of Expected and Check text (the impact map already has the tiers, so no separate
+  severity scale is added):
+  - one visible behavior per sentence, present tense ("The cart shows 3 items")
+  - a named actor, not "the system" ("The guest sees…", "The admin can…")
+  - exact values and UI labels as they appear on screen, not paraphrases
+  - a negative behavior is a valid row ("A user without the role does not see the button")
+  - split a sentence with "and" into two separate checks
+  - no "should", "must", "will", and no internal steps (cache, logging, retries)
 
 ## Statistics
 

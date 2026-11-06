@@ -149,6 +149,13 @@ export function printFinalSummary(
     }
   }
 
+  const discover = phaseCompacts.find((p) => p.phase === "Phase 1 discover");
+  const researched = phaseCompacts.filter(
+    (p) => p.phase.startsWith("Phase 1 research") && p.status === "SUCCESS",
+  ).length;
+  const researchSkipped = phaseCompacts.filter(
+    (p) => p.phase.startsWith("Phase 1 research") && p.status === "SKIPPED",
+  ).length;
   const plan = phaseCompacts.find((p) => p.phase === "Phase 2 plan");
   const tests = phaseCompacts.find((p) => p.phase === "Phase 3 summary");
   const report = phaseCompacts.find((p) => p.phase === "Phase 4 report");
@@ -158,6 +165,15 @@ export function printFinalSummary(
     num(report, "defects_low");
 
   console.log(`\n${c.bold}Totals:${c.reset}`);
+  console.log(
+    `  Pages researched:    ${c.cyan}${researched}${c.reset}` +
+      (researchSkipped > 0
+        ? ` ${c.dim}(${researchSkipped} skipped)${c.reset}`
+        : "") +
+      (discover
+        ? ` ${c.dim}· not covered: ${num(discover, "pages_skipped_cap") + num(discover, "pages_needs_data")}${c.reset}`
+        : ""),
+  );
   console.log(
     `  Scenarios planned:   ${c.cyan}${num(plan, "scenario_count")}${c.reset}`,
   );

@@ -40,7 +40,9 @@ Rank every scenario by outcome strength, strongest first:
 Rules:
 - 3–12 scenarios per plan (default target = `--max-tests`, else 6).
 - At most **2** scenarios per feature area. Data-changing scenarios first.
-- Skip navigation/menu: the page under test is THIS page.
+- Skip navigation/menu: the page under test is THIS page. (In a multi-page run, moving between pages is
+  covered by discovery; a scenario may still start on one page and end on another when that hop is the point,
+  see "Multi-page plans".)
 - Every Extended Research section (modal, dropdown, panel) with actionable features deserves a scenario.
 - Multiple ways to create or modify data (types, forms, options) → one scenario each.
 - Scenarios that modify or delete something must create their own target first (`data-protection.md`);
@@ -52,6 +54,26 @@ Rules:
   what to leave out. `--focus "checkout"` alone is ambiguous — ask the user to sharpen it or restate it
   yourself and show it in the plan header.
 - Read-only focus ("do not change data", "search only") → every scenario is read-only (`data-protection.md` 5).
+
+## Multi-page plans (`--pages`, `site-scope.md`)
+
+A run can cover several pages. The planner still writes **one** `plan.md`.
+
+- Every page in scope is a "page under test" with its own research, experience and `testedScenarios[<page-key>]`.
+  Dedup and the `curious` gap-mining run per page.
+- Count: about 3 scenarios per page, at least 1 for every page with actionable features (a purely static page
+  may get none; say so in the plan header comment), at most 24 in total or `--max-tests`. The "3–12" limit above
+  is for a single page.
+- The "≤ 2 per feature area" rule is **per page**: the same area on two pages is two areas.
+- Rank across the whole run: all data changes first, then state changes, then UI-only. Within a rank keep
+  pages in `pages.md` order.
+- `## Requirements` of each test = the page the scenario starts on. A scenario that starts on page A and ends on
+  page B (add on the list, check on the cart page) lists page A and names page B in its steps; its area comment is
+  `area: <area> (<pageA> → <pageB>)`.
+- Capabilities are grounded on the page where the step happens (`capability-grounding.md`): a control seen on
+  page A is not assumed on page B.
+- Pages the research marked `needs-data` / `external` / `ignored` are never planned.
+- Scenarios that act on the pre-existing session (Logout) are never planned in a multi-page run.
 
 ## Priorities
 

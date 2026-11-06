@@ -1,7 +1,9 @@
 // Flow 2 runner: drives /expl-bot-independent-orchestrator headlessly through the Claude Agent SDK.
 //
 // Usage:  npm run expl-bot:run -- <url> [--focus "…"] [--style normal|curious|psycho]
+//                                   [--scope page|site] [--pages "<path>,<path>"] [--max-pages N]
 //                                   [--max-tests N] [--max-duration M] [--deep] [--headed] [--from <ISSUEKEY>]
+// Scope: the default is `site` (start URL + discovered pages, at most --max-pages, default 8); `page` = this URL only.
 // Exit codes: 0 ok · 2 pipeline error / stopped early / bad input · 3 fatal · 130 SIGINT
 import "dotenv/config";
 import { query } from "@anthropic-ai/claude-agent-sdk";
@@ -33,6 +35,8 @@ const ALLOWED_TOOLS = [
   "Bash(date:*)",
   "Bash(printenv EXPL_BOT_AUTH)",
   "Bash(git status:*)",
+  // read-only run-cost table printed at the end of the run (hooks in .claude/hooks/ record it)
+  "Bash(node .claude/hooks/metrics-report.mjs:*)",
 ];
 
 function findGitBashBin(): string {
@@ -76,6 +80,9 @@ const VALUE_FLAGS = new Set([
   "--max-tests",
   "--max-duration",
   "--from",
+  "--scope",
+  "--pages",
+  "--max-pages",
 ]);
 const BOOL_FLAGS = new Set(["--deep", "--headed"]);
 
@@ -122,10 +129,10 @@ async function main(): Promise<void> {
   } catch (err: unknown) {
     console.error(`${c.red}[ERROR] ${(err as Error).message}${c.reset}`);
     console.error(
-      `\nUsage:   npm run expl-bot:run -- <url> [--focus "…"] [--style normal|curious|psycho] [--max-tests N] [--max-duration M] [--deep] [--headed] [--from <ISSUEKEY>]`,
+      `\nUsage:   npm run expl-bot:run -- <url> [--scope page|site] [--pages "<path>,<path>"] [--max-pages N] [--focus "…"] [--style normal|curious|psycho] [--max-tests N] [--max-duration M] [--deep] [--headed] [--from <ISSUEKEY>]`,
     );
     console.error(
-      `Example: npm run expl-bot:run -- http://localhost:3000/products --max-tests 2\n`,
+      `Example: npm run expl-bot:run -- http://localhost:3000/products --scope page --max-tests 2\n`,
     );
     process.exit(2);
   }
