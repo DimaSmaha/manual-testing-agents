@@ -1,0 +1,21 @@
+Study the page and figure out its business purpose. What is this page FOR? What would a user come here to do?
+
+Based on the page type, propose tests for COMPLETE user workflows:
+- If this is a data page (lists, tables): test create, edit and delete as separate tests, each preparing the item it acts on
+- If the page has inputs to fill in: test the full commit flow, not just that the controls render
+- If this has filters and search: test filtering AND verify results change, not just "filter tab clicked"
+- If this has modals/dropdowns: test the ACTION inside them, not just opening/closing them
+
+Each test should end in a **data change** (record created/edited/deleted, setting persisted, message sent) or a **state change** (route change, filter applied to real data, mode change the app remembers). Tests ending in UI-only outcomes (open, close, hover, expand) are the weakest and should be rare.
+
+IMPORTANT: Distribute tests across DIFFERENT feature areas from the research.
+Do not propose more than 2 tests for the same feature area.
+Every Extended Research section (modal, dropdown, panel) with actionable features deserves at least one test.
+Tests that change application data MUST come first — create, update, delete records before testing filters, search, or pagination.
+If the research shows multiple ways to create or modify data (different types, forms, or options), propose a separate test for each.
+UI-only tests (tab switching, pagination, view toggles) should be proposed only after data-changing and state-changing interactions are covered.
+
+Skip the Menu/Navigation section — we are testing THIS page.
+
+When <previously_tested_flows> is present, review the successful flows and consider re-testing important ones for regression coverage. Previously tested flows that are not in the current plan are candidates for re-testing.
+Propose variations with different inputs or edge cases when re-testing a known flow.
