@@ -145,3 +145,24 @@ run / skipped / not run, its output file path, and its key counters:
 | 8 expl1-8-web-testing | run | `<ISSUEKEY>-8-web-testing.md` | counters + verdict |
 
 (The table above is an example — report the real values.)
+
+### Run cost (after the table)
+
+Agent run metrics are recorded from outside by the hooks in `.claude/hooks/` (registered in
+`.claude/settings.json`); no stage skill knows about them. After the table, run one read-only command and
+print its output as-is — one row per stage, the orchestrator's own turns, and the overall total
+(tokens, cost, active time):
+
+```
+node .claude/hooks/metrics-report.mjs <ISSUEKEY> --save
+```
+
+`--save` also writes `<ISSUEKEY>-metrics.md` and `<ISSUEKEY>-metrics.json` into
+`.workflow-artifacts/<ISSUEKEY>/` (script-owned files: the orchestrator never edits them; re-running
+overwrites them, and rows whose chat transcript was cleaned up are restored from the earlier snapshot).
+Mention the saved md path in the final report.
+
+Do it on every exit — pipeline complete, user stops early, or a stage blocked. Never edit, reword or
+"correct" the numbers. If it prints `No metrics recorded`, say so in one line (hooks not registered or the
+session started before they were) and go on. Stages run in an earlier chat appear in the same table because
+the report is keyed by `<ISSUEKEY>`.

@@ -33,6 +33,8 @@ const ALLOWED_TOOLS = [
   "Bash(date:*)",
   "Bash(printenv EXPL_BOT_AUTH)",
   "Bash(git status:*)",
+  // read-only run-cost table printed at the end of the run (hooks in .claude/hooks/ record it)
+  "Bash(node .claude/hooks/metrics-report.mjs:*)",
 ];
 
 function findGitBashBin(): string {

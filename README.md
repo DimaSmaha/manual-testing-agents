@@ -28,6 +28,7 @@ More flows will be added next to it under `.claude/skills/`.
 - [Stage 8: web testing in detail](#stage-8-web-testing-in-detail)
 - [Issue tracker integration](#issue-tracker-integration)
 - [Exploratory flow: `expl-bot-*`](#exploratory-flow-expl-bot-)
+- [Run metrics: tokens, cost and time per skill](#run-metrics-tokens-cost-and-time-per-skill)
 - [Repository layout](#repository-layout)
 - [Configuring and adapting the skills](#configuring-and-adapting-the-skills)
 - [Design principles](#design-principles)
@@ -391,6 +392,52 @@ Notes:
 
 ---
 
+## Run metrics: tokens, cost and time per skill
+
+Hooks in `.claude/hooks/` (registered in `.claude/settings.json`) measure every skill run **from outside**:
+no stage skill or agent mentions them. They are ported from the agent-metrics hooks of the
+`suvore-qa-confa` mock (`agent-metrics.mjs` + `metrics-report.mjs` and their libs) and adapted, because
+here the stages are skills in the main chat, not subagents.
+
+| What | How it is measured |
+|---|---|
+| One stage skill (`expl1-3-qa-checklist`, `expl-bot-plan`, …), launched by an orchestrator or typed as `/name args` | the window of the chat from its launch to the next skill; tokens are the assistant messages in it, summed once per message id from the session transcript |
+| `expl-bot-researcher` / `expl-bot-tester` subagents | their own transcripts, added to the stage that launched them (shown as `↳` rows, not added twice) |
+| An orchestrator | `<name> (own turns)` row plus all its stages; the **Σ row is the orchestrator's overall result** |
+| Time | **Active** = prompt → stop (the agent working); **Wall** = launch → last stop, including questions to you |
+| Key | `TASK-<id>` / `BUG-<id>` for `expl1-*`, the `eb-YYMMDD-HHMM` RUN_ID for `expl-bot-*` (resolved from skill args or the artifact paths the skill wrote) |
+
+After every turn of a skill session the **Stop** hook prints one line, e.g.
+`SKILL_RUN_METRICS: skill=expl1-3-qa-checklist key=TASK-112 run=1/1 model=… active=95.2s tokens=212,345 cost=$0.41 …`.
+The orchestrators print the full table at the end:
+
+```
+node .claude/hooks/metrics-report.mjs TASK-112            # table, one row per stage + Σ
+node .claude/hooks/metrics-report.mjs TASK-112 --detail   # + input / output / cache split
+node .claude/hooks/metrics-report.mjs TASK-112 --json     # machine-readable
+node .claude/hooks/metrics-report.mjs TASK-112 --save     # table + save the snapshot files on demand
+node .claude/hooks/metrics-report.mjs --list              # every key that has metrics
+```
+
+**Where it is saved.** The **Stop hook saves automatically after every turn** (so a stage you type yourself, with no
+orchestrator, is saved too; its line ends with `saved=<path>`), the orchestrators also run `--save` at the end, and
+you can run it by hand. It writes a markdown table and a JSON snapshot next to the key's own artifacts:
+`.workflow-artifacts/TASK-112/TASK-112-metrics.{md,json}` (or `.workflow-artifacts/expl-bot/runs/<RUN_ID>/metrics.{md,json}`).
+They are script-owned: re-running overwrites them. The numbers come from the session transcripts in
+`~/.claude/projects`, which Claude Code can clean up, so every later report fills any row whose transcript is
+gone from the saved JSON — a saved number is never replaced by a worse one. The raw events behind it are in
+`.workflow-artifacts/metrics/_events/<session>.jsonl` (git-ignored). A hook that bails writes the reason to `.workflow-artifacts/metrics/_diagnostics.jsonl` — if the
+table is empty, look there first. All hooks exit 0: metrics never fail a tool call.
+
+**Limits (also printed under the table):** per-skill numbers are attributed by time window in one shared chat, so
+an off-topic message between stages lands in the surrounding stage; cost is list price (no plan discount) and
+rates live in `lib/pricing.mjs` (`RATES_AS_OF` says when they were checked — an unknown model or a fast-mode run
+is left unpriced, never guessed); a row whose session transcript is no longer in `~/.claude/projects` keeps its
+time but has no tokens; an interrupted subagent has no bill. The unattended runner (`npm run expl-bot:run`)
+loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the same way.
+
+---
+
 ## Repository layout
 
 ```
@@ -421,6 +468,8 @@ Notes:
 │   │   ├── expl-bot-core/         Shared rules, formats and run-code scripts (not a stage)
 │   │   └── playwright-cli/        Browser automation skill used by stage 8 and expl-bot-*
 │   ├── agents/                    Subagents: expl-bot-researcher, expl-bot-tester
+│   ├── hooks/                     Run-metrics hooks: agent-metrics.mjs, metrics-report.mjs, lib/
+│   ├── settings.json              Registers the hooks (settings.local.json stays personal)
 │   └── skills-archive/            Retired skill versions (inert)
 └── .workflow-artifacts/           Git-ignored: per-task artifacts and scratch files
     └── <ISSUEKEY>/

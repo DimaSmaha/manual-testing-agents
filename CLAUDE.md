@@ -84,6 +84,35 @@ the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from 
   test page; a full end-to-end run on a real app has not been done yet. Flow 3 was verified only up to
   `explorbot config --json` (models and dirs resolve); running its commands needs the user's OpenRouter key.
 
+## Run metrics (hooks, not skills)
+
+`.claude/hooks/agent-metrics.mjs` (registered in `.claude/settings.json`) records, from outside the conversation,
+every skill launch (a `Skill` tool call, **and** a skill the user types as `/name args`, which is not a tool call and is
+only visible in the `UserPromptSubmit` prompt), every user turn (`UserPromptSubmit` → `Stop`) and every `Task|Agent` subagent run into
+`.workflow-artifacts/metrics/_events/<session>.jsonl`; `metrics-report.mjs <KEY>` derives the cost table from those
+events plus the transcripts in `~/.claude/projects` (ported from the `suvore-qa-confa` mock, adapted: a stage is a
+window of the main session, not a subagent). Rules to keep when editing:
+
+- **No stage skill or agent file mentions the metrics.** Only the three orchestrators run
+  `node .claude/hooks/metrics-report.mjs <KEY>` (read-only) at the end; `expl-bot-run.ts` whitelists that one command.
+- **Orchestrator names live in one place**: `GROUP_SKILLS` in `lib/tracked-tools.mjs`. A new orchestrator skill must be
+  added there, or its turns are billed to the stage before it. The matcher `Task|Agent` and `Skill` in
+  `settings.json` must keep matching `SUBAGENT_TOOLS` / `SKILL_TOOLS`.
+- **Key** = `TASK-/BUG-<id>` or the RUN_ID (`lib/keys.mjs`). expl-bot skills ignore `--from <ISSUEKEY>` for keying.
+  Only assistant tool-call inputs are scanned for artifact paths, never tool results (SKILL.md quotes example keys).
+- **The Stop hook saves after every turn** (`saveReport` in `lib/report-render.mjs`, shared with the CLI), so typed
+  `/skill` runs are saved without an orchestrator; a failed write is a `save_failed` diagnostic, never a failed turn.
+- **The orchestrators also run `metrics-report.mjs <KEY> --save`**, which writes `<KEY>-metrics.{md,json}` into
+  `.workflow-artifacts/<KEY>/` (expl-bot: `runs/<RUN_ID>/metrics.{md,json}`). These two files are **script-owned**: the
+  "orchestrator never edits artifacts" rule stands, they are the one thing a script writes. The JSON snapshot restores
+  rows whose `~/.claude/projects` transcript was cleaned up (`buildKeyReport`'s `snapshot`); it only ever fills a missing
+  bill. Changing the JSON row shape means changing `loadSnapshot`/`saveTargets` in `lib/report-model.mjs` together.
+- **Cost is an API-list-price estimate, derived each run** (not plan usage); rates are in `lib/pricing.mjs` (`RATES_AS_OF`). Unknown model, non-standard
+  speed or Haiku 5.5 above 100K prompt = unpriced, never guessed. Update rates there when prices change.
+- Every hook path exits 0 and writes `_diagnostics.jsonl` instead of failing silently. Empty table → read it first.
+- Synthetic checks used to verify the model live in the (git-ignored) scratch folder only; re-create them from the
+  report-model rules if you change the window logic.
+
 ## External dependencies
 
 - **Issue tracker**: a REST API read with `curl` (no auth), default `http://localhost:3000`, with an ngrok alternative. Tasks (`/tasks/<id>`) and bugs (`/bugs/<id>`) have **separate id spaces**, so the kind must always be known. Commands, retry flags and response shapes: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`. Pre-flight health check is `curl -s --max-time 5 <BASE>/`; if it fails, stop and ask rather than work around it. Comments, attachments and linked items are not exposed by the tracker.

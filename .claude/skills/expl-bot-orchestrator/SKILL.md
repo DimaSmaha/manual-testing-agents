@@ -139,6 +139,18 @@ rules the app does not show. Never invent them.
 2. **Final response** (short): paths of `plan.md`, `test-cases.md`, `report.md`, results folder (and the
    drafts); counters; top defects (title + severity); what was offered and declined; next-run hint ("Run
    again: the next style is `<style>`; new scenarios skip what is already covered").
+3. **Run cost.** The hooks in `.claude/hooks/` record every stage skill and every researcher/tester subagent
+   from outside (no stage knows about them). Run, as one read-only command, and print the table as-is below
+   the final response (once per `RUN_ID` of this chat — after "another round", run it for each):
+
+   ```
+   node .claude/hooks/metrics-report.mjs <RUN_ID> --save
+   ```
+
+   It shows one row per stage (subagent bills are included in the stage that launched them), the
+   orchestrator's own turns, and the overall total, and saves `RUN/metrics.md` + `RUN/metrics.json`
+   (script-owned; add the md path to the final response). Never edit the numbers. `No metrics recorded` → say so in
+   one line and go on.
 
 ## Stage settings (recommended)
 

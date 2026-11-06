@@ -134,6 +134,10 @@ Skill `expl-bot-report --independent --run <RUN_ID>` (add `--tests` only if the 
 3. Final reply (the only non-compact text): paths of `plan.md`, `report.md`, `results/`; counters; the
    headline defects (title + severity); leftover data; any `STOP:` reason; the exact next-run hint.
    If the run stopped early, start the reply with `STOPPED: <reason>` and still report what exists.
+4. **Run cost** (part of the final reply, not a compact; no compact field changes). If `.claude/hooks/` is
+   registered for this session, run `node .claude/hooks/metrics-report.mjs <RUN_ID> --save` once (it also writes
+   `RUN/metrics.md` + `RUN/metrics.json`) and append its table unedited. If it prints `No metrics recorded` (a headless runner that did not load project hooks), write
+   `Run cost: not recorded` and go on. Never ask, never wait, never fail the run over it.
 
 ## Hard rules
 
