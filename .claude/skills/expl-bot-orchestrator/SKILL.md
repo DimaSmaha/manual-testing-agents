@@ -45,7 +45,7 @@ to `--max-pages` (default 8). With no `--scope` and no `--pages` the orchestrato
 - Playwright: `playwright-cli` only, headed, `-s=<SESSION>`, `--persistent`. Not Playwright MCP / Chrome ext.
 - Scripts: files via Write, one simple command each, outputs in `RUN/out/` (see `run-context.md`).
 - Re-running a stage deletes and recreates that stage's file; it never merges.
-- **Never silently skip an optional feature.** Every feature in "Optional features" below is either chosen by
+- **Never silently skip an optional feature** (the login-state save is offered in Step 1, not at the end). Every feature in "Optional features" below is either chosen by
   the user (argument or answer) or offered once at its moment. Ask with the AskUserQuestion tool (short
   options, recommended default first). A "no" is final for this run; record it in `RUN/meta.md` under
   `Declined:` and list it in the final response. Do not ask again for the same feature.
@@ -62,7 +62,7 @@ to `--max-pages` (default 8). With no `--scope` and no `--pages` the orchestrato
 | Seed test data (`qa-data-seeder`, **creates marked records in a live non-production environment**; writes `RUN/seed.md`; the skill asks its own confirmation and approval gate) | After plan approval (Step 3), only when the approved scenarios need data that does not exist and the focus is not read-only | Ask; default No; never in Flow 2 |
 | Human knowledge to store (`expl-bot-learn knowledge`) | Step 6 | Ask |
 | Another round with the next style (new run, research reused while fresh) | Step 7 | Offer |
-| Save login state (`auth.json`) | Step 7 | Ask; never without a yes |
+| Save login state (`auth.json`) | Step 1, right after the login (skipped when `auth.json` exists or the user already said yes) | Ask; default Yes; never without a yes |
 | Close the browser session | Step 7 | Ask |
 
 Arguments already given answer the matching question; do not ask it again.
@@ -89,6 +89,21 @@ Arguments already given answer the matching question; do not ask it again.
    (`run-context.md`).
 3. `playwright-cli list`; open or reuse the headed persistent session; `snapshot`. A login page → ask the user
    to log in in the open window ("Please log in, tell me when you are on <page>"). Wait for "done".
+   **Save the login right away (ask first).** As soon as the session is logged in (the user said "done", or the
+   persistent profile was still logged in) and `SITE/auth.json` does not exist yet, ask once with AskUserQuestion:
+   "Save this login state to `SITE/auth.json`? Headless runs (`expl-bot-independent-*`) can start logged in from
+   it, and a mid-run login that expired can be restored from it — but only while the session cookie inside is
+   still valid (some apps, such as saucedemo, expire it after about 12 minutes, so the file is then useless
+   soon after saving). It holds cookies = a login secret (git-ignored; do not share)."
+   Options: Yes (recommended) / No. Yes → `playwright-cli -s=<SESSION> state-save
+   .workflow-artifacts/expl-bot/sites/<HOST>/auth.json` and write `Login state: saved` to `RUN/meta.md`; No →
+   `Declined: save login state`. Never save without the yes (an earlier, explicit "save it" in this chat counts as
+   the yes; then skip the question). Never print the file's contents. If the session shows a login page mid-run
+   and `auth.json` exists, `state-load` it and reload once; **a cookie whose `expires` is already in the past
+   cannot restore the login** (check the `expires` of the session cookie without printing its value), so do not
+   retry it: ask the user to log in again, then `state-save` again to refresh the file. Tell testers in their
+   prompt when the app's session is short-lived so they return `NEEDS_USER: login required` at once instead of
+   trying `state-load`.
 4. Load knowledge for the URL (paths only) and tell the user the line `Knowledge: N files · Experience:
    <yes/no> · Research cache: <fresh/stale/none> · Style: <style> · Session: <SESSION> · Run: <RUN_ID>`.
 5. `--from <ISSUEKEY>`: check the expl1 files exist (read-only); say what was found.
@@ -160,10 +175,8 @@ rules the app does not show. Never invent them.
      the fresh research and the same pages, and skips scenarios already covered." Yes → copy `RUN/pages.md`
      into the new run, re-research only pages whose research is stale (> 6 h), go back to Step 3 with a new
      `RUN_ID` (write its `meta.md`), keeping the browser session.
-   - **Save the login state** of this session for headless runs (`expl-bot-independent-*`)? It is stored as
-     cookies in `SITE/auth.json` (git-ignored, but it is a login secret — do not share it). If yes —
-     `playwright-cli -s=<SESSION> state-save .workflow-artifacts/expl-bot/sites/<HOST>/auth.json`. Never save
-     it without the user's yes.
+   - **Refresh the saved login** only when Step 1 saved `SITE/auth.json` and the session had to be re-logged-in
+     since (otherwise this question is not asked; the save itself is offered in Step 1, right after the login).
    - **Close the browser session** `<SESSION>`? (The login stays in the persistent profile.) If yes —
      `playwright-cli -s=<SESSION> close`. `delete-data` only if the user asks.
 1. Delete the scratch you created (`RUN/scripts/`, `RUN/out/`), keep the rest. Check `git status --porcelain`
