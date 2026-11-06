@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-Not an application. It is a **Claude Code skill pipeline for manual QA of one task/bug at a time**. All the real content lives in `.claude/skills/` as Markdown skills (`SKILL.md` + `references/` + `setup-guide.md`). The only code is the stock Playwright scaffold (`playwright.config.ts`, `tests/example.spec.ts`), which is not part of the pipeline. `package.json` has no scripts; the only dependencies are `@playwright/test` and `@types/node`.
+Not an application. It is a **Claude Code skill pipeline for manual QA of one task/bug at a time**. All the real content lives in `.claude/skills/` as Markdown skills (`SKILL.md` + `references/` + `setup-guide.md`). The only code is the stock Playwright scaffold (`playwright.config.ts`, `tests/example.spec.ts`), which is not part of the pipeline, plus the Flow 2 runner (`scripts/expl-bot-run.ts`, scripts `expl-bot:run` / `expl-bot:typecheck`) and the Flow 3 config (`explorbot.config.mjs`). Dependencies: `@playwright/test`, `@types/node`, `@anthropic-ai/claude-agent-sdk`, `dotenv`, `tsx`, `typescript`, and `explorbot` (dev).
 
 ## The pipeline
 
@@ -68,8 +68,17 @@ the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from 
   yes in Flow 1); never print them. The Express server (SSE, batch jobs) and Docker are written up as "Future
   updates — run pipeline" in `README.md` and are **not built**; do not add them unprompted. Changing a compact's
   fields means changing `colors.ts` (`printFinalSummary`) and the orchestrator skill together.
+- **Flow 3, `explorbot-run`** wraps the real explorbot CLI (`explorbot@0.6.2`, dev dependency; its own models and
+  `OPENROUTER_API_KEY` in `.env`, billed by the provider — not Claude Code). Config is `explorbot.config.mjs`
+  (`.mjs`: the package is CommonJS and an ES-module `.js` config does not load). Its `dirs.knowledge` points at
+  `.workflow-artifacts/expl-bot/sites/<host>/knowledge` so Flow 1 and Flow 3 share human facts; `experience` and
+  `output` live in `.workflow-artifacts/explorbot/`. Use only non-TUI commands on Windows; never trust the exit
+  code for pass/fail (read `reports/<mode>-<session>.md`); never read or print `.env`; credentials only via
+  `--auth` for one run. Every explorbot command needs the key at startup. Bridge mode runs a Flow 1 `plan.md`
+  with `explorbot test`; keep the plan format explorbot-compatible when editing `expl-bot-plan`.
 - Status: the skills were written against explorbot's sources and the three scripts were run against a local
-  test page; a full end-to-end run on a real app has not been done yet.
+  test page; a full end-to-end run on a real app has not been done yet. Flow 3 was verified only up to
+  `explorbot config --json` (models and dirs resolve); running its commands needs the user's OpenRouter key.
 
 ## External dependencies
 

@@ -9,6 +9,7 @@ The repo is meant to grow. Each flow is a self-contained family of skills with i
 | **Explorer 1** | `expl1-*` | End-to-end QA pipeline for one task or bug: ticket → requirements → checklist → test cases → PR review → impact analysis → browser testing | Working |
 | **Exploratory bot (semi-auto)** | `expl-bot-*` | [explorbot](https://github.com/testomatio/explorbot)'s agent crew on Claude Code (no API key): research a page → plan scenarios → test → report → learn | New, untested on a real app |
 | **Exploratory bot (unattended)** | `expl-bot-independent-*` | Same crew, headless, driven by `npm run expl-bot:run` (Claude Agent SDK); never asks the user | New, untested on a real app |
+| **explorbot as-is** | `explorbot-run` | The real [explorbot](https://github.com/testomatio/explorbot) npm package with its own models and API key, behind a thin wrapper skill; can run an `expl-bot-*` plan | Config verified; needs your OpenRouter key to run |
 
 More flows will be added next to it under `.claude/skills/`.
 
@@ -343,6 +344,47 @@ Not implemented. Planned, modeled on `user-story-to-test-case-agent-generator`:
 - **Docker.** `Dockerfile` (Node 24 + `playwright-cli` + Chromium, `.workflow-artifacts` as a volume) and
   `docker-compose.yml` / `docker-compose.prod.yml`.
 
+### Flow 3: explorbot as-is (`explorbot-run`)
+
+The real explorbot, installed as a dev dependency (`explorbot@0.6.2`, Node ≥ 24). It uses **its own models and a
+pay-per-token API key**, not Claude Code. Useful as a baseline to compare the `expl-bot-*` results against.
+
+1. `npm install`, then `npx playwright install chromium` if the browser is missing.
+2. Put `OPENROUTER_API_KEY` in `.env` (copy `.env.sample`; `.env` is git-ignored). Leave `TESTOMATIO` and the
+   `LANGFUSE_*` variables empty unless you want run data sent to those services.
+3. `explorbot.config.mjs` (`.mjs` because this package is CommonJS) sets the URL from `EXPLORBOT_URL` /
+   `EXPL_BOT_URL`, the bundled OpenRouter model recommendations, a visible browser, and:
+
+   | explorbot dir | Location |
+   | ------------- | -------- |
+   | `knowledge` | `.workflow-artifacts/expl-bot/sites/<host>/knowledge`, **shared with the `expl-bot-*` flows** (one source of human facts, same frontmatter format) |
+   | `experience`, `output` | `.workflow-artifacts/explorbot/{experience,output}` (apart from Flow 1: explorbot writes runnable tests and its own reports there) |
+
+4. Use the **non-TUI** commands on Windows (the TUI needs Windows Terminal + WSL), through the skill or directly:
+
+   ```
+   /explorbot-run config                        # npx explorbot config --json
+   /explorbot-run navigate /products            # pre-flight, exit 1 if unreachable
+   /explorbot-run research /products [--deep]
+   /explorbot-run plan /products --focus "…"
+   /explorbot-run explore /products --max-tests 2 --max-duration 10
+   /explorbot-run test <plan.md> '*'
+   /explorbot-run bridge <RUN_ID>               # run a Flow 1 plan.md through explorbot
+   ```
+
+The skill reads the report explorbot wrote (`.workflow-artifacts/explorbot/output/reports/<mode>-<session>.md`) and
+never trusts the exit code for pass/fail. **Bridge mode** works because Flow 1 writes `runs/<RUN_ID>/plan.md` in
+explorbot's own plan format.
+
+Notes:
+- Every command, including `context`, needs the key at startup (the bundled decision model requires
+  `OPENROUTER_API_KEY`), even when it makes no AI calls. `config --json` works without it.
+- Explorbot's data protection is not the own-data-only policy of Flow 1/2. On an app with real data prefer
+  `bridge`/`test` with a Flow 1 plan over a free `explore`.
+- `npm install` reports vulnerabilities in explorbot's dependency tree (`npm audit`); they are in a dev-only tool.
+- Optional: `npx explorbot prima verify|ask` against an open Flow 1 browser session. Explorbot's own review
+  recommends `playwright-cli` for driving and `prima` only for `verify`/`ask`; it needs the key as well.
+
 ---
 
 ## Repository layout
@@ -353,7 +395,8 @@ Not implemented. Planned, modeled on `user-story-to-test-case-agent-generator`:
 ├── README.md                      This file
 ├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck
 ├── scripts/                       expl-bot-run.ts (Flow 2 runner) and utils/colors.ts
-├── .env.sample                    Env template for the runner (copy to .env, git-ignored)
+├── .env.sample                    Env template for the runner and explorbot (copy to .env, git-ignored)
+├── explorbot.config.mjs           Config for Flow 3 (explorbot as-is)
 ├── playwright.config.ts           Stock Playwright scaffold (not used by the pipeline)
 ├── tests/example.spec.ts          Stock Playwright example
 ├── .claude/
@@ -369,6 +412,8 @@ Not implemented. Planned, modeled on `user-story-to-test-case-agent-generator`:
 │   │   ├── expl1-8-web-testing/
 │   │   ├── expl-bot-orchestrator/ Exploratory flow (semi-auto), see above
 │   │   ├── expl-bot-{research,plan,test,report,learn}/
+│   │   ├── expl-bot-independent-orchestrator/  Unattended twin (Flow 2)
+│   │   ├── explorbot-run/         Wrapper for the real explorbot CLI (Flow 3)
 │   │   ├── expl-bot-core/         Shared rules, formats and run-code scripts (not a stage)
 │   │   └── playwright-cli/        Browser automation skill used by stage 8 and expl-bot-*
 │   ├── agents/                    Subagents: expl-bot-researcher, expl-bot-tester
