@@ -64,7 +64,10 @@ user asks) `tests/expl-bot/<scenario-slug>.spec.ts` drafts.
    `tests/expl-bot/<scenario-slug>.spec.ts` per the "Historian" part of `report-format.md`, from the `CODE:`
    lines and the verified expected results. Create the folder with the Write tool. Logins come from the
    environment (`process.env`), in one shared `tests/expl-bot/helpers.ts`; mark locators the result blocks
-   did not record as `NOT VERIFIED`. These are drafts; do not run them against the user's app unless asked. After writing, list the files — they are new tracked files in this
-   repo, so say so.
+   did not record as `NOT VERIFIED`. **A PASSED scenario that is cited in a report Defect** (its `Affects:` line
+   or the `>` notes behind it) is written with the **correct-behaviour assertion**, not with the buggy behaviour
+   it observed, and is marked as a known failing test that points to the Defect (`report-format.md`,
+   "Historian"). These are drafts; do not run them against the user's app unless asked. After writing, list the
+   files, say which ones are expected to fail and why — they are new tracked files in this repo, so say so.
 9. **Final response**: path of the report, counters of defects by severity, execution issues count, leftover
    data, and the test drafts if any. Offer `/expl-bot-learn`.
