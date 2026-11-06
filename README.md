@@ -284,6 +284,9 @@ into Claude Code. **Claude Code is the brain, `playwright-cli` is the hands, no 
 Every skill is also runnable alone (for example `/expl-bot-research https://app/products --deep`). Shared rules,
 formats and scripts live in `expl-bot-core` (not a stage).
 
+**New to it?** Read [`docs/expl-bot-flows.md`](docs/expl-bot-flows.md): what the bot is (and is not), how it
+differs from `expl1-*`, and example sessions for each orchestrator and each skill.
+
 What is ported from explorbot: cheap workers with heavy context + a smart manager (subagents vs. main session);
 the Researcher's UI map with tested locators and a 6 h cache; planning styles ranked **data change > state
 change > UI-only**; the Tester loop (≤ 30 actions, only the latest snapshot kept, dead-loop detection by state

@@ -48,7 +48,10 @@ receives the page's snapshots or the full map.
 6. **State**: update `SITE/state.json` → `researchedAt[<page-key>]` (ISO time).
 7. **Report in chat** (≤ 12 lines): path, purpose, sections with control counts, locator verification
    (`ok/total`), feature areas, risks. Offer the next step: `/expl-bot-plan` (or `--deep` if the page has
-   hidden UI that was not explored).
+   hidden UI that was not explored). Interactive runs: when the mode was `standard` and the research names
+   hidden UI that was not opened, **ask** (AskUserQuestion, recommend yes): "Run deep research (opens and
+   closes menus, tabs, dropdowns, modals; submits nothing)?" Yes → re-run with `--deep --fresh`. With
+   `--independent` never ask.
 
 ## Do not
 

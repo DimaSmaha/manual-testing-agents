@@ -44,6 +44,7 @@ exploratory-testing agent crew that needs its own API key. Here Claude Code is t
 | `tester-loop.md` | executing a scenario (tester) |
 | `pilot-stuck-patterns.md` | a tester returned `STUCK` or is looping |
 | `report-format.md` | writing the report / historian tests |
+| `test-cases-format.md` | writing `test-cases.md` (readable view of `plan.md`) |
 | `memory-formats.md` | reading/writing knowledge, experience, state.json, plan.md |
 | `run-context.md` | **first**, in every `expl-bot-*` skill: names (HOST, SESSION, RUN_ID), browser, asking the user, scratch |
 

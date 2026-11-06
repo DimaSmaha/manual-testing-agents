@@ -10,7 +10,7 @@ plan use **explorbot's own formats** so Flow 3 (`npx explorbot`) reads the same 
   sites/<host>/research/<page-key>.md     UI maps (ui-map-format.md)
   sites/<host>/state.json                 style rotation + tested scenarios
   sites/<host>/auth.json                  optional playwright-cli state-save (cookies = a login secret; only with the user's yes)
-  runs/<RUN_ID>/plan.md  results/<n>.md  report.md  screenshots/  scripts/  out/
+  runs/<RUN_ID>/plan.md  test-cases.md  results/<n>.md  report.md  screenshots/  scripts/  out/
 ```
 
 `<host>` = hostname with the port when not default (`localhost-3000`). `<page-key>` is defined in

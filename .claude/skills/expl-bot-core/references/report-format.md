@@ -104,5 +104,7 @@ For each `PASSED` scenario, `expl-bot-report` may write `tests/expl-bot/<scenari
 - Record each verified expected result as an `expect(...)` that mirrors the check you ran. If a check cannot be
   expressed in Playwright, add `// NOT VERIFIED: <expected>` instead of a weaker assertion.
 - Names that carry the RUN_ID become `\`${runId}\`` or a const at the top; the test must create its own data.
-- Never include credentials. Use `process.env.<NAME>` placeholders and a comment.
+- Never include credentials. Use `process.env.<NAME>` placeholders and a comment. Put the login in one shared
+  `tests/expl-bot/helpers.ts` (with the other locator helpers) instead of repeating it in every spec; a locator
+  the result blocks did not record is marked `NOT VERIFIED` in a comment at the top of the spec.
 - These are drafts: do not run them against the user's app unless the user asks.

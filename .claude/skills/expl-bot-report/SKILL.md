@@ -55,10 +55,14 @@ user asks) `tests/expl-bot/<scenario-slug>.spec.ts` drafts.
    the user's request here.)
 7. Write `RUN/report.md` with the template, omitting empty sections (not *Data created*). Check: one
    top-level heading, headline ≤ 2 sentences without counts, no banned words from the brevity rules.
-8. **Historian (only with `--tests` or when asked)**: for each PASSED scenario write
+8. **Historian**. Without `--tests` and when the user has not already said no: in an interactive run
+   (no `--independent`) ask once, recommending yes: "Write runnable Playwright drafts for the passed
+   scenarios into `tests/expl-bot/`? (new files in this repo)". With `--independent` never ask and write
+   drafts only when `--tests` is passed. For each PASSED scenario write
    `tests/expl-bot/<scenario-slug>.spec.ts` per the "Historian" part of `report-format.md`, from the `CODE:`
-   lines and the verified expected results. Create the folder with the Write tool. These are drafts; do not run
-   them against the user's app unless asked. After writing, list the files — they are new tracked files in this
+   lines and the verified expected results. Create the folder with the Write tool. Logins come from the
+   environment (`process.env`), in one shared `tests/expl-bot/helpers.ts`; mark locators the result blocks
+   did not record as `NOT VERIFIED`. These are drafts; do not run them against the user's app unless asked. After writing, list the files — they are new tracked files in this
    repo, so say so.
 9. **Final response**: path of the report, counters of defects by severity, execution issues count, leftover
    data, and the test drafts if any. Offer `/expl-bot-learn`.

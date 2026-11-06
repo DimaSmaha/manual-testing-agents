@@ -47,8 +47,12 @@ the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from 
 | `expl-bot-core` | Shared references and `run-code` scripts; not a stage, writes no artifacts |
 
 - Data lives in `.workflow-artifacts/expl-bot/` (`sites/<host>/{knowledge,experience,research}`, `state.json`,
-  `runs/<RUN_ID>/{plan.md,results/,report.md,screenshots/,scripts/,out/}`). `RUN_ID` = `eb-YYMMDD-HHMM`. Knowledge
+  `runs/<RUN_ID>/{plan.md,test-cases.md,results/,report.md,screenshots/,scripts/,out/}`). `RUN_ID` = `eb-YYMMDD-HHMM`. Knowledge
   and plan formats are explorbot-compatible (Flow 3 reads them).
+- **Flow 1 offers every optional feature** (deep research, style, runnable `tests/expl-bot/` drafts, knowledge,
+  another round, saving the login, closing the browser): the orchestrator's "Optional features" table lists
+  what to ask and when; declines are recorded in `RUN/meta.md`. Flow 2 never asks and keeps `--deep`,
+  `--style`, `--tests` as explicit flags. Keep the table, the stage skills and `README.md` in step.
 - **Own data only**: a run creates/edits/deletes only records it created itself, named with the RUN_ID.
   Pre-existing data is never touched (`expl-bot-core/references/data-protection.md`). Preserve this rule when
   editing the skills and agents.

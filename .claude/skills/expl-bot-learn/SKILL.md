@@ -55,6 +55,9 @@ Formats: `.claude/skills/expl-bot-core/references/memory-formats.md`. Paths: `SI
 4. Update `SITE/state.json` → `testedScenarios` for scenarios that are not yet listed (the orchestrator normally
    did this; check, do not duplicate).
 5. If a file now exceeds ~40 blocks or ~400 lines, run **compact**.
+6. Interactive run (no `--independent`): after writing, ask once whether the user has human facts for this site
+   to store (preconditions, test data, rules the app does not show) and, if yes, continue with the
+   **Knowledge** mode using their words. Do not ask when the orchestrator already did.
 
 ## Compact
 
