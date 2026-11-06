@@ -4,12 +4,12 @@ A collection of **AI agents (Claude Code skills) that automate manual QA flows**
 
 The repo is meant to grow. Each flow is a self-contained family of skills with its own prefix. Right now there is one flow:
 
-| Flow           | Prefix    | What it does                                                                                                                               | Status  |
-| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| **Explorer 1** | `expl1-*` | End-to-end QA pipeline for one task or bug: ticket → requirements → checklist → test cases → PR review → impact analysis → browser testing | Working |
-| **Exploratory bot (semi-auto)** | `expl-bot-*` | [explorbot](https://github.com/testomatio/explorbot)'s agent crew on Claude Code (no API key): research a page → plan scenarios → test → report → learn | New, untested on a real app |
-| **Exploratory bot (unattended)** | `expl-bot-independent-*` | Same crew, headless, driven by `npm run expl-bot:run` (Claude Agent SDK); never asks the user | New, untested on a real app |
-| **explorbot as-is** | `explorbot-run` | The real [explorbot](https://github.com/testomatio/explorbot) npm package with its own models and API key, behind a thin wrapper skill; can run an `expl-bot-*` plan | Config verified; needs your OpenRouter key to run |
+| Flow                             | Prefix                   | What it does                                                                                                                                                         | Status                                            |
+| -------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **Explorer 1**                   | `expl1-*`                | End-to-end QA pipeline for one task or bug: ticket → requirements → checklist → test cases → PR review → impact analysis → browser testing                           | Working                                           |
+| **Exploratory bot (semi-auto)**  | `expl-bot-*`             | [explorbot](https://github.com/testomatio/explorbot)'s agent crew on Claude Code (no API key): research a page → plan scenarios → test → report → learn              | New, untested on a real app                       |
+| **Exploratory bot (unattended)** | `expl-bot-independent-*` | Same crew, headless, driven by `npm run expl-bot:run` (Claude Agent SDK); never asks the user                                                                        | New, untested on a real app                       |
+| **explorbot as-is**              | `explorbot-run`          | The real [explorbot](https://github.com/testomatio/explorbot) npm package with its own models and API key, behind a thin wrapper skill; can run an `expl-bot-*` plan | Config verified; needs your OpenRouter key to run |
 
 More flows will be added next to it under `.claude/skills/`.
 
@@ -272,14 +272,14 @@ into Claude Code. **Claude Code is the brain, `playwright-cli` is the hands, no 
 /expl-bot-orchestrator <url|path> [--focus "…"] [--style normal|curious|psycho] [--max-tests N] [--deep] [--from <ISSUEKEY>]
 ```
 
-| Step | Skill | Who does the work | Output |
-| ---- | ----- | ----------------- | ------ |
-| 1 | (orchestrator preflight) | main session; opens a headed `--persistent` session `expl-<host>`, you log in | `runs/<RUN_ID>/meta.md` |
-| 2 | `expl-bot-research` | subagent `expl-bot-researcher` (Sonnet) | `sites/<host>/research/<page-key>.md`: UI map, locators tested against the live page |
-| 3 | `expl-bot-plan` | main session; style rotates normal → curious → psycho; **you approve the plan** | `runs/<RUN_ID>/plan.md` (explorbot plan format) |
-| 4 | `expl-bot-test` | subagent `expl-bot-tester` (Sonnet), one at a time; main session is the Pilot and resumes a `STUCK` tester up to twice | `runs/<RUN_ID>/results/<n>.md` |
-| 5 | `expl-bot-report` | main session | `runs/<RUN_ID>/report.md` (Coverage / What works / Defects / UX / Execution Issues / Data created); optional `tests/expl-bot/*.spec.ts` drafts |
-| 6 | `expl-bot-learn` | main session | `sites/<host>/experience/<page-key>.md`, `knowledge/*.md`, `state.json` |
+| Step | Skill                    | Who does the work                                                                                                      | Output                                                                                                                                         |
+| ---- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | (orchestrator preflight) | main session; opens a headed `--persistent` session `expl-<host>`, you log in                                          | `runs/<RUN_ID>/meta.md`                                                                                                                        |
+| 2    | `expl-bot-research`      | subagent `expl-bot-researcher` (Sonnet)                                                                                | `sites/<host>/research/<page-key>.md`: UI map, locators tested against the live page                                                           |
+| 3    | `expl-bot-plan`          | main session; style rotates normal → curious → psycho; **you approve the plan**                                        | `runs/<RUN_ID>/plan.md` (explorbot plan format)                                                                                                |
+| 4    | `expl-bot-test`          | subagent `expl-bot-tester` (Sonnet), one at a time; main session is the Pilot and resumes a `STUCK` tester up to twice | `runs/<RUN_ID>/results/<n>.md`                                                                                                                 |
+| 5    | `expl-bot-report`        | main session                                                                                                           | `runs/<RUN_ID>/report.md` (Coverage / What works / Defects / UX / Execution Issues / Data created); optional `tests/expl-bot/*.spec.ts` drafts |
+| 6    | `expl-bot-learn`         | main session                                                                                                           | `sites/<host>/experience/<page-key>.md`, `knowledge/*.md`, `state.json`                                                                        |
 
 Every skill is also runnable alone (for example `/expl-bot-research https://app/products --deep`). Shared rules,
 formats and scripts live in `expl-bot-core` (not a stage).
@@ -317,12 +317,12 @@ npm run expl-bot:run -- http://localhost:3000/products --max-tests 2 [--focus "�
 
 Or inside Claude Code chat: `/expl-bot-independent-orchestrator <url> …` (explicit invocation only).
 
-| Piece | File |
-| ----- | ---- |
-| Orchestrator skill | `.claude/skills/expl-bot-independent-orchestrator/SKILL.md` |
-| Overrides every stage skill follows with `--independent` | `expl-bot-core/references/run-context.md`, "Independent mode" |
-| Runner (Agent SDK `query()`, SIGINT, summary, exit codes) | `scripts/expl-bot-run.ts`, `scripts/utils/colors.ts` |
-| Env template | `.env.sample` |
+| Piece                                                     | File                                                          |
+| --------------------------------------------------------- | ------------------------------------------------------------- |
+| Orchestrator skill                                        | `.claude/skills/expl-bot-independent-orchestrator/SKILL.md`   |
+| Overrides every stage skill follows with `--independent`  | `expl-bot-core/references/run-context.md`, "Independent mode" |
+| Runner (Agent SDK `query()`, SIGINT, summary, exit codes) | `scripts/expl-bot-run.ts`, `scripts/utils/colors.ts`          |
+| Env template                                              | `.env.sample`                                                 |
 
 - **Exit codes:** `0` ok · `2` bad input, pipeline error or stopped early (`STOPPED:`/`STOP:`) · `3` fatal ·
   `130` Ctrl+C (the browser session `expl-<host>` is closed in every case).
@@ -358,10 +358,10 @@ pay-per-token API key**, not Claude Code. Useful as a baseline to compare the `e
 3. `explorbot.config.mjs` (`.mjs` because this package is CommonJS) sets the URL from `EXPLORBOT_URL` /
    `EXPL_BOT_URL`, the bundled OpenRouter model recommendations, a visible browser, and:
 
-   | explorbot dir | Location |
-   | ------------- | -------- |
-   | `knowledge` | `.workflow-artifacts/expl-bot/sites/<host>/knowledge`, **shared with the `expl-bot-*` flows** (one source of human facts, same frontmatter format) |
-   | `experience`, `output` | `.workflow-artifacts/explorbot/{experience,output}` (apart from Flow 1: explorbot writes runnable tests and its own reports there) |
+   | explorbot dir          | Location                                                                                                                                           |
+   | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `knowledge`            | `.workflow-artifacts/expl-bot/sites/<host>/knowledge`, **shared with the `expl-bot-*` flows** (one source of human facts, same frontmatter format) |
+   | `experience`, `output` | `.workflow-artifacts/explorbot/{experience,output}` (apart from Flow 1: explorbot writes runnable tests and its own reports there)                 |
 
 4. Use the **non-TUI** commands on Windows (the TUI needs Windows Terminal + WSL), through the skill or directly:
 
@@ -380,6 +380,7 @@ never trusts the exit code for pass/fail. **Bridge mode** works because Flow 1 w
 explorbot's own plan format.
 
 Notes:
+
 - Every command, including `context`, needs the key at startup (the bundled decision model requires
   `OPENROUTER_API_KEY`), even when it makes no AI calls. `config --json` works without it.
 - Explorbot's data protection is not the own-data-only policy of Flow 1/2. On an app with real data prefer
@@ -486,6 +487,10 @@ Explorer 1 is based on the ideas and workflow shown in. Thanks a lot Anna ;) :
 
 - DOU forum post: <https://dou.ua/forums/topic/59970/>
 - Live stream: <https://www.youtube.com/live/YwTP0yveYzU>
+
+Explorbot skills are based on the ideas and workflow shown in. Thanks a lot Misha ;) :
+
+- Github: <https://github.com/testomatio/explorbot/>
 
 Public apps and repositories used as practice targets:
 
