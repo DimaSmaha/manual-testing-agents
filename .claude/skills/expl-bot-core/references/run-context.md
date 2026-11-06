@@ -17,9 +17,12 @@
 2. Called on its own: use the `RUN_ID` the user names; else the newest `BASE/runs/*` folder **if the user is
    continuing the same job**; else create a new run. State which one you use in the first chat line.
 3. Creating a run = writing `RUN/meta.md` with the Write tool (it creates the folders):
-   `RUN_ID`, start time, app URL, `HOST`, `SESSION`, style, focus, `--from` key, `--max-tests`. Never delete or
-   overwrite an existing run folder except for the single artifact the stage owns (re-running a stage deletes
-   and recreates ITS file; it never merges).
+   `RUN_ID`, start time, app URL, `HOST`, `SESSION`, style, focus, `--from` key, `--max-tests`, scope
+   (`page|pick|site`), `--max-pages`, `--pages`. Never delete or overwrite an existing run folder except for the
+   single artifact the stage owns (re-running a stage deletes and recreates ITS file; it never merges).
+
+`RUN/pages.md` (written by `expl-bot-discover`) lists the pages of a multi-page run; scope, discovery, the
+per-page loop and the page/test/time budgets are in `site-scope.md`.
 
 ## Browser
 
@@ -77,9 +80,12 @@ above is replaced by:
    (dismiss popup, `reload`, another route to the page, a knowledge hint) by resuming the subagent with a
    `NEXT:`. If it is still blocked, mark the scenario `BLOCKED` with the reason, record it and move on. Never
    wait for the user.
-6. **Budgets**: `--max-tests N` (default 5) and `--max-duration M` minutes (default 30). Before each scenario
-   check the elapsed time (`date +%s` against the start stored in `RUN/meta.md`); over budget → stop starting new
-   scenarios and go on to the report.
+6. **Budgets**: `--max-tests N` (default 5 for one page, 3 per in-scope page up to 24 for a site run),
+   `--max-duration M` minutes (default 30 for one page, 60 for a site run) and `--max-pages N` (default 8).
+   Before each scenario check the elapsed time (`date +%s` against the start stored in `RUN/meta.md`); over
+   budget → stop starting new scenarios and go on to the report.
+   **Scope**: the default is `--scope site` (`site-scope.md`); the run never asks which pages. `pick` is treated
+   as `site`. A page that cannot be researched is `SKIPPED`, only the start page can stop the run.
 7. **Scratch stays**: do not delete `RUN/scripts/` and `RUN/out/` (they live in the git-ignored run folder).
 8. **Output protocol**: at the end of each phase the orchestrator emits one `<!-- PHASE COMPACT: <label> -->`
    JSON block; stage skills only return their normal summaries.

@@ -43,8 +43,10 @@ Formats: `.claude/skills/expl-bot-core/references/memory-formats.md`. Paths: `SI
 ## Experience
 
 1. Read `RUN/results/*.md` and `RUN/plan.md`. Take PASSED scenarios.
-2. For each, group by `page-key` (from the start URL) and write to `SITE/experience/<page-key>.md` (create with
-   the frontmatter if missing; append, never overwrite other blocks):
+2. For each, group by `page-key` (from the scenario's own start URL, its `## Requirements` path in `plan.md`; a
+   multi-page run writes one experience file per page) and write to `SITE/experience/<page-key>.md` (create with
+   the frontmatter if missing; append, never overwrite other blocks). A scenario that crossed pages goes to the
+   page it started on; put a `>` line naming the other page(s) it touched:
    - `## FLOW: <imperative how-to that matches what the steps accomplished>` — the steps that ran (bulleted),
      one `js` block built from the `CODE:` lines (only actions that worked), then `>` discovery lines from
      `NOTES`, then `---`.

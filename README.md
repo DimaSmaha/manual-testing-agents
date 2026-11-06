@@ -270,13 +270,15 @@ into Claude Code. **Claude Code is the brain, `playwright-cli` is the hands, no 
 `expl1-*` pipeline (which stays unchanged); it can optionally read its artifacts with `--from <ISSUEKEY>`.
 
 ```
-/expl-bot-orchestrator <url|path> [--focus "…"] [--style normal|curious|psycho] [--max-tests N] [--deep] [--from <ISSUEKEY>]
+/expl-bot-orchestrator <url|path> [--scope page|site|pick] [--pages "<path>,…"] [--max-pages N] [--focus "…"] [--style normal|curious|psycho] [--max-tests N] [--deep] [--from <ISSUEKEY>]
 ```
 
 | Step | Skill                    | Who does the work                                                                                                      | Output                                                                                                                                         |
 | ---- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | (orchestrator preflight) | main session; opens a headed `--persistent` session `expl-<host>`, you log in                                          | `runs/<RUN_ID>/meta.md`                                                                                                                        |
-| 2    | `expl-bot-research`      | subagent `expl-bot-researcher` (Sonnet)                                                                                | `sites/<host>/research/<page-key>.md`: UI map, locators tested against the live page                                                           |
+| 1    | (orchestrator preflight) | main session; opens a headed `--persistent` session `expl-<host>`, you log in; asks the scope, depth, style, drafts    | `runs/<RUN_ID>/meta.md`                                                                                                                        |
+| 2a   | `expl-bot-research`      | subagent `expl-bot-researcher` (Sonnet), start page                                                                    | `sites/<host>/research/<page-key>.md`: UI map, locators tested against the live page                                                           |
+| 2b   | `expl-bot-discover`      | subagent `expl-bot-researcher` in `discover` mode (scope `pick`/`site`); with `pick` you choose the pages              | `runs/<RUN_ID>/pages.md`: pages of the app with a status each (in-scope, skipped-cap, needs-data, external, ignored)                           |
+| 2c   | `expl-bot-research`      | one page per call, one at a time, for every other in-scope page                                                        | one research file per page                                                                                                                     |
 | 3    | `expl-bot-plan`          | main session; style rotates normal → curious → psycho; **you approve the plan**                                        | `runs/<RUN_ID>/plan.md` (explorbot plan format)                                                                                                |
 | 4    | `expl-bot-test`          | subagent `expl-bot-tester` (Sonnet), one at a time; main session is the Pilot and resumes a `STUCK` tester up to twice | `runs/<RUN_ID>/results/<n>.md`                                                                                                                 |
 | 5    | `expl-bot-report`        | main session                                                                                                           | `runs/<RUN_ID>/report.md` (Coverage / What works / Defects / UX / Execution Issues / Data created); optional `tests/expl-bot/*.spec.ts` drafts |
@@ -284,6 +286,14 @@ into Claude Code. **Claude Code is the brain, `playwright-cli` is the hands, no 
 
 Every skill is also runnable alone (for example `/expl-bot-research https://app/products --deep`). Shared rules,
 formats and scripts live in `expl-bot-core` (not a stage).
+
+**Scope: one page or the whole app.** The stage skills work on one page each; the orchestrator decides which
+pages (`expl-bot-core/references/site-scope.md`). Flow 1 asks in Step 1: `pick` (recommended: it discovers the
+pages, shows the list and you choose), `site` (discover and cover everything up to `--max-pages`, default 8) or
+`page` (only the URL you gave). `--pages "/cart.html,/inventory-item.html?id=4"` names pages directly. Discovery is
+read-only: it follows links and navigation controls (never log out, submit, add to cart or pay), stays on the
+origin, and records pages that need data or a form submit as `needs-data` (listed as not covered in the report, not
+researched in this version). One plan covers all researched pages (about 3 scenarios per page, at most 24).
 
 **New to it?** Read [`docs/expl-bot-flows.md`](docs/expl-bot-flows.md): what the bot is (and is not), how it
 differs from `expl1-*`, and example sessions for each orchestrator and each skill.
@@ -306,14 +316,17 @@ files use explorbot's own formats.
 
 The same crew, rules, stage skills and subagents, driven headlessly by a Claude Agent SDK script. It **never asks
 the user**: missing input means stop-and-report. No plan-approval checkpoint; browser is headless unless
-`--headed`; budgets `--max-tests` (default 5) and `--max-duration` minutes (default 30); a blocker gets one
+`--headed`; the scope defaults to `site` (start URL plus discovered pages, `--max-pages` default 8; `--scope page`
+restores the single-page run); budgets `--max-tests` (default 5 for one page, 3 per page up to 24 for a site) and
+`--max-duration` minutes (default 30 for one page, 60 for a site); a blocker gets one
 attempt to unblock, then the scenario is `BLOCKED` and the run moves on. After each phase the orchestrator emits a
 `<!-- PHASE COMPACT -->` JSON block (same protocol as `flow-1a-gt-us-to-tc` in
 `user-story-to-test-case-agent-generator`), which the runner parses for the live log and the final summary.
 
 ```
 cp .env.sample .env            # set EXPL_BOT_URL / auth, see below
-npm run expl-bot:run -- http://localhost:3000/products --max-tests 2 [--focus "…"] [--style curious] [--deep] [--headed] [--from TASK-112]
+npm run expl-bot:run -- http://localhost:3000/products --scope page --max-tests 2 [--focus "…"] [--style curious] [--deep] [--headed] [--from TASK-112]
+npm run expl-bot:run -- http://localhost:3000/ --max-pages 6        # whole site: discovers pages, 3 scenarios per page
 ```
 
 Or inside Claude Code chat: `/expl-bot-independent-orchestrator <url> …` (explicit invocation only).
@@ -399,13 +412,13 @@ no stage skill or agent mentions them. They are ported from the agent-metrics ho
 `suvore-qa-confa` mock (`agent-metrics.mjs` + `metrics-report.mjs` and their libs) and adapted, because
 here the stages are skills in the main chat, not subagents.
 
-| What | How it is measured |
-|---|---|
+| What                                                                                                               | How it is measured                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | One stage skill (`expl1-3-qa-checklist`, `expl-bot-plan`, …), launched by an orchestrator or typed as `/name args` | the window of the chat from its launch to the next skill; tokens are the assistant messages in it, summed once per message id from the session transcript |
-| `expl-bot-researcher` / `expl-bot-tester` subagents | their own transcripts, added to the stage that launched them (shown as `↳` rows, not added twice) |
-| An orchestrator | `<name> (own turns)` row plus all its stages; the **Σ row is the orchestrator's overall result** |
-| Time | **Active** = prompt → stop (the agent working); **Wall** = launch → last stop, including questions to you |
-| Key | `TASK-<id>` / `BUG-<id>` for `expl1-*`, the `eb-YYMMDD-HHMM` RUN_ID for `expl-bot-*` (resolved from skill args or the artifact paths the skill wrote) |
+| `expl-bot-researcher` / `expl-bot-tester` subagents                                                                | their own transcripts, added to the stage that launched them (shown as `↳` rows, not added twice)                                                         |
+| An orchestrator                                                                                                    | `<name> (own turns)` row plus all its stages; the **Σ row is the orchestrator's overall result**                                                          |
+| Time                                                                                                               | **Active** = prompt → stop (the agent working); **Wall** = launch → last stop, including questions to you                                                 |
+| Key                                                                                                                | `TASK-<id>` / `BUG-<id>` for `expl1-*`, the `eb-YYMMDD-HHMM` RUN_ID for `expl-bot-*` (resolved from skill args or the artifact paths the skill wrote)     |
 
 After every turn of a skill session the **Stop** hook prints one line, e.g.
 `SKILL_RUN_METRICS: skill=expl1-3-qa-checklist key=TASK-112 run=1/1 model=… active=95.2s tokens=212,345 cost=$0.41 …`.
@@ -462,7 +475,7 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 │   │   ├── expl1-7-impact-analysis/
 │   │   ├── expl1-8-web-testing/
 │   │   ├── expl-bot-orchestrator/ Exploratory flow (semi-auto), see above
-│   │   ├── expl-bot-{research,plan,test,report,learn}/
+│   │   ├── expl-bot-{research,discover,plan,test,report,learn}/
 │   │   ├── expl-bot-independent-orchestrator/  Unattended twin (Flow 2)
 │   │   ├── explorbot-run/         Wrapper for the real explorbot CLI (Flow 3)
 │   │   ├── expl-bot-core/         Shared rules, formats and run-code scripts (not a stage)
@@ -540,6 +553,10 @@ Explorer 1 is based on the ideas and workflow shown in. Thanks a lot Anna ;) :
 Explorbot skills are based on the ideas and workflow shown in. Thanks a lot Misha ;) :
 
 - Github: <https://github.com/testomatio/explorbot/>
+
+Metrics hooks are based on the ideas and workflow shown in. Thanks a lot Kostia ;) :
+
+- Github: <https://github.com/dneprokos/suvore-qa-confa-test-automation>
 
 Public apps and repositories used as practice targets:
 

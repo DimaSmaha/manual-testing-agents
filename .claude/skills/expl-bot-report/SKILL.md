@@ -36,6 +36,8 @@ user asks) `tests/expl-bot/<scenario-slug>.spec.ts` drafts.
 ## Workflow
 
 1. **Resolve** the run. Read `plan.md` (titles, priorities, outcome categories) and every `results/<n>.md`.
+   If `RUN/pages.md` exists (multi-page run), read it too: it feeds *Coverage* and *Not covered*
+   (`report-format.md`, "Multi-page runs").
 2. **Walk every scenario** by the rules in `report-format.md`:
    - PASSED: verified goal + all expected results PASSED/justified NOT VERIFIED → *What works*; a PASSED
      with an empty or vacuous check, or where submitted data ≠ title → *Execution Issues* (false positive).

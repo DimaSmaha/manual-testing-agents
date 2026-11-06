@@ -41,7 +41,9 @@ The main context only ever sees the compact result blocks.
 3. **Per scenario** (in plan order):
    a. Compute `START_URL` (base URL from `SITE`/`meta.md` + the scenario's `## Requirements` path, else the
       suite's prerequisite).
-   b. Find the page's `page-key`; collect `RESEARCH`, `KNOWLEDGE` paths, `EXPERIENCE` path.
+   b. Find the page's `page-key`; collect `RESEARCH`, `KNOWLEDGE` paths, `EXPERIENCE` path. In a multi-page plan
+      every scenario gets the research / experience of **its own** page (its `## Requirements` URL); if the
+      scenario crosses to another researched page, add that page's `RESEARCH` path too.
    c. Launch the subagent: `Agent` with `subagent_type: expl-bot-tester` and a prompt containing `SESSION`,
       `RUN_ID`, `HOST`, `N`, `START_URL`, the scenario block verbatim, and the three paths. Remember the agent
       id for a possible resume.
@@ -58,7 +60,8 @@ The main context only ever sees the compact result blocks.
         If the user says skip → keep `BLOCKED` with the reason.
       - `BLOCKED` otherwise (capability missing, precondition unmet, pre-existing data) → keep it, move on.
    f. After each scenario print one line: `S<n> <STATUS> — <title>`.
-4. **Bookkeeping** (once, after the loop): append to `SITE/state.json` → `testedScenarios[<page-key>]`:
+4. **Bookkeeping** (once, after the loop): append to `SITE/state.json` → `testedScenarios[<page-key>]` (the key
+   of the page each scenario started on):
    title, area, outcome (from the plan comment), status, the steps that ran. Only the main session writes this
    file.
 5. **Browser state check**: `snapshot` to see where the browser ended up; if a modal of the last scenario

@@ -55,6 +55,7 @@ standout problem is. No counts, no "N tests run". Talk about the product, not th
 ## Coverage
 - Pages: <paths>
 - Features: <capabilities>
+- Not covered: <page — reason; only when RUN/pages.md exists and has such rows>
 
 ## What works
 - **<feature>** — `S2 <title>`, `S7 <title>`
@@ -77,6 +78,18 @@ Evidence: <one short observation, screenshot path if any>
 ## Data created by this run
 - <name> — removed | left in place
 ```
+
+## Multi-page runs
+
+When `RUN/pages.md` exists:
+
+- *Coverage → Pages* lists every page that had at least one executed scenario (path only).
+- *Coverage → Not covered* has one entry per row with status `skipped-cap`, `unselected` or `needs-data`, as
+  `<page-key> — <reason>` (for example `checkout-step-two — needs a form submit`, `about — over the page limit`).
+  `external` and `ignored` rows are not listed. A page that was researched but whose scenarios were all
+  `BLOCKED`/not executed is listed under *Execution Issues*, not under *Not covered*.
+- *What works* groups by feature, not by page; one entry may cite scenarios from several pages.
+- Defect titles name the feature, and `Reproduce` names the page where it happened.
 
 ## Brevity rules
 

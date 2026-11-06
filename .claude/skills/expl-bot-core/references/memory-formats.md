@@ -11,6 +11,7 @@ plan use **explorbot's own formats** so Flow 3 (`npx explorbot`) reads the same 
   sites/<host>/state.json                 style rotation + tested scenarios
   sites/<host>/auth.json                  optional playwright-cli state-save (cookies = a login secret; only with the user's yes)
   runs/<RUN_ID>/plan.md  test-cases.md  results/<n>.md  report.md  screenshots/  scripts/  out/
+  runs/<RUN_ID>/pages.md                  pages of a multi-page run (site-scope.md)
 ```
 
 `<host>` = hostname with the port when not default (`localhost-3000`). `<page-key>` is defined in
@@ -111,11 +112,15 @@ await page.getByRole('button', { name: 'Close' }).click();
         "outcome": "data", "status": "PASSED", "steps": ["Click 'New product'", "Fill 'Name'", "Click 'Save'"] }
     ]
   },
-  "researchedAt": { "products": "2026-11-06T14:32:00Z" }
+  "researchedAt": { "products": "2026-11-06T14:32:00Z" },
+  "pages": {
+    "products": { "url": "/products", "title": "Products", "discoveredAt": "2026-11-06T14:30:00Z" }
+  }
 }
 ```
 
-Updated by the orchestrator after each run (not by subagents). `outcome` is `data | state | ui`.
+Updated by the orchestrator after each run (not by subagents). `outcome` is `data | state | ui`. `pages` is
+written by `expl-bot-discover` (a record of the pages found; optional, older files do not have it).
 
 ## Plan file (`runs/<RUN_ID>/plan.md`) — explorbot test-plan format
 

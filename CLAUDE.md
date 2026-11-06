@@ -40,6 +40,7 @@ the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from 
 |---|---|
 | `expl-bot-orchestrator` | Captain; launches the stage skills, asks before advancing; never edits their files |
 | `expl-bot-research` + subagent `expl-bot-researcher` (`.claude/agents/`) | Researcher: UI map with tested locators |
+| `expl-bot-discover` (same subagent, `MODE: discover`) | Finds the app's pages (read-only navigation) and writes `RUN/pages.md`; gives a run its scope |
 | `expl-bot-plan` | Planner: styles normal/curious/psycho, user approves the plan |
 | `expl-bot-test` + subagent `expl-bot-tester` | Tester; the main session is the Pilot (`STUCK` → `PROGRESS:`/`NEXT:`, resume ≤ 2) |
 | `expl-bot-report` | Analyst (+ Historian: `tests/expl-bot/*.spec.ts` drafts) |
@@ -47,9 +48,16 @@ the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from 
 | `expl-bot-core` | Shared references and `run-code` scripts; not a stage, writes no artifacts |
 
 - Data lives in `.workflow-artifacts/expl-bot/` (`sites/<host>/{knowledge,experience,research}`, `state.json`,
-  `runs/<RUN_ID>/{plan.md,test-cases.md,results/,report.md,screenshots/,scripts/,out/}`). `RUN_ID` = `eb-YYMMDD-HHMM`. Knowledge
+  `runs/<RUN_ID>/{plan.md,test-cases.md,pages.md,results/,report.md,screenshots/,scripts/,out/}`). `RUN_ID` = `eb-YYMMDD-HHMM`. Knowledge
   and plan formats are explorbot-compatible (Flow 3 reads them).
-- **Flow 1 offers every optional feature** (deep research, style, runnable `tests/expl-bot/` drafts, knowledge,
+- **Scope** (`expl-bot-core/references/site-scope.md`): the stage skills are page-scoped, the orchestrators pick the
+  pages. `--scope page|site|pick`, `--pages`, `--max-pages` (default 8). Flow 1 asks (recommended `pick`); Flow 2
+  defaults to `site` and never asks. Discovery is read-only and writes `runs/<RUN_ID>/pages.md`; `needs-data`
+  pages are listed as not covered, never researched. One `plan.md` covers all researched pages (each test's
+  `## Requirements` = its page). Changing the `pages.md` format or the status names means changing
+  `site-scope.md`, the researcher agent (`discover` mode), `expl-bot-discover`, `expl-bot-plan`, `expl-bot-report`
+  and both orchestrators together.
+- **Flow 1 offers every optional feature** (scope, deep research, style, runnable `tests/expl-bot/` drafts, knowledge,
   another round, saving the login, closing the browser): the orchestrator's "Optional features" table lists
   what to ask and when; declines are recorded in `RUN/meta.md`. Flow 2 never asks and keeps `--deep`,
   `--style`, `--tests` as explicit flags. Keep the table, the stage skills and `README.md` in step.

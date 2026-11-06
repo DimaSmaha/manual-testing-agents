@@ -21,7 +21,7 @@ exploratory-testing agent crew that needs its own API key. Here Claude Code is t
 | Explorbot role | Here |
 |---|---|
 | Captain, Pilot, Planner judgement, Analyst | the main chat session, driven by `expl-bot-orchestrator` |
-| Researcher | subagent `expl-bot-researcher` (skill `expl-bot-research`) |
+| Researcher | subagent `expl-bot-researcher` (skill `expl-bot-research`; `discover` mode via skill `expl-bot-discover`) |
 | Planner | skill `expl-bot-plan` (rules: `planner-rules.md`, `planner-styles/*`) |
 | Tester | subagent `expl-bot-tester` (skill `expl-bot-test`) |
 | Pilot interventions | orchestrator + `pilot-stuck-patterns.md` |
@@ -40,6 +40,7 @@ exploratory-testing agent crew that needs its own API key. Here Claude Code is t
 | `capability-grounding.md` | planning or executing a scenario that needs a named action/feature |
 | `data-protection.md` | **always** (tester, planner, orchestrator) — own data only |
 | `ui-map-format.md` | researching a page / reading a research file |
+| `site-scope.md` | choosing which pages a run covers: scope modes, page discovery, `pages.md`, per-page loop, page/test/time budgets |
 | `planner-rules.md` + `planner-styles/<style>.md` | planning |
 | `tester-loop.md` | executing a scenario (tester) |
 | `pilot-stuck-patterns.md` | a tester returned `STUCK` or is looping |
@@ -64,6 +65,7 @@ the returned JSON. (Tested against a local page: all three scripts return valid 
 |---|---|
 | `page-state.js` | `url`, `path`, `title`, `headings`, `overlays`, `focused`, `stateKey`, `stateHash`, `pageKey` — the deterministic state key used for loop detection and for experience/research file names |
 | `interactive-map.js` | every visible interactive element: role, accessible name, id/name/data-testid/aria-label/href, state (disabled/checked/expanded/required), nearest section `kind` + `container`; plus iframes, duplicate role+name pairs and pagination hints |
+| `discover-links.js` | every visible `a[href]` (text, same-origin path or external origin) plus the controls that navigate without an href (`navButtons`): the discoverer's input for the click-and-record pass |
 | `locator-check.template.js` | a **template**. The researcher writes a copy into `runs/<RUN_ID>/scripts/` with its UI-map locators inlined in `CHECKS` and runs the copy; returns match counts per ARIA/CSS/XPath locator and per container, and `summary.redoResearch` |
 
 Follow the user's global rules when running anything: scripts are files (Write tool), one simple command

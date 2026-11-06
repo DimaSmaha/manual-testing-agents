@@ -54,6 +54,10 @@ STUCK evidence go into `runs/<RUN_ID>/screenshots/`.
 - Scripts are files written with Write into `runs/<RUN_ID>/scripts/`; every command is one simple command
   (no `cd`, no `&&` / `;`, no env prefixes, no paths outside the repo). Redirect output to `runs/<RUN_ID>/out/`
   and Read it. For `run-code` use `--raw`.
+- A locator with quotes, brackets, parentheses or dots (`button[data-test='…']`) must not go inline into
+  `click`: the permission check may block it. Use a snapshot ref or a `run-code` script file with the locator
+  hardcoded (`locator-rules.md`, "Permission-check caveat"). If a call is denied anyway, do not retry it in the
+  same form; switch to a script file, and if that is denied too return `NEEDS_USER`.
 - Do not invent test data beyond what the scenario needs, apart from values that satisfy the form's
   requirements. Do not guess locators you have not seen.
 - You cannot ask the user. If you need a decision, a login, missing data or a sharper step:

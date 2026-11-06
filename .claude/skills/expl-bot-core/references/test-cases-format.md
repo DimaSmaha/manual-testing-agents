@@ -39,6 +39,9 @@ Source of truth: plan.md. This file is generated from it; do not edit.
 |---|---|---|---|---|
 | TC-S1 | critical | add to cart | data | <plan heading> |
 
+For a multi-page plan add a `Page` column after `ID` (the scenario's `## Requirements` path, for example
+`/cart.html`) and keep the scenarios in plan order.
+
 ---
 
 ## TC-S1: <plan heading>
