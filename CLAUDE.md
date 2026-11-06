@@ -30,6 +30,47 @@ Cross-stage contracts that span several skills (read the orchestrator `SKILL.md`
 - Each stage skill declares a recommended model/effort/thinking setting (Opus + thinking for stages 2, 6, 7; Sonnet otherwise). Stage 1 blocks until the user confirms those settings.
 - Stages 1–4 are tracker/requirements work; stages 5–7 need a PR URL or branch and use the `gh` CLI (`gh pr view`, `gh api repos/.../compare/...`) as the only code source; stage 8 uses the browser only.
 
+## The `expl-bot-*` flow (exploratory testing, separate from `expl1-*`)
+
+A port of the explorbot crew (`C:\qa\work\explorbot`) to Claude Code: Claude Code is the brain, `playwright-cli`
+the hands. Independent of the `expl1-*` pipeline, which it never edits (`--from <ISSUEKEY>` only **reads**
+`<ISSUEKEY>-2-requirements.md` / `-4-test-cases.md`).
+
+| Skill / agent | Role (explorbot) |
+|---|---|
+| `expl-bot-orchestrator` | Captain; launches the stage skills, asks before advancing; never edits their files |
+| `expl-bot-research` + subagent `expl-bot-researcher` (`.claude/agents/`) | Researcher: UI map with tested locators |
+| `expl-bot-plan` | Planner: styles normal/curious/psycho, user approves the plan |
+| `expl-bot-test` + subagent `expl-bot-tester` | Tester; the main session is the Pilot (`STUCK` → `PROGRESS:`/`NEXT:`, resume ≤ 2) |
+| `expl-bot-report` | Analyst (+ Historian: `tests/expl-bot/*.spec.ts` drafts) |
+| `expl-bot-learn` | knowledge / experience / compaction |
+| `expl-bot-core` | Shared references and `run-code` scripts; not a stage, writes no artifacts |
+
+- Data lives in `.workflow-artifacts/expl-bot/` (`sites/<host>/{knowledge,experience,research}`, `state.json`,
+  `runs/<RUN_ID>/{plan.md,results/,report.md,screenshots/,scripts/,out/}`). `RUN_ID` = `eb-YYMMDD-HHMM`. Knowledge
+  and plan formats are explorbot-compatible (Flow 3 reads them).
+- **Own data only**: a run creates/edits/deletes only records it created itself, named with the RUN_ID.
+  Pre-existing data is never touched (`expl-bot-core/references/data-protection.md`). Preserve this rule when
+  editing the skills and agents.
+- Browser: `playwright-cli`, headed, `-s=expl-<host>`, `--persistent`. Subagents cannot spawn subagents and share
+  one browser, so testers run one at a time. Subagents never ask the user; they return `NEEDS_USER: …` and the
+  calling skill asks.
+- Heavy snapshots stay in subagents; the main context gets the compact result block
+  (`expl-bot-core/references/tester-loop.md`, "Result block"). Changes to a block's shape must be matched in
+  `expl-bot-test`, `expl-bot-report`, `expl-bot-learn` and the two agents.
+- Scripts in `expl-bot-core/scripts/` are `run-code` files; run them with `--raw` and absolute-or-repo-relative
+  paths, one simple command, output into `runs/<RUN_ID>/out/`.
+- **Flow 2, `expl-bot-independent-orchestrator`** (explicit invocation only) is the unattended twin. It never asks
+  the user, uses the same stage skills with `--independent` (overrides: `run-context.md`, "Independent mode"),
+  and emits `<!-- PHASE COMPACT: … -->` JSON blocks that `scripts/expl-bot-run.ts` (Agent SDK, `permissionMode:
+  "dontAsk"` + `allowedTools` whitelist, never `bypassPermissions`) parses. Run: `npm run expl-bot:run -- <url>`.
+  Credentials only via `EXPL_BOT_AUTH` (env, in memory) or `sites/<host>/auth.json` (written only with the user's
+  yes in Flow 1); never print them. The Express server (SSE, batch jobs) and Docker are written up as "Future
+  updates — run pipeline" in `README.md` and are **not built**; do not add them unprompted. Changing a compact's
+  fields means changing `colors.ts` (`printFinalSummary`) and the orchestrator skill together.
+- Status: the skills were written against explorbot's sources and the three scripts were run against a local
+  test page; a full end-to-end run on a real app has not been done yet.
+
 ## External dependencies
 
 - **Issue tracker**: a REST API read with `curl` (no auth), default `http://localhost:3000`, with an ngrok alternative. Tasks (`/tasks/<id>`) and bugs (`/bugs/<id>`) have **separate id spaces**, so the kind must always be known. Commands, retry flags and response shapes: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`. Pre-flight health check is `curl -s --max-time 5 <BASE>/`; if it fails, stop and ask rather than work around it. Comments, attachments and linked items are not exposed by the tracker.

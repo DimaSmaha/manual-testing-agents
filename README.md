@@ -7,6 +7,8 @@ The repo is meant to grow. Each flow is a self-contained family of skills with i
 | Flow           | Prefix    | What it does                                                                                                                               | Status  |
 | -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
 | **Explorer 1** | `expl1-*` | End-to-end QA pipeline for one task or bug: ticket → requirements → checklist → test cases → PR review → impact analysis → browser testing | Working |
+| **Exploratory bot (semi-auto)** | `expl-bot-*` | [explorbot](https://github.com/testomatio/explorbot)'s agent crew on Claude Code (no API key): research a page → plan scenarios → test → report → learn | New, untested on a real app |
+| **Exploratory bot (unattended)** | `expl-bot-independent-*` | Same crew, headless, driven by `npm run expl-bot:run` (Claude Agent SDK); never asks the user | New, untested on a real app |
 
 More flows will be added next to it under `.claude/skills/`.
 
@@ -24,6 +26,7 @@ More flows will be added next to it under `.claude/skills/`.
 - [How the stages hand work to each other](#how-the-stages-hand-work-to-each-other)
 - [Stage 8: web testing in detail](#stage-8-web-testing-in-detail)
 - [Issue tracker integration](#issue-tracker-integration)
+- [Exploratory flow: `expl-bot-*`](#exploratory-flow-expl-bot-)
 - [Repository layout](#repository-layout)
 - [Configuring and adapting the skills](#configuring-and-adapting-the-skills)
 - [Design principles](#design-principles)
@@ -258,13 +261,99 @@ Full details: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`.
 
 ---
 
+## Exploratory flow: `expl-bot-*`
+
+A port of the agent crew of [explorbot](https://github.com/testomatio/explorbot) (autonomous exploratory testing)
+into Claude Code. **Claude Code is the brain, `playwright-cli` is the hands, no API key.** Independent of the
+`expl1-*` pipeline (which stays unchanged); it can optionally read its artifacts with `--from <ISSUEKEY>`.
+
+```
+/expl-bot-orchestrator <url|path> [--focus "…"] [--style normal|curious|psycho] [--max-tests N] [--deep] [--from <ISSUEKEY>]
+```
+
+| Step | Skill | Who does the work | Output |
+| ---- | ----- | ----------------- | ------ |
+| 1 | (orchestrator preflight) | main session; opens a headed `--persistent` session `expl-<host>`, you log in | `runs/<RUN_ID>/meta.md` |
+| 2 | `expl-bot-research` | subagent `expl-bot-researcher` (Sonnet) | `sites/<host>/research/<page-key>.md`: UI map, locators tested against the live page |
+| 3 | `expl-bot-plan` | main session; style rotates normal → curious → psycho; **you approve the plan** | `runs/<RUN_ID>/plan.md` (explorbot plan format) |
+| 4 | `expl-bot-test` | subagent `expl-bot-tester` (Sonnet), one at a time; main session is the Pilot and resumes a `STUCK` tester up to twice | `runs/<RUN_ID>/results/<n>.md` |
+| 5 | `expl-bot-report` | main session | `runs/<RUN_ID>/report.md` (Coverage / What works / Defects / UX / Execution Issues / Data created); optional `tests/expl-bot/*.spec.ts` drafts |
+| 6 | `expl-bot-learn` | main session | `sites/<host>/experience/<page-key>.md`, `knowledge/*.md`, `state.json` |
+
+Every skill is also runnable alone (for example `/expl-bot-research https://app/products --deep`). Shared rules,
+formats and scripts live in `expl-bot-core` (not a stage).
+
+What is ported from explorbot: cheap workers with heavy context + a smart manager (subagents vs. main session);
+the Researcher's UI map with tested locators and a 6 h cache; planning styles ranked **data change > state
+change > UI-only**; the Tester loop (≤ 30 actions, only the latest snapshot kept, dead-loop detection by state
+key); the Pilot's stuck-pattern catalogue; the closed verification vocabulary (`NOT VERIFIED` ≠ failed); the
+Analyst report that separates product defects from automation problems; knowledge and experience memory.
+
+**Data policy: own data only.** A run creates, edits or deletes only records it created itself, named with the
+run id (`eb-YYMMDD-HHMM`). Pre-existing data is never touched; anything that would is reported as `BLOCKED`.
+See `.claude/skills/expl-bot-core/references/data-protection.md`.
+
+**Memory** is in `.workflow-artifacts/expl-bot/` (git-ignored):
+`sites/<host>/{knowledge,experience,research}`, `sites/<host>/state.json`, `runs/<RUN_ID>/…`. Knowledge and plan
+files use explorbot's own formats.
+
+### Flow 2: unattended run (`expl-bot-independent-*`)
+
+The same crew, rules, stage skills and subagents, driven headlessly by a Claude Agent SDK script. It **never asks
+the user**: missing input means stop-and-report. No plan-approval checkpoint; browser is headless unless
+`--headed`; budgets `--max-tests` (default 5) and `--max-duration` minutes (default 30); a blocker gets one
+attempt to unblock, then the scenario is `BLOCKED` and the run moves on. After each phase the orchestrator emits a
+`<!-- PHASE COMPACT -->` JSON block (same protocol as `flow-1a-gt-us-to-tc` in
+`user-story-to-test-case-agent-generator`), which the runner parses for the live log and the final summary.
+
+```
+cp .env.sample .env            # set EXPL_BOT_URL / auth, see below
+npm run expl-bot:run -- http://localhost:3000/products --max-tests 2 [--focus "…"] [--style curious] [--deep] [--headed] [--from TASK-112]
+```
+
+Or inside Claude Code chat: `/expl-bot-independent-orchestrator <url> …` (explicit invocation only).
+
+| Piece | File |
+| ----- | ---- |
+| Orchestrator skill | `.claude/skills/expl-bot-independent-orchestrator/SKILL.md` |
+| Overrides every stage skill follows with `--independent` | `expl-bot-core/references/run-context.md`, "Independent mode" |
+| Runner (Agent SDK `query()`, SIGINT, summary, exit codes) | `scripts/expl-bot-run.ts`, `scripts/utils/colors.ts` |
+| Env template | `.env.sample` |
+
+- **Exit codes:** `0` ok · `2` bad input, pipeline error or stopped early (`STOPPED:`/`STOP:`) · `3` fatal ·
+  `130` Ctrl+C (the browser session `expl-<host>` is closed in every case).
+- **Permissions:** `permissionMode: "dontAsk"` with a whitelist (`Read/Write/Edit/Glob/Grep/Agent/SendMessage`,
+  `Bash(playwright-cli:*)`, `date`, `git status`, `printenv EXPL_BOT_AUTH`). Anything else is denied, not prompted.
+  `bypassPermissions` is not used.
+- **Login:** headless runs need a login that needs no human. Either log in once in Flow 1 and answer "yes" to
+  saving the login state (`sites/<host>/auth.json`, loaded with `playwright-cli state-load`), or set
+  `EXPL_BOT_AUTH` (free-form text, kept in memory only; the agent reads it with `printenv`, so it appears in the
+  session transcript, not in any artifact).
+- **SDK authentication:** `ANTHROPIC_API_KEY` or `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`), else the
+  local Claude Code login. Check Anthropic's current terms before using a subscription token in automation.
+- **Data policy** is unchanged: own data only, and any doubt means read-only/`BLOCKED`.
+
+#### Future updates — run pipeline
+
+Not implemented. Planned, modeled on `user-story-to-test-case-agent-generator`:
+
+- **Server.** An Express app (`server/`) that starts `expl-bot:run` jobs, streams live logs to the browser over
+  SSE, runs batch jobs (several URLs / pages one after another) with per-job timeouts, and has optional
+  `X-API-Key` auth. Services: `server/services/processManager.ts`, `batchRunner.ts`, `sseManager.ts`.
+- **Docker.** `Dockerfile` (Node 24 + `playwright-cli` + Chromium, `.workflow-artifacts` as a volume) and
+  `docker-compose.yml` / `docker-compose.prod.yml`.
+
+---
+
 ## Repository layout
 
 ```
 .
 ├── CLAUDE.md                      Guidance for Claude Code working in this repo
 ├── README.md                      This file
-├── package.json                   Playwright dev dependencies (no scripts)
+├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck
+├── scripts/                       expl-bot-run.ts (Flow 2 runner) and utils/colors.ts
+├── .env.sample                    Env template for the runner (copy to .env, git-ignored)
 ├── playwright.config.ts           Stock Playwright scaffold (not used by the pipeline)
 ├── tests/example.spec.ts          Stock Playwright example
 ├── .claude/
@@ -278,7 +367,11 @@ Full details: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`.
 │   │   ├── expl1-6-code-review/
 │   │   ├── expl1-7-impact-analysis/
 │   │   ├── expl1-8-web-testing/
-│   │   └── playwright-cli/        Browser automation skill used by stage 8
+│   │   ├── expl-bot-orchestrator/ Exploratory flow (semi-auto), see above
+│   │   ├── expl-bot-{research,plan,test,report,learn}/
+│   │   ├── expl-bot-core/         Shared rules, formats and run-code scripts (not a stage)
+│   │   └── playwright-cli/        Browser automation skill used by stage 8 and expl-bot-*
+│   ├── agents/                    Subagents: expl-bot-researcher, expl-bot-tester
 │   └── skills-archive/            Retired skill versions (inert)
 └── .workflow-artifacts/           Git-ignored: per-task artifacts and scratch files
     └── <ISSUEKEY>/
