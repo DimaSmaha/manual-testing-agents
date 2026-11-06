@@ -1,0 +1,16 @@
+{
+  "styleIndex": 1,
+  "lastStyle": "normal",
+  "lastRun": "eb-261106-1157",
+  "testedScenarios": {
+    "inventory": [
+      { "run": "eb-261106-1157", "title": "A shopper adds a product to the cart and sees the cart reflect it", "area": "add to cart", "outcome": "data", "status": "PASSED", "steps": ["Click 'Add to cart' on Sauce Labs Backpack", "Check button, badge and cart link", "Click 'Remove' on Sauce Labs Backpack"] },
+      { "run": "eb-261106-1157", "title": "A shopper builds a multi-item cart and removes one item from the list", "area": "remove from cart", "outcome": "data", "status": "PASSED", "steps": ["Click 'Add to cart' on Bike Light, Onesie, Fleece Jacket", "Check badge", "Click 'Remove' on Onesie", "Check badge and all 6 buttons", "Click 'Remove' on the two remaining items"] },
+      { "run": "eb-261106-1157", "title": "After sorting by price high to low the shopper adds the first listed product and the right item is added", "area": "sort", "outcome": "data", "status": "PASSED", "steps": ["Select 'Price (high to low)'", "Click 'Add to cart' on the first product", "Check Remove button and badge", "Click 'Remove'"] },
+      { "run": "eb-261106-1157", "title": "A shopper opens a product's detail page and it matches the list entry", "area": "product details", "outcome": "state", "status": "PASSED", "steps": ["Click the title link of Bolt T-Shirt", "Compare name, description, price, image", "Browser Back", "Click the image link of Backpack", "Compare name and price", "Click 'Back to products'"] },
+      { "run": "eb-261106-1157", "title": "The cart contents survive a page reload and a detour to a product detail page", "area": "cart persistence", "outcome": "state", "status": "PASSED", "steps": ["Click 'Add to cart' on Bolt T-Shirt", "Reload", "Check badge and Remove button", "Open a product detail page and click 'Back to products'", "Check badge and Remove button", "Click 'Remove'"] },
+      { "run": "eb-261106-1157", "title": "Every sort option orders the product list correctly", "area": "sort", "outcome": "state", "status": "PASSED", "steps": ["Select 'Name (Z to A)', 'Price (low to high)', 'Price (high to low)', 'Name (A to Z)' in turn", "Read names and prices after each"] }
+    ]
+  },
+  "researchedAt": {"inventory":"2026-11-06T10:05:00Z"}
+}
