@@ -1,0 +1,19 @@
+{
+  "sequence": 1,
+  "tool": "Write",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "status": "RETRYING",
+  "retries": 1,
+  "max_retries": 3,
+  "layer": "reviewer",
+  "checked_by": "reviewer subagent expl1-test-cases-reviewer (.claude/agents/expl1-test-cases-reviewer.md)",
+  "checked_against": "TASK-112-3-checklist.md",
+  "path": ".workflow-artifacts/TASK-112-20261111-111111/TASK-112-4-test-cases.md",
+  "notes": [
+    "REQ-2.2: The check says 'When authentication fails, an inline error state is displayed on the login page'. No test case verifies it. TC-REQ-3.1 sets up a failed authentication (valid email, wrong password 'WrongPass1!') but its step 3 only expects 'The login page remains displayed' and 'The user is not navigated to another page'. TC-REQ-2.1 covers the validation failure (REQ-2.1), not the authentication failure. (rule 1) → Extend step 3 of TC-REQ-3.1 with the expected result 'An inline error state is displayed on the login page'."
+  ],
+  "cached": false,
+  "review_ms": 9584,
+  "review_cost_usd": 0.0857513,
+  "checked_at": "2026-11-11T11:11:11.111Z"
+}

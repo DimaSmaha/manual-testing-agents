@@ -11,6 +11,10 @@ author: Testomat.io (adapted)
 
 # QA Thinking
 
+> 📁 **Run folder.** `.workflow-artifacts/<ISSUEKEY>/` below means the timestamped run folder
+> `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/`: the one the caller passes as `--run-dir`, otherwise the newest
+> such folder (Glob). Never use the bare `.workflow-artifacts/<ISSUEKEY>/`.
+
 > ⚙️ Recommended settings: **Sonnet · Effort: Medium · Extended thinking: Off**
 
 Think about a feature like a senior QA engineer and surface risk scenarios, then explain them to

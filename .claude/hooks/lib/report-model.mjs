@@ -223,7 +223,16 @@ export function analyzeSession(sessionId, events) {
     }
   }
   for (const row of ordered) {
-    if (row.kind !== "group" || row.key) continue;
+    if (row.kind !== "group") continue;
+    if (row.key) {
+      // expl1-independent-orchestrator: its args name only the issue (`TASK-112`); the run key
+      // (`TASK-112-20261114-153042`, also its artifact folder) first appears in the args of its stages.
+      const stamped = ordered.find(
+        (r) => r.kind === "leaf" && r.groupId === row.rowId && r.key?.toLowerCase().startsWith(`${row.key.toLowerCase()}-`),
+      );
+      if (stamped) row.key = stamped.key;
+      continue;
+    }
     const child = ordered.find((r) => r.kind === "leaf" && r.groupId === row.rowId && r.key);
     row.key = child?.key ?? null;
     if (!row.key) {
@@ -259,12 +268,14 @@ export function analyzeSession(sessionId, events) {
 /**
  * Where a key's saved metrics live, next to the artifacts the key already owns:
  *   TASK-/BUG-<id>  ->  .workflow-artifacts/<KEY>/<KEY>-metrics.{md,json}
+ *   TASK-/BUG-<id>-YYYYMMDD-HHMMSS (run key of expl1-independent-orchestrator; the folder has the same name)
+ *                   ->  .workflow-artifacts/<RUNKEY>/<RUNKEY>-metrics.{md,json}
  *   eb-… RUN_ID     ->  .workflow-artifacts/expl-bot/runs/<RUN_ID>/metrics.{md,json}
  * `null` for `unassigned` (nowhere honest to put it).
  */
 export function saveTargets(projectDir, key) {
   const root = path.join(projectDir, ".workflow-artifacts");
-  if (/^(TASK|BUG)-\d+$/i.test(key)) {
+  if (/^(TASK|BUG)-\d+(-\d{8}-\d{6})?$/i.test(key)) {
     const dir = path.join(root, key.toUpperCase());
     return { dir, md: path.join(dir, `${key.toUpperCase()}-metrics.md`), json: path.join(dir, `${key.toUpperCase()}-metrics.json`) };
   }

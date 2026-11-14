@@ -12,6 +12,10 @@ author: Testomat.io (adapted)
 
 # QA Review of a Pull Request
 
+> 📁 **Run folder.** `.workflow-artifacts/<ISSUEKEY>/` below means the timestamped run folder
+> `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/`: the one the caller passes as `--run-dir`, otherwise the newest
+> such folder (Glob). Never use the bare `.workflow-artifacts/<ISSUEKEY>/`.
+
 > ⚙️ Recommended settings: **Opus · Effort: High · Extended thinking: On**
 
 Think about the change like a senior QA engineer and give a short verdict a person who does not read

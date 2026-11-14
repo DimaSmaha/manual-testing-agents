@@ -1,0 +1,13 @@
+{
+  "status": "PASSED",
+  "retries": 1,
+  "max_retries": 3,
+  "layer": "script",
+  "checked_by": "script .claude/hooks/lib/validate-requirements.mjs",
+  "checked_against": "TASK-112-1-context.md",
+  "path": ".workflow-artifacts/TASK-112-20261111-111111/TASK-112-2-requirements.md",
+  "notes": [],
+  "checked_at": "2026-11-11T11:11:11.111Z",
+  "sequence": 2,
+  "history": ".workflow-artifacts/TASK-112-20261111-111111/validations/TASK-112-2-requirements.validation-002.json"
+}

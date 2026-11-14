@@ -24,7 +24,7 @@ Not an application. It is a **Claude Code skill pipeline for manual QA of one ta
 Cross-stage contracts that span several skills (read the orchestrator `SKILL.md` for the full list):
 
 - **`<ISSUEKEY>`** is `TASK-<id>` or `BUG-<id>` and prefixes every artifact. Requirement IDs (`REQ-N`) are assigned in stage 2 and must stay stable through all later stages.
-- **Artifacts** go in `.workflow-artifacts/<ISSUEKEY>/` (git-ignored, kept after the run). Re-running a stage deletes and recreates its file; it never merges. Later stages may need a re-run if an earlier one changed.
+- **Artifacts** go in a **timestamped run folder** `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/` (git-ignored, kept after the run), for example `TASK-114-20261114-170834`. Stage 1 (or `expl1-orchestrator`) creates it with `date +%Y%m%d-%H%M%S`; stages 2–8 take `--run-dir <dir>` or else the newest such folder; never the bare `.workflow-artifacts/<ISSUEKEY>/`. Artifact file names stay `<ISSUEKEY>-<n>-<name>.md`. The metrics key is then the stamped run key (see the metrics section). Re-running a stage deletes and recreates its file; it never merges. Later stages may need a re-run if an earlier one changed.
 - **The orchestrator never does stage work or edits artifacts.** It launches stage skills via the Skill tool, checks handoff files exist and are non-empty, reports counters, and asks before advancing. Stage skills ask the user questions; never answer them on the user's behalf.
 - **Stage 8 scope** = **every** test case of stage 4, whatever its stage 6 status (`QA` / `FAIL` / `PASS` / `N/A` only sets the Source column; no code review → all `QA`), plus the rows of stage 7's "Retest in stage 8" section (source `IMPACT`; live-app browser checks only, code/CI/npm results get no row). FAIL items from the code review may only end as `FAIL CONFIRMED` or `FAIL REJECTED`. Feedback loop 4 enforces that every test case has an executed row.
 - Each stage skill declares a recommended model/effort/thinking setting (Opus + thinking for stages 2, 6, 7; Sonnet otherwise). Stage 1 blocks until the user confirms those settings.
@@ -39,6 +39,25 @@ Cross-stage contracts that span several skills (read the orchestrator `SKILL.md`
   (tables "Optional helpers" / "Optional features") and never edit their files; the others edit no stage artifact. `qa-explain-behavior` is on-demand only (chat answer,
   code through `gh` or the scratch clone). The `-x-` files are outside the handoff checks and the Stage 8 scope. They are
   not orchestrators, so `GROUP_SKILLS` is unchanged and their cost lands in the stage window they run in.
+
+### Autonomous run: `expl1-independent-orchestrator` (explicit invocation only)
+
+The unattended twin of `expl1-orchestrator`: stages 1–8 back to back, no question and no pause
+(`/expl1-independent-orchestrator <TASK-id|BUG-id|URL> [--pr …] [--repo …] [--app-url …] [--from-stage N] [--to-stage N] [--run-dir …] [--skip-impact]`).
+- **Run folder** is `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/` (the run key). Only the folder carries the stamp;
+  artifact file names stay `<ISSUEKEY>-<n>-<name>.md`, so the validators and the artifact gate are unchanged. The run key
+  is also the metrics key (`keys.mjs`, `saveTargets`; a group row adopts its stages' stamped key in `report-model.mjs`),
+  so `<RUN_KEY>-metrics.{md,json}` land in the run folder. Every stage is launched with `--run-dir <RUN_DIR>` as the
+  **first** argument — that order is what makes `keyFromArgs` pick the stamped key. Don't reorder it.
+- **How stages stop asking**: each stage skill has a short "Autonomous mode" note (`--autonomous`, `--run-dir`) that points
+  to `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`, one section per stage. Changing a stage's
+  questions or its blockers means updating that file too. Unanswered grooming questions leave the requirement unchanged;
+  stage 4 uses its `>` needs-clarification note; unknown login/app URL/path → `BLOCKED` rows, never a question.
+- Browser: `playwright-cli`, always **headed**, `--persistent`, session `qa-<ISSUEKEY>`; it is left open at the end.
+- Failure policy: stages 1–4 abort the run, 5–7 failures fall through to stage 8 (Source `QA`), validation not `PASSED`
+  is logged and flagged, never retried by the orchestrator. Helpers (`qa-*`) are never run, `qa-data-seeder` least of all.
+- Pre-flight stops the run before stage 1 when stage 8 is in range and no app URL is known (`--app-url`, `login-config.md`
+  Base URL, or a saved path). `<RUN_DIR>/<ISSUEKEY>-x-auto-run.md` is the orchestrator's own decision log.
 
 ## The `expl-bot-*` flow (exploratory testing, separate from `expl1-*`)
 
@@ -120,7 +139,7 @@ window of the main session, not a subagent). Rules to keep when editing:
 - **Orchestrator names live in one place**: `GROUP_SKILLS` in `lib/tracked-tools.mjs`. A new orchestrator skill must be
   added there, or its turns are billed to the stage before it. The matcher `Task|Agent` and `Skill` in
   `settings.json` must keep matching `SUBAGENT_TOOLS` / `SKILL_TOOLS`.
-- **Key** = `TASK-/BUG-<id>` or the RUN_ID (`lib/keys.mjs`). expl-bot skills ignore `--from <ISSUEKEY>` for keying.
+- **Key** = `TASK-/BUG-<id>`, the stamped run key `TASK-/BUG-<id>-YYYYMMDD-HHMMSS` of `expl1-independent-orchestrator`, or the RUN_ID (`lib/keys.mjs`). expl-bot skills ignore `--from <ISSUEKEY>` for keying.
   Only assistant tool-call inputs are scanned for artifact paths, never tool results (SKILL.md quotes example keys).
 - **The Stop hook saves after every turn** (`saveReport` in `lib/report-render.mjs`, shared with the CLI), so typed
   `/skill` runs are saved without an orchestrator; a failed write is a `save_failed` diagnostic, never a failed turn.
@@ -139,9 +158,13 @@ window of the main session, not a subagent). Rules to keep when editing:
 
 ## Feedback loops (hooks, stages 2, 3, 4 and 8)
 
-`.claude/hooks/artifact-gate.mjs` is a `PostToolUse` hook on `Write|Edit` in `.claude/settings.json`, with one
-`if: Edit(/.workflow-artifacts/**/*-<stage>.md)` file matcher per artifact (`-2-requirements`, `-3-checklist`,
-`-4-test-cases`, `-8-web-testing`; timeout 60 s, or 300 s for the two reviewer loops). Because it is a project hook and
+`.claude/hooks/artifact-gate.mjs` is a `PostToolUse` hook on `Write|Edit` in `.claude/settings.json`, with **two**
+`if:` file matchers per artifact, `Write(**/*-<stage>.md)` and `Edit(**/*-<stage>.md)` (`-2-requirements`, `-3-checklist`,
+`-4-test-cases`, `-8-web-testing`; timeout 60 s, or 300 s for the two reviewer loops). The `if:` names the tool
+literally and wants the `**/` path form: the earlier `Edit(/.workflow-artifacts/**/*-<stage>.md)` never fired for a
+Write call (no status file, no log entry; found on the first stamped run, TASK-114). Verified live for stage 2 with
+both Write and Edit; stages 3, 4 and 8 use the same patterns. The script still ignores any file that is not a
+configured `TASK-/BUG-<id>-<stage>.md` artifact in `.workflow-artifacts/<folder>/`. Because it is a project hook and
 not a skill-frontmatter hook, it fires the same way inside `expl1-orchestrator` (stages run inline via the Skill tool)
 and for a single `/expl1-…` call, and again on every fix. Stage 4's skill is not changed by its loop; stage 8's scope
 was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate` / `tc-gate` of
@@ -194,7 +217,11 @@ was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate`
   The ground truth is never fabricated. A gate crash also gives a `systemMessage`, and every path exits 0.
 - Status: `.workflow-artifacts/<KEY>/<KEY>-<stage>.validation.json` (`PASSED | RETRYING | FAILED | UNVERIFIED | PENDING`,
   plus `layer`, `checked_by`, `notes`, `review_ms`, `review_cost_usd`, `cached`). These are **hook-owned**: the
-  orchestrator reads them in its handoff checks and never edits them. Retry state and the log are in
+  orchestrator reads them in its handoff checks and never edits them. That file is the **latest** check only, and it is
+  overwritten each time. **Every** check (PENDING, RETRYING, PASSED, FAILED, UNVERIFIED) also writes its own numbered,
+  never-overwritten file `.workflow-artifacts/<KEY>/validations/<KEY>-<stage>.validation-<NNN>.json` (same fields plus
+  `sequence`, `tool`, `session_id`); the latest file carries `sequence` and `history` pointing at it. Checks made before
+  this change have no history file. Retry state and the log are in
   `.workflow-artifacts/.hook-state/` (`artifact-gate-<run>-<stem>.json`, `artifact-gate.log`).
 - **Nested reviewer sessions** run with `EXPL1_REVIEW_CHILD=1`: `artifact-gate.mjs` and `agent-metrics.mjs` are no-ops
   inside them (no recursion, and the reviewer's Read calls must not be billed to — or overwrite the saved metrics of —

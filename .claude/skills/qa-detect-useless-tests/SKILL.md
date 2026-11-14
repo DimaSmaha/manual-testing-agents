@@ -12,6 +12,10 @@ author: Testomat.io (adapted)
 
 # Detect Useless Tests
 
+> 📁 **Run folder.** `.workflow-artifacts/<ISSUEKEY>/` below means the timestamped run folder
+> `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/`: the one the caller passes as `--run-dir`, otherwise the newest
+> such folder (Glob). Never use the bare `.workflow-artifacts/<ISSUEKEY>/`.
+
 > ⚙️ Recommended settings: **Sonnet · Effort: High · Extended thinking: Off**
 
 Go through tests of the same level (unit, e2e or manual) and detect the useless ones. In the

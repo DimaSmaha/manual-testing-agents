@@ -79,12 +79,27 @@ A non-empty response means it is up. If the output is empty or the command fails
 tell the user the tracker is not reachable (and ask for the correct base URL if needed)
 and wait. Do not work around it. Skip the pre-flight when resuming from stage 2 or later.
 
-Locations: stage artifacts (`<ISSUEKEY>-*.md`) go to the per-task folder
-`.workflow-artifacts/<ISSUEKEY>/` (git-ignored) and are kept after the run;
+Locations: stage artifacts (`<ISSUEKEY>-*.md`) go to the run folder `RUN_DIR`
+(`.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/`, see "Timestamped run folder"; git-ignored) and are kept after the run;
 the raw tracker response is saved in `.workflow-artifacts/<ISSUEKEY>/tracker/` and is kept
 with the task folder. Other scratch files (helper scripts and their output) go to the other
 subfolders of `.workflow-artifacts/` and are deleted when the run is finished.
 Never delete the `.workflow-artifacts/<ISSUEKEY>/` folder.
+
+### Timestamped run folder (always)
+
+Every new run gets its own folder `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/`, never the bare
+`.workflow-artifacts/<ISSUEKEY>/` (older runs may still sit there; leave them alone). Same naming as
+`expl1-independent-orchestrator`:
+1. Run `date +%Y%m%d-%H%M%S` (one simple command) → `TS`. `RUN_KEY = <ISSUEKEY>-<TS>`,
+   `RUN_DIR = .workflow-artifacts/<RUN_KEY>`. Say it in one line. To resume an earlier stamped run, the user gives
+   its folder and `RUN_DIR` is that folder.
+2. Launch **every** stage skill with `--run-dir <RUN_DIR>` as the **first** argument (before the key and everything
+   else; that order makes the metrics hooks bill the run under `RUN_KEY`). Do not pass `--autonomous`: the stage
+   skills keep asking the user.
+3. Everywhere above, `.workflow-artifacts/<ISSUEKEY>/` means `RUN_DIR`: handoff checks, `*.validation.json`, the
+   final report. Artifact file names stay `<ISSUEKEY>-<n>-<name>.md`.
+4. The metrics command takes the run key: `node .claude/hooks/metrics-report.mjs <RUN_KEY> --save`.
 
 ## Handoff checks before each stage
 
