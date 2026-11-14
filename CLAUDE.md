@@ -40,6 +40,25 @@ Cross-stage contracts that span several skills (read the orchestrator `SKILL.md`
   code through `gh` or the scratch clone). The `-x-` files are outside the handoff checks and the Stage 8 scope. They are
   not orchestrators, so `GROUP_SKILLS` is unchanged and their cost lands in the stage window they run in.
 
+### Autonomous run: `expl1-independent-orchestrator` (explicit invocation only)
+
+The unattended twin of `expl1-orchestrator`: stages 1–8 back to back, no question and no pause
+(`/expl1-independent-orchestrator <TASK-id|BUG-id|URL> [--pr …] [--repo …] [--app-url …] [--from-stage N] [--to-stage N] [--run-dir …] [--skip-impact]`).
+- **Run folder** is `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/` (the run key). Only the folder carries the stamp;
+  artifact file names stay `<ISSUEKEY>-<n>-<name>.md`, so the validators and the artifact gate are unchanged. The run key
+  is also the metrics key (`keys.mjs`, `saveTargets`; a group row adopts its stages' stamped key in `report-model.mjs`),
+  so `<RUN_KEY>-metrics.{md,json}` land in the run folder. Every stage is launched with `--run-dir <RUN_DIR>` as the
+  **first** argument — that order is what makes `keyFromArgs` pick the stamped key. Don't reorder it.
+- **How stages stop asking**: each stage skill has a short "Autonomous mode" note (`--autonomous`, `--run-dir`) that points
+  to `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`, one section per stage. Changing a stage's
+  questions or its blockers means updating that file too. Unanswered grooming questions leave the requirement unchanged;
+  stage 4 uses its `>` needs-clarification note; unknown login/app URL/path → `BLOCKED` rows, never a question.
+- Browser: `playwright-cli`, always **headed**, `--persistent`, session `qa-<ISSUEKEY>`; it is left open at the end.
+- Failure policy: stages 1–4 abort the run, 5–7 failures fall through to stage 8 (Source `QA`), validation not `PASSED`
+  is logged and flagged, never retried by the orchestrator. Helpers (`qa-*`) are never run, `qa-data-seeder` least of all.
+- Pre-flight stops the run before stage 1 when stage 8 is in range and no app URL is known (`--app-url`, `login-config.md`
+  Base URL, or a saved path). `<RUN_DIR>/<ISSUEKEY>-x-auto-run.md` is the orchestrator's own decision log.
+
 ## The `expl-bot-*` flow (exploratory testing, separate from `expl1-*`)
 
 A port of the explorbot crew (`C:\qa\work\explorbot`) to Claude Code: Claude Code is the brain, `playwright-cli`
@@ -120,7 +139,7 @@ window of the main session, not a subagent). Rules to keep when editing:
 - **Orchestrator names live in one place**: `GROUP_SKILLS` in `lib/tracked-tools.mjs`. A new orchestrator skill must be
   added there, or its turns are billed to the stage before it. The matcher `Task|Agent` and `Skill` in
   `settings.json` must keep matching `SUBAGENT_TOOLS` / `SKILL_TOOLS`.
-- **Key** = `TASK-/BUG-<id>` or the RUN_ID (`lib/keys.mjs`). expl-bot skills ignore `--from <ISSUEKEY>` for keying.
+- **Key** = `TASK-/BUG-<id>`, the stamped run key `TASK-/BUG-<id>-YYYYMMDD-HHMMSS` of `expl1-independent-orchestrator`, or the RUN_ID (`lib/keys.mjs`). expl-bot skills ignore `--from <ISSUEKEY>` for keying.
   Only assistant tool-call inputs are scanned for artifact paths, never tool results (SKILL.md quotes example keys).
 - **The Stop hook saves after every turn** (`saveReport` in `lib/report-render.mjs`, shared with the CLI), so typed
   `/skill` runs are saved without an orchestrator; a failed write is a `save_failed` diagnostic, never a failed turn.

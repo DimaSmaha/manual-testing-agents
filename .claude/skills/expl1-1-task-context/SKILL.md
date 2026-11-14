@@ -14,6 +14,11 @@ description: >
 
 > ⚙️ Recommended settings: **Sonnet · Effort: Medium · Extended thinking: Off**
 
+> 🤖 **Autonomous mode.** If the arguments contain `--autonomous` (set by `expl1-independent-orchestrator`), first
+> read the "Stage 1" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
+> rules override every instruction in this skill that asks, confirms or waits for the user (including the MANDATORY
+> settings message below), and `--run-dir <dir>` replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+
 **MANDATORY before starting work** — show the user
 the message below and stop. Do not perform any actions until
 the user confirms:

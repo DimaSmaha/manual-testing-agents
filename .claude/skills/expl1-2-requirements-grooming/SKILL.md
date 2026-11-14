@@ -12,6 +12,11 @@ description: >
 
 > ⚙️ Recommended settings: **Opus · Effort: High · Extended thinking: On**
 
+> 🤖 **Autonomous mode.** If the arguments contain `--autonomous` (set by `expl1-independent-orchestrator`), first
+> read the "Stage 2" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
+> rules override every instruction in this skill that asks, confirms or waits for the user, and `--run-dir <dir>`
+> replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+
 Analyzes the requirements from the context file through a QA lens as in grooming,
 finds problems, aligns with the user, and produces
 the final numbered list of requirements — input for the following skills.

@@ -12,6 +12,11 @@ description: >
 
 > ⚙️ Recommended settings: **Sonnet · Effort: Medium · Extended thinking: Off**
 
+> 🤖 **Autonomous mode.** If the arguments contain `--autonomous` (set by `expl1-independent-orchestrator`), first
+> read the "Stage 5" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
+> rules override every instruction in this skill that asks, confirms or waits for the user, and `--run-dir <dir>`
+> replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+
 Reads the PR through the CLI or API and produces a structured summary
 of the changes: which files changed, which components are affected,
 what was added, removed, and modified.

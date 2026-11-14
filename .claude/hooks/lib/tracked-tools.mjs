@@ -22,6 +22,7 @@ export const isSkillTool = (toolName) => SKILL_TOOLS.includes(toolName);
 /** Skills that drive other skills. Their own turns are reported as "(own turns)"; stages are separate rows. */
 export const GROUP_SKILLS = Object.freeze([
   "expl1-orchestrator",
+  "expl1-independent-orchestrator",
   "expl-bot-orchestrator",
   "expl-bot-independent-orchestrator",
 ]);

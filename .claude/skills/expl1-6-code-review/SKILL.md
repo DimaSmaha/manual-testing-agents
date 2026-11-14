@@ -14,6 +14,11 @@ description: >
 
 > ⚙️ Recommended settings: **Opus · Effort: High · Extended thinking: On**
 
+> 🤖 **Autonomous mode.** If the arguments contain `--autonomous` (set by `expl1-independent-orchestrator`), first
+> read the "Stage 6" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
+> rules override every instruction in this skill that asks, confirms or waits for the user, and `--run-dir <dir>`
+> replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+
 Verifies each test case against the PR code. The output is a
 compact results table with findings for the FAIL items.
 

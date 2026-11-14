@@ -14,6 +14,11 @@ description: >
 
 > ⚙️ Recommended settings: **Sonnet · Effort: High · Extended thinking: Off**
 
+> 🤖 **Autonomous mode.** If the arguments contain `--autonomous` (set by `expl1-independent-orchestrator`), first
+> read the "Stage 4" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
+> rules override every instruction in this skill that asks, confirms or waits for the user, and `--run-dir <dir>`
+> replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+
 Generates test cases with specific steps, input data,
 and expected results based on the checklist.
 

@@ -16,10 +16,13 @@
 import { bareSkillName } from "./tracked-tools.mjs";
 
 const RUN_ID = /\beb-\d{6}-\d{4}\b/;
-const ISSUE = /\b((?:TASK|BUG)-\d+)\b/i;
+// `TASK-112`, or the run key of an `expl1-independent-orchestrator` run: `TASK-112-20261114-153042`
+// (ISSUEKEY + `-YYYYMMDD-HHMMSS`, also the name of its artifact folder). The optional stamp is greedy, so a
+// run key wins over its bare issue key when both are in the args (the orchestrator puts the run key first).
+const ISSUE = /\b((?:TASK|BUG)-\d+(?:-\d{8}-\d{6})?)\b/i;
 const URL_ID = /\/(tasks|bugs)\/(\d+)\b/i;
 const PATH_KEY =
-  /\.workflow-artifacts[\\/]+((?:TASK|BUG)-\d+)[\\/]|expl-bot[\\/]+runs[\\/]+(eb-\d{6}-\d{4})[\\/]/;
+  /\.workflow-artifacts[\\/]+((?:TASK|BUG)-\d+(?:-\d{8}-\d{6})?)[\\/]|expl-bot[\\/]+runs[\\/]+(eb-\d{6}-\d{4})[\\/]/;
 
 const isExplBotSkill = (skill) => /^(expl-bot|explorbot)/.test(bareSkillName(skill));
 

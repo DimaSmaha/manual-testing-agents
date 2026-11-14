@@ -15,6 +15,11 @@ description: >
 
 > ⚙️ Recommended settings: **Opus · Effort: High · Extended thinking: On**
 
+> 🤖 **Autonomous mode.** If the arguments contain `--autonomous` (set by `expl1-independent-orchestrator`), first
+> read the "Stage 7" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
+> rules override every instruction in this skill that asks, confirms or waits for the user, and `--run-dir <dir>`
+> replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+
 Looks beyond the files changed in the PR. It finds the contracts that changed
 (exports, props, constants, routes, storage keys, selectors), finds the files
 that depend on them but were **not** changed in the PR, and checks that those

@@ -77,6 +77,8 @@ The result is a traceable trail from a requirement (`REQ-3`) to a check, to a te
 
 The `expl1-orchestrator` skill runs the stages in order, verifies the handoff files between them, reports counters after each stage, and asks you before moving on.
 
+**Autonomous run (no questions).** `/expl1-independent-orchestrator <TASK-id|BUG-id|URL> --pr <PR URL> --app-url <url>` runs stages 1–8 back to back without asking anything. Each run writes to a new folder `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/` (for example `TASK-112-20261114-153042`); file names inside keep the `<ISSUEKEY>-<n>-…` form. The browser is headed (`playwright-cli … --headed --persistent`) and stays open at the end. What happens instead of a question is written in `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`; every such decision is listed in the final report and in `<ISSUEKEY>-x-auto-run.md`. Log in once beforehand in the session `qa-<ISSUEKEY>` if the app needs a login, because nobody can do it during the run. Resume with `--run-dir <folder> --from-stage N`.
+
 ---
 
 ## Prerequisites
@@ -519,6 +521,7 @@ node .claude/hooks/lib/validate-test-cases.mjs   .workflow-artifacts/TASK-114/TA
 ├── .claude/
 │   ├── skills/                    The only folder Claude Code loads
 │   │   ├── expl1-orchestrator/
+│   │   ├── expl1-independent-orchestrator/  Autonomous twin (no questions, timestamped run folder)
 │   │   ├── expl1-1-task-context/
 │   │   ├── expl1-2-requirements-grooming/
 │   │   ├── expl1-3-qa-checklist/
