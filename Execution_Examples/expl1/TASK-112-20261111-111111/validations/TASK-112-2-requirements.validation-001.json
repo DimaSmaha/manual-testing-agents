@@ -1,0 +1,16 @@
+{
+  "sequence": 1,
+  "tool": "Write",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "status": "RETRYING",
+  "retries": 1,
+  "max_retries": 3,
+  "layer": "script",
+  "checked_by": "script .claude/hooks/lib/validate-requirements.mjs",
+  "checked_against": "TASK-112-1-context.md",
+  "path": ".workflow-artifacts/TASK-112-20261111-111111/TASK-112-2-requirements.md",
+  "notes": [
+    "TASK-112-1-context.md has 3 requirements, but requirement #3 has no REQ-3 (or sub-items REQ-3a, REQ-3b) → add \"- REQ-3: …\" for it: \"Users remain on the page when authentication fails.\". Do not drop or merge context requirements."
+  ],
+  "checked_at": "2026-11-11T11:11:11.111Z"
+}

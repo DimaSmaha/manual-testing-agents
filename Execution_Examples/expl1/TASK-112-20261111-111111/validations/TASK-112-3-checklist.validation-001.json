@@ -1,0 +1,16 @@
+{
+  "sequence": 1,
+  "tool": "Write",
+  "session_id": "00000000-0000-0000-0000-000000000000",
+  "status": "RETRYING",
+  "retries": 1,
+  "max_retries": 3,
+  "layer": "script",
+  "checked_by": "script .claude/hooks/lib/validate-checklist.mjs",
+  "checked_against": "TASK-112-2-requirements.md",
+  "path": ".workflow-artifacts/TASK-112-20261111-111111/TASK-112-3-checklist.md",
+  "notes": [
+    "REQ-1 of TASK-112-2-requirements.md has no heading → add \"### REQ-1: Create the end-to-end login experience so users can sign in with validated credentials.\" with at least one check, as the first section"
+  ],
+  "checked_at": "2026-11-11T11:11:11.111Z"
+}
