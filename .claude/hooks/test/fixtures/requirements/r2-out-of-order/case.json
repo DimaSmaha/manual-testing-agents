@@ -1,0 +1,12 @@
+{
+  "description": "REQ-3 and REQ-4 are swapped. Every number is present, but REQs must follow the order of the context requirements.",
+  "edits": [
+    {
+      "find": "- REQ-3: The product details page must include the product name.\n- REQ-4: The product details page must include a detailed description.\n",
+      "replace": "- REQ-4: The product details page must include a detailed description.\n- REQ-3: The product details page must include the product name.\n"
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "REQ-3 \\(line \\d+\\) comes after REQ-4" }
+}

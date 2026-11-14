@@ -1,0 +1,13 @@
+{
+  "description": "TC-REQ-3.1 has status PASS (so the script layer is satisfied), but its comment says it was not re-run in the browser because the code review marked it PASS — exactly the old stage-8 habit. The fixed report has the row executed (closes the loop with the real reviewer).",
+  "edits": [
+    {
+      "find": "| TC-REQ-3.1 | The product name matches the inventory page | PASS | PASS | — |",
+      "replace": "| TC-REQ-3.1 | The product name matches the inventory page | PASS | PASS | Not re-run in the browser: the code review already marked it PASS |"
+    }
+  ],
+  "fix": true,
+  "expect": { "real": ["BLOCK", "PASS"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "layers": ["reviewer", "reviewer"], "notes_match": "TC-REQ-3\\.1" }
+}

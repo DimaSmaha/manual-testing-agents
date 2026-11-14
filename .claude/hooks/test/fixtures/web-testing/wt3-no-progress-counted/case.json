@@ -1,0 +1,7 @@
+{
+  "description": "The agent rewrites the report without executing the missing test case: the same problem twice is not progress, so both failures use a retry.",
+  "edits": [{ "find": "| TC-REQ-14b.1 | Added on the details page → 'Remove' on the inventory page | PASS | PASS | — |\n", "replace": "" }],
+  "writes": ["bad", "bad"],
+  "expect": ["BLOCK", "BLOCK"],
+  "assert": { "retries": 2, "last_reason_includes": "retry 2/3", "reviewer_calls": 0 }
+}

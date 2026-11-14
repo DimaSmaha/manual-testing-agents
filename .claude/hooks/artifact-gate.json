@@ -1,0 +1,24 @@
+{
+  "2-requirements.md": {
+    "skill": "expl1-2-requirements-grooming",
+    "validator": "lib/validate-requirements.mjs",
+    "max_retries": 3
+  },
+  "3-checklist.md": {
+    "skill": "expl1-3-qa-checklist",
+    "validator": "lib/validate-checklist.mjs",
+    "max_retries": 3
+  },
+  "4-test-cases.md": {
+    "skill": "expl1-4-qa-test-cases",
+    "validator": "lib/validate-test-cases.mjs",
+    "reviewer": { "agent": "expl1-test-cases-reviewer", "timeout_ms": 240000 },
+    "max_retries": 3
+  },
+  "8-web-testing.md": {
+    "skill": "expl1-8-web-testing",
+    "validator": "lib/validate-web-testing.mjs",
+    "reviewer": { "agent": "expl1-web-testing-reviewer", "timeout_ms": 240000 },
+    "max_retries": 3
+  }
+}

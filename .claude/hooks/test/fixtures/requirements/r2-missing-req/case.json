@@ -1,0 +1,9 @@
+{
+  "description": "REQ-9 was dropped (for example merged into REQ-8 without the user agreeing). The context has 14 requirements, so #9 has no REQ. The fixed version restores it.",
+  "edits": [
+    { "find": "- REQ-9: The product details page maintains consistent cart functionality.\n", "replace": "" }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "requirement #9 has no REQ-9" }
+}

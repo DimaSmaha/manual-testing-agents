@@ -1,0 +1,12 @@
+{
+  "description": "The REQ-5 section lost its test case and has no structural / needs-clarification note either.",
+  "edits": [
+    {
+      "find": "Applied techniques: Use Case\n\n### TC-REQ-5.1: The price matches the inventory page\n\n**Precondition:** The inventory page is open; the price of Product A is noted from the inventory list\n\n| # | Step | Test data | Expected result |\n|---|------|-----------|-----------------|\n| 1 | Click the name of Product A | Product A [test data] | The details page displays a price |\n| 2 | Compare the price on the details page with the price noted on the inventory page | — | The prices are identical |\n",
+      "replace": ""
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "## REQ-5 \\(line \\d+\\) has no test cases and no note", "layers": ["script", "reviewer"] }
+}

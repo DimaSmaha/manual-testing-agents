@@ -1,0 +1,6 @@
+{
+  "description": "The reviewer cannot start (CLAUDE_BIN points to a binary that does not exist). The gate fails open: UNVERIFIED with a visible message, not counted as a retry.",
+  "env": { "CLAUDE_BIN": "__missing_claude_binary__" },
+  "expect": ["UNVERIFIED"],
+  "assert": { "retries": 0, "reason_includes": "could not run" }
+}

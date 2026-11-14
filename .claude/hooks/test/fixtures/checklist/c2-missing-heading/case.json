@@ -1,0 +1,12 @@
+{
+  "description": "The REQ-9 section is missing. The checklist must cover every REQ of the requirements file, and the note gives the exact heading to add and where.",
+  "edits": [
+    {
+      "find": "### REQ-9: The product details page maintains consistent cart functionality.\n- [ ] REQ-9.1: Opening the product details page does not change the cart count that was shown on the inventory page\n- [ ] REQ-9.2: A product added to the cart on the product details page is listed on the cart page\n- [ ] REQ-9.3: A product removed from the cart on the product details page is not listed on the cart page\n\n",
+      "replace": ""
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "REQ-9 of TASK-114-2-requirements.md has no heading .* after the REQ-8 section" }
+}

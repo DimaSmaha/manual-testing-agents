@@ -1,0 +1,16 @@
+{
+  "description": "REQ-9 was dropped and the rest renumbered (REQ-10 → REQ-9 … REQ-14b → REQ-13b). The numbering looks gap-free, but the context has 14 requirements, so #14 has no REQ.",
+  "edits": [
+    { "find": "- REQ-9: The product details page maintains consistent cart functionality.\n", "replace": "" },
+    { "find": "- REQ-10: ", "replace": "- REQ-9: " },
+    { "find": "- REQ-11: ", "replace": "- REQ-10: " },
+    { "find": "- REQ-12: ", "replace": "- REQ-11: " },
+    { "find": "- REQ-12a: ", "replace": "- REQ-11a: " },
+    { "find": "- REQ-13: ", "replace": "- REQ-12: " },
+    { "find": "- REQ-14a: ", "replace": "- REQ-13a: " },
+    { "find": "- REQ-14b: ", "replace": "- REQ-13b: " }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "has 14 requirements, but requirement #14 has no REQ-14" }
+}

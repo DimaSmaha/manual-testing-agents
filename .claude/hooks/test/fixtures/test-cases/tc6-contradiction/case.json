@@ -1,0 +1,7 @@
+{
+  "description": "TC-REQ-8.1 starts with cart count 1 and adds one product, but expects count 3 — contradicts REQ-8.2 of the checklist ('increases the cart count by 1') and its own precondition.",
+  "edits": [{ "find": "| 2 | Check the cart count | — | The cart count is 2 |", "replace": "| 2 | Check the cart count | — | The cart count is 3 |" }],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-8\\.1" }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-12.2 has a row, but its status is NOT RUN. Any executed result would do (PASS, FAIL, BLOCKED …); NOT RUN does not.",
+  "edits": [
+    {
+      "find": "| TC-REQ-12.2 | Reloading the details page | QA | PASS | Page reloaded and shows \"Sauce Labs Bike Light\". OBSERVATION: OBS-1 |",
+      "replace": "| TC-REQ-12.2 | Reloading the details page | QA | NOT RUN | — |"
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "TC-REQ-12\\.2 .*\"NOT RUN\"", "layers": ["script", "reviewer"] }
+}

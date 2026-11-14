@@ -1,0 +1,12 @@
+{
+  "description": "A row for TC-REQ-15.1, which is not a test case of the test-cases file (a typo or an invented test).",
+  "edits": [
+    {
+      "find": "| TC-REQ-14b.2 | Removed on the details page → 'Add to cart' on the inventory page | PASS | PASS | — |\n",
+      "replace": "| TC-REQ-14b.2 | Removed on the details page → 'Add to cart' on the inventory page | PASS | PASS | — |\n| TC-REQ-15.1 | Product rating is shown | QA | PASS | — |\n"
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "row TC-REQ-15\\.1" }
+}

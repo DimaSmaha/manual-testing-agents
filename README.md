@@ -29,6 +29,7 @@ More flows will be added next to it under `.claude/skills/`.
 - [Issue tracker integration](#issue-tracker-integration)
 - [Exploratory flow: `expl-bot-*`](#exploratory-flow-expl-bot-)
 - [Run metrics: tokens, cost and time per skill](#run-metrics-tokens-cost-and-time-per-skill)
+- [Feedback loops: stages check their own output](#feedback-loops-stages-check-their-own-output)
 - [Repository layout](#repository-layout)
 - [Configuring and adapting the skills](#configuring-and-adapting-the-skills)
 - [Design principles](#design-principles)
@@ -198,9 +199,9 @@ Compares the PR head with the commit before the PR (the merge base) and finds co
 
 ### 8. `expl1-8-web-testing`: run it in a real browser
 
-Executes the `QA` and `FAIL` items from the code review, plus `Browser` retest rows from the impact analysis, in a headed browser through `playwright-cli`, and writes a detailed report. See [Stage 8: web testing in detail](#stage-8-web-testing-in-detail).
+Executes **every** test case of stage 4 (the code-review status `QA` / `FAIL` / `PASS` / `N/A` only sets the Source column; `FAIL` items end as `FAIL CONFIRMED` or `FAIL REJECTED`), plus `Browser` retest rows from the impact analysis, in a headed browser through `playwright-cli`, and writes a detailed report. See [Stage 8: web testing in detail](#stage-8-web-testing-in-detail).
 
-- **Input:** `<ISSUEKEY>-6-code-review.md`, `<ISSUEKEY>-4-test-cases.md` (optional: checklist, impact analysis)
+- **Input:** `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-6-code-review.md` (recommended; without it every test case runs as `QA`) (optional: checklist, impact analysis)
 - **Output:** `<ISSUEKEY>-8-web-testing.md` plus screenshots
 
 ---
@@ -216,9 +217,9 @@ Executes the `QA` and `FAIL` items from the code review, plus `Browser` retest r
 
 ### Conditional stages
 
-- No PR or branch yet → stop after stage 4.
+- No PR or branch yet → stop after stage 4, or go straight to stage 8 (every test case then runs as `QA`).
 - Stage 7 is optional; skip it if you want.
-- Stage 8 has nothing to do (and is skipped) if the code review has no `QA`/`FAIL` rows and the impact analysis has no `Browser` rows.
+- Stage 8 runs every test case; it has nothing to do (and is skipped) only if there are no test cases and the impact analysis has no `Browser` rows.
 
 ### Optional helpers
 
@@ -247,7 +248,7 @@ The rest of the imported set stays in `.claude/skills-archive/testomat-skills/`.
   | Status           | Meaning                                                            |
   | ---------------- | ------------------------------------------------------------------ |
   | `PASS`           | UI matches the expected result                                     |
-  | `FAIL`           | UI differs from expected (for items that came as `QA` or `IMPACT`) |
+  | `FAIL`           | UI differs from expected (items that came as `QA`, `PASS`, `N/A` or `IMPACT`) |
   | `FAIL CONFIRMED` | A code-review `FAIL` that the UI confirms                          |
   | `FAIL REJECTED`  | A code-review `FAIL` that the UI does not show                     |
   | `BLOCKED`        | Could not be executed (with the reason)                            |
@@ -465,13 +466,51 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 
 ---
 
+## Feedback loops: stages check their own output
+
+A `PostToolUse` hook (`.claude/hooks/artifact-gate.mjs`, registered in `.claude/settings.json` with an
+`if: Edit(...)` file matcher per artifact) checks stages 2, 3, 4 and 8 every time they write or edit their artifact.
+It works the same inside `expl1-orchestrator` and when you type a stage yourself (`/expl1-4-qa-test-cases …`).
+When a check finds a problem, the stage sees the notes next to its Write result and fixes the file in place.
+After 3 failed retries it stops and reports `… VALIDATION FAILED`.
+
+| Loop | Artifact | Checked against | Checked by | What must hold |
+|------|----------|-----------------|------------|----------------|
+| 1 | `<KEY>-2-requirements.md` | `<KEY>-1-context.md` | script | `## Goal` copied unchanged; one REQ number per context requirement (REQ-k or sub-items REQ-ka/kb), nothing above the count, no duplicate or out-of-order ids. Wording is **not** compared: agreed rewrites are fine |
+| 2 | `<KEY>-3-checklist.md` | `<KEY>-2-requirements.md` | script | one `### REQ-<id>: <text>` heading per REQ with the exact text, in order; every heading has checks numbered `REQ-<id>.1…n` |
+| 3 | `<KEY>-4-test-cases.md` | `<KEY>-3-checklist.md` | script, then reviewer subagent `expl1-test-cases-reviewer` | every behavioral checklist check covered with its data, conditions and exact values; no contradictions, no invented behavior, executable preconditions, verifiable results |
+| 4 | `<KEY>-8-web-testing.md` | `<KEY>-4-test-cases.md` | script, then reviewer subagent `expl1-web-testing-reviewer` | **every** test case executed on the live app and reported — any result (PASS, FAIL, BLOCKED …) is fine; not "covered by code review", not partial |
+
+**Cost control for the reviewer loops (3 and 4).** The subagent (Sonnet, `claude -p --agent`, measured 10–20 s and
+$0.07–0.13 per review) runs only when it is worth it:
+- An unfinished file (no `## Statistics` section yet) is marked `PENDING` and not checked at all.
+- The free script layer runs first. A structural problem gets feedback without any model call.
+- An unchanged file reuses the last verdict.
+- A rewrite that reduces the script problems (stage 8 adding executed test cases one by one) gets feedback but uses
+  no retry.
+
+The result is saved next to the artifact, in `<KEY>-<stage>.validation.json`, with the status `PASSED`, `RETRYING`,
+`FAILED`, `UNVERIFIED` or `PENDING`. It also records which layer decided, the notes, the review time and the review
+cost. The orchestrator reads it before the next stage. Retry state and the log are in
+`.workflow-artifacts/.hook-state/`.
+
+```
+npm run test:artifact-gate                                   # all four loops, fake reviewer: free, deterministic, seconds
+npm run test:artifact-gate -- --artifact web-testing --verbose # one loop, with the feedback text
+npm run test:artifact-gate:real                              # loops 3–4 with the real reviewer subagents (minutes, ~$2–3)
+node .claude/hooks/lib/validate-requirements.mjs .workflow-artifacts/TASK-114/TASK-114-2-requirements.md
+node .claude/hooks/lib/validate-test-cases.mjs   .workflow-artifacts/TASK-114/TASK-114-4-test-cases.md   # script layer only
+```
+
+---
+
 ## Repository layout
 
 ```
 .
 ├── CLAUDE.md                      Guidance for Claude Code working in this repo
 ├── README.md                      This file
-├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck
+├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck, test:artifact-gate
 ├── scripts/                       expl-bot-run.ts (Flow 2 runner) and utils/colors.ts
 ├── .env.sample                    Env template for the runner and explorbot (copy to .env, git-ignored)
 ├── explorbot.config.mjs           Config for Flow 3 (explorbot as-is)
@@ -499,8 +538,11 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 │   │   ├── explorbot-run/         Wrapper for the real explorbot CLI (Flow 3)
 │   │   ├── expl-bot-core/         Shared rules, formats and run-code scripts (not a stage)
 │   │   └── playwright-cli/        Browser automation skill used by stage 8 and expl-bot-*
-│   ├── agents/                    Subagents: expl-bot-researcher, expl-bot-tester
+│   ├── agents/                    Subagents: expl-bot-researcher, expl-bot-tester; feedback-loop reviewers
+│   │                              expl1-test-cases-reviewer, expl1-web-testing-reviewer
 │   ├── hooks/                     Run-metrics hooks: agent-metrics.mjs, metrics-report.mjs, lib/
+│   │                              Feedback loops: artifact-gate.mjs (+ .json), lib/validate-*.mjs,
+│   │                              lib/review-subagent.mjs, test/ (runner, fake-claude.mjs, fixtures)
 │   ├── settings.json              Registers the hooks (settings.local.json stays personal)
 │   └── skills-archive/            Retired skill versions (inert)
 └── .workflow-artifacts/           Git-ignored: per-task artifacts and scratch files

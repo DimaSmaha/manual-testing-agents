@@ -1,0 +1,5 @@
+{
+  "description": "The REAL no-code-review TASK-114 run that the user stopped after 12 of 23 test cases: 11 rows NOT RUN and 1 NOT COMPLETED. All 23 rows exist, but 12 were not executed — one note each.",
+  "expect": ["BLOCK"],
+  "assert": { "retries": 1, "notes_count": 12, "notes_match": "status \"NOT COMPLETED\" means it was not executed", "layers": ["script"], "reviewer_calls": 0 }
+}

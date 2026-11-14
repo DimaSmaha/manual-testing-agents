@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-5.1 expects 'The price is displayed correctly' instead of 'The prices are identical' — not verifiable, and REQ-5.2 (identical to the inventory price) is no longer checked.",
+  "edits": [
+    {
+      "find": "| 2 | Compare the price on the details page with the price noted on the inventory page | — | The prices are identical |",
+      "replace": "| 2 | Compare the price on the details page with the price noted on the inventory page | — | The price is displayed correctly |"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-5\\.1|REQ-5\\.2" }
+}

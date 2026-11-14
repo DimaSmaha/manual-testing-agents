@@ -1,0 +1,5 @@
+{
+  "description": "The TASK-114 test cases after the review: the real stage-4 output with the six problems the real reviewer found fixed (see tc6-real-114-stale). Script layer passes, the reviewer passes. Confirmed with the real expl1-test-cases-reviewer.",
+  "expect": ["PASS"],
+  "assert": { "retries": 0, "layers": ["reviewer"], "reviewer_calls": 1 }
+}

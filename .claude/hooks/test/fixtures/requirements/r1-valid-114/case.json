@@ -1,0 +1,5 @@
+{
+  "description": "The real TASK-114 stage-2 output. The Goal is copied, and the 14 context requirements become REQ-1 … REQ-14 with an agreed rewrite (REQ-6), extensions (REQ-8/10/11/13), an added sub-item (REQ-12a) and a split (REQ-14a/14b). Wording is not compared, so it passes.",
+  "expect": ["PASS"],
+  "assert": { "retries": 0 }
+}

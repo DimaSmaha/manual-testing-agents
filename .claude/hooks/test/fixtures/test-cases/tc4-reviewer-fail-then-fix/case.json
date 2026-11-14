@@ -1,0 +1,13 @@
+{
+  "description": "Loop mechanics, reviewer layer: the (fake) reviewer returns FAIL with one note, the agent fixes the file, the second review passes. Two reviewer runs.",
+  "edits": [
+    {
+      "find": "# TASK-114 - Test cases\n",
+      "replace": "# TASK-114 - Test cases\n<!-- fake-review: FAIL REQ-11.5: no test case checks the empty-cart state (rule 1) → add a test case under REQ-11 -->\n"
+    }
+  ],
+  "fix": true,
+  "expect": { "fake": ["BLOCK", "PASS"] },
+  "skip_reason": { "real": "loop mechanics with a fake-review marker — the real reviewers are tested by the tc6 cases" },
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "REQ-11\\.5", "layers": ["reviewer", "reviewer"], "reviewer_calls": 2 }
+}

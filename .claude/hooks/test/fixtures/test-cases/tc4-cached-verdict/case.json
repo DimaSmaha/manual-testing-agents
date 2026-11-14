@@ -1,0 +1,13 @@
+{
+  "description": "The agent writes the same rejected file twice. The second check reuses the first verdict (same agent rules + artifact + checklist digest): no second model call, and the feedback says the verdict was reused. It still counts as a retry.",
+  "edits": [
+    {
+      "find": "# TASK-114 - Test cases\n",
+      "replace": "# TASK-114 - Test cases\n<!-- fake-review: FAIL REQ-11.5: no test case checks the empty-cart state (rule 1) → add a test case under REQ-11 -->\n"
+    }
+  ],
+  "writes": ["bad", "bad"],
+  "expect": { "fake": ["BLOCK", "BLOCK"] },
+  "skip_reason": { "real": "loop mechanics with a fake-review marker" },
+  "assert": { "retries": 2, "cached": true, "reviewer_calls": 1, "last_reason_includes": "verdict was reused" }
+}

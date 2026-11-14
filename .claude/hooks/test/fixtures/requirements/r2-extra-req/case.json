@@ -1,0 +1,9 @@
+{
+  "description": "An invented REQ-15 was added. The context has only 14 requirements, so there is no #15 (an agreed addition must be a sub-item such as REQ-12a).",
+  "edits": [
+    { "find": "on the inventory page after returning to it.", "replace": "on the inventory page after returning to it.\n- REQ-15: The product details page shows the product rating." }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "REQ-15 \\(line \\d+\\): .* has 14 requirements" }
+}

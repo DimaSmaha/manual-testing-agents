@@ -26,7 +26,7 @@ Cross-stage contracts that span several skills (read the orchestrator `SKILL.md`
 - **`<ISSUEKEY>`** is `TASK-<id>` or `BUG-<id>` and prefixes every artifact. Requirement IDs (`REQ-N`) are assigned in stage 2 and must stay stable through all later stages.
 - **Artifacts** go in `.workflow-artifacts/<ISSUEKEY>/` (git-ignored, kept after the run). Re-running a stage deletes and recreates its file; it never merges. Later stages may need a re-run if an earlier one changed.
 - **The orchestrator never does stage work or edits artifacts.** It launches stage skills via the Skill tool, checks handoff files exist and are non-empty, reports counters, and asks before advancing. Stage skills ask the user questions; never answer them on the user's behalf.
-- **Stage 8 scope** = `QA` and `FAIL` rows from stage 6, plus the rows of stage 7's "Retest in stage 8" section (source `IMPACT`; live-app browser checks only, code/CI/npm results get no row). `PASS`/`N/A` rows from the code review are not browser-tested. FAIL items from the code review may only end as `FAIL CONFIRMED` or `FAIL REJECTED`.
+- **Stage 8 scope** = **every** test case of stage 4, whatever its stage 6 status (`QA` / `FAIL` / `PASS` / `N/A` only sets the Source column; no code review → all `QA`), plus the rows of stage 7's "Retest in stage 8" section (source `IMPACT`; live-app browser checks only, code/CI/npm results get no row). FAIL items from the code review may only end as `FAIL CONFIRMED` or `FAIL REJECTED`. Feedback loop 4 enforces that every test case has an executed row.
 - Each stage skill declares a recommended model/effort/thinking setting (Opus + thinking for stages 2, 6, 7; Sonnet otherwise). Stage 1 blocks until the user confirms those settings.
 - Stages 1–4 are tracker/requirements work; stages 5–7 need a PR URL or branch and use the `gh` CLI (`gh pr view`, `gh api repos/.../compare/...`) as the only code source; stage 8 uses the browser only.
 - **Optional helpers** (adapted from `testomatio/skills`, MIT; not stages, never required): `qa-thinking` (offered after
@@ -132,8 +132,84 @@ window of the main session, not a subagent). Rules to keep when editing:
 - **Cost is an API-list-price estimate, derived each run** (not plan usage); rates are in `lib/pricing.mjs` (`RATES_AS_OF`). Unknown model, non-standard
   speed or Haiku 5.5 above 100K prompt = unpriced, never guessed. Update rates there when prices change.
 - Every hook path exits 0 and writes `_diagnostics.jsonl` instead of failing silently. Empty table → read it first.
+- `agent-metrics.mjs` exits at once in a nested feedback-loop reviewer session (`EXPL1_REVIEW_CHILD=1`, see "Feedback
+  loops"): that session is not a skill run, and its Read calls name the reviewed task's artifacts.
 - Synthetic checks used to verify the model live in the (git-ignored) scratch folder only; re-create them from the
   report-model rules if you change the window logic.
+
+## Feedback loops (hooks, stages 2, 3, 4 and 8)
+
+`.claude/hooks/artifact-gate.mjs` is a `PostToolUse` hook on `Write|Edit` in `.claude/settings.json`, with one
+`if: Edit(/.workflow-artifacts/**/*-<stage>.md)` file matcher per artifact (`-2-requirements`, `-3-checklist`,
+`-4-test-cases`, `-8-web-testing`; timeout 60 s, or 300 s for the two reviewer loops). Because it is a project hook and
+not a skill-frontmatter hook, it fires the same way inside `expl1-orchestrator` (stages run inline via the Skill tool)
+and for a single `/expl1-…` call, and again on every fix. Stage 4's skill is not changed by its loop; stage 8's scope
+was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate` / `tc-gate` of
+`user-story-to-test-case-agent-generator`, with the write trigger only.
+
+- Config: `.claude/hooks/artifact-gate.json` (file-name suffix after `<ISSUEKEY>-` → `validator`, optional
+  `reviewer: { agent, timeout_ms }`, `max_retries`). Validators export
+  `validateArtifact(absPath) → { errors, warnings, unverified?, pending?, source, inputs?, fixHint? }` and also work as a
+  CLI: `node .claude/hooks/lib/validate-requirements.mjs <file>`.
+- **Layers, cheapest first** — this is what keeps the reviewer from running on every edit (user requirement):
+  1. `pending` (stages 4 and 8): the file has no `## Statistics` section yet, so the stage is still writing it →
+     status `PENDING`, silent, nothing else runs.
+  2. script validator → `errors` block without any model call.
+  3. reviewer subagent, only for a finished file that passed the script layer: `.claude/agents/<agent>.md` run as-is
+     through `claude -p --agent <agent> --setting-sources project --no-session-persistence --output-format json
+     --json-schema <{verdict, notes}>` (`lib/review-subagent.mjs`). The agent reads the files itself (tools `Read`,
+     `StructuredOutput`). **Verdict cache**: same agent rules + artifact + ground truth (sha256) in the same session →
+     the last verdict is reused, no model call. Reviewer cannot run → `UNVERIFIED` + `systemMessage`, not a retry.
+     Time and cost of each review are recorded (`review_ms`, `review_cost_usd`; measured: 10–20 s, $0.07–0.13).
+- **Progress is free**: a script-layer failure with fewer problems than the previous script-layer check still gets
+  feedback but uses no retry, so stage 8 adding executed test cases one by one never runs out of retries.
+- **Loop 1**, `lib/validate-requirements.mjs`: `<KEY>-2-requirements.md` is checked against the sibling
+  `<KEY>-1-context.md`. `## Goal` must be copied unchanged. The count is checked: N context requirements (the
+  `## Requirements` bullets, then the `## Additional requirements (from comments)` bullets) need REQ-1 … REQ-N, where
+  REQ-k may be replaced or extended by sub-items REQ-ka, REQ-kb. There must be nothing above N, no duplicate ids,
+  ids in ascending order, and every bullet must carry an id. **Wording is not compared**, because grooming may
+  rewrite after the user agrees. That was the user's decision.
+- **Loop 2**, `lib/validate-checklist.mjs`: `<KEY>-3-checklist.md` is checked against the sibling `<KEY>-2-requirements.md`.
+  Every REQ needs exactly one `### REQ-<id>: <text>` heading with the exact text (whitespace and quote style may
+  differ), in order, with no unknown headings. Every heading needs at least one check, numbered `REQ-<id>.1…n` with no
+  gaps and under the matching heading.
+- **Loop 3**, `lib/validate-test-cases.mjs` + reviewer `.claude/agents/expl1-test-cases-reviewer.md`:
+  `<KEY>-4-test-cases.md` against the sibling `<KEY>-3-checklist.md`. Script: one `## REQ-<id>: <text>` section per
+  checklist REQ (exact text, order), each with test cases or a `>` note (structural / needs clarification),
+  `TC-REQ-<id>.1…n` numbering, a steps table per test case. Reviewer: every behavioral checklist check is covered with
+  its data, conditions and exact values; no contradiction, no invented behavior, executable preconditions, verifiable
+  expected results, no duplicates. Style, naming and technique are out of scope. Stage 4's skill is unchanged.
+- **Loop 4**, `lib/validate-web-testing.mjs` + reviewer `.claude/agents/expl1-web-testing-reviewer.md`:
+  `<KEY>-8-web-testing.md` against the sibling `<KEY>-4-test-cases.md`. **Every** test case must have exactly one
+  `## Results` row with an executed status (PASS / FAIL / FAIL CONFIRMED / FAIL REJECTED / BLOCKED / OBSERVATION — the
+  result does not matter; NOT RUN / NOT COMPLETED / empty fail). Reviewer: really run on the live app (not "covered by
+  the code review", not partial, not incidental), FAIL/BLOCKED rows say what happened, the report names the app. This
+  is why stage 8 now runs every test case whatever its code-review status (user decision).
+- Shared parsing lives in `lib/expl1-markdown.mjs`. **Changing the output template of stage 1, 2, 3, 4 or 8 means
+  changing this parser, the validators, the reviewer agent and the fixtures together.**
+- Feedback is `{"decision":"block","reason":…}`, shown next to the Write/Edit result. It is one note per problem with
+  one fix each. The loop is bounded per (session, run folder, artifact): 3 blocks, then a final block asking for a
+  `<REQUIREMENTS|CHECKLIST|TEST-CASES|WEB-TESTING> VALIDATION FAILED after 3 retries — <path>` reply, then silence.
+  A PASS resets the count. A missing ground-truth sibling gives `UNVERIFIED`: a `systemMessage`, no block and no retry.
+  The ground truth is never fabricated. A gate crash also gives a `systemMessage`, and every path exits 0.
+- Status: `.workflow-artifacts/<KEY>/<KEY>-<stage>.validation.json` (`PASSED | RETRYING | FAILED | UNVERIFIED | PENDING`,
+  plus `layer`, `checked_by`, `notes`, `review_ms`, `review_cost_usd`, `cached`). These are **hook-owned**: the
+  orchestrator reads them in its handoff checks and never edits them. Retry state and the log are in
+  `.workflow-artifacts/.hook-state/` (`artifact-gate-<run>-<stem>.json`, `artifact-gate.log`).
+- **Nested reviewer sessions** run with `EXPL1_REVIEW_CHILD=1`: `artifact-gate.mjs` and `agent-metrics.mjs` are no-ops
+  inside them (no recursion, and the reviewer's Read calls must not be billed to — or overwrite the saved metrics of —
+  the task it reviews). Its cost is in the `.validation.json` instead.
+- Only files in `.workflow-artifacts/<folder>/` named `TASK-<id>-…` / `BUG-<id>-…` are checked. Dot-folders such as
+  `.hook-state` and `.hook-test` are ignored.
+- Offline tests: `npm run test:artifact-gate` (all four loops, **fake** reviewer `test/fake-claude.mjs`, which judges a
+  file only by `<!-- fake-review: FAIL … -->` markers: free, deterministic, seconds) and `npm run test:artifact-gate:real`
+  (loops 3–4 with the real reviewer subagents against labelled examples: real model calls, minutes, ~$2–3). Options:
+  `--artifact <kind>[,<kind>]`, `--reviewer fake|real`, `--case <substr>`, `--verbose`, `--keep`. The runner plays the
+  agent and pipes `PostToolUse` inputs into the real gate. Fixtures are in `.claude/hooks/test/fixtures/<artifact>/`:
+  `_base/` is built from the real TASK-114 run (for loop 3 the real test cases with the fixes the real reviewer asked
+  for; the original is the `tc6-real-114-stale` defect case), and each case folder holds a `case.json` with find/replace
+  `edits` (or named `versions`), the expected outcome sequence (per reviewer mode when they differ) and asserts. Run
+  folders are created under `.workflow-artifacts/gate-test-*` and deleted afterwards.
 
 ## External dependencies
 
@@ -145,7 +221,7 @@ window of the main session, not a subagent). Rules to keep when editing:
 
 - `.claude/skills/` is the only folder Claude Code loads. `.claude/skills-archive/` holds retired versions (currently the Claude Desktop variant of stage 8) and is inert. To restore one, copy it into `skills/` under a non-clashing name.
 - `.claude/skills-archive/testomat-skills/` is the imported `testomatio/skills` set. Five were promoted (moved out: `qa-thinking`, `qa-review-pr`, `qa-explain-behavior`, `qa-detect-useless-tests` (renamed from `detect-useless-tests`), `qa-data-seeder`); useful rules from `qa-write-test-cases`, `epic-requirement-reviewer`, `write-user-story`, `pull-request-diff-analyzer`, `wiki-from-code`, `detect-product-mismatches`, `qa-pr-requirements-analyzer`, `detect-duplicate-test-cases` and the three `explorbot-*` skills were merged into stages 2–7 and the explorbot flow (the archive copies stay). The rest are Testomat/TMS- or automation-tied and are not used. Do not import their `.test.md` format, ids, `.testeiya/` folder or "never generate IDs" rule: they conflict with `REQ-N` / `TC-REQ-N.N` and the artifact layout.
-- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks.
+- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks. For stages 1–3, they must also be matched in the feedback-loop validators and fixtures (`.claude/hooks/lib/expl1-markdown.mjs`, `validate-*.mjs`, `.claude/hooks/test/fixtures/`).
 - `setup-guide.md` in each stage records how to reconfigure that stage for another tracker or project. Stages 1 and 7 also keep `references/configure-blocks-original.md` with the original `⚠️ CONFIGURE` placeholder blocks.
 - Skill text is written in English, with short chat messages and no invented data. Several skills have hard "do not" rules (do not reword requirements, do not invent test data, uncovered files never get FAIL). Preserve them when editing.
 

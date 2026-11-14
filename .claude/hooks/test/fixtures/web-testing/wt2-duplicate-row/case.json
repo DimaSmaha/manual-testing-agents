@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-5.1 has two rows. One row per test case.",
+  "edits": [
+    {
+      "find": "| TC-REQ-5.1 | The price matches the inventory page | PASS | PASS | — |\n",
+      "replace": "| TC-REQ-5.1 | The price matches the inventory page | PASS | PASS | — |\n| TC-REQ-5.1 | The price matches the inventory page | PASS | PASS | — |\n"
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "TC-REQ-5\\.1 has 2 rows" }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-7.1 expects a green toast 'Product added to cart' for 3 seconds — behavior neither the requirement nor the checklist states.",
+  "edits": [
+    {
+      "find": "| 2 | Click 'Add to cart' | — | The product is added to the cart |",
+      "replace": "| 2 | Click 'Add to cart' | — | A green toast 'Product added to cart' is displayed for 3 seconds |"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-7\\.1" }
+}

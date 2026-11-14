@@ -1,0 +1,8 @@
+{
+  "description": "The Goal is copied unchanged but wrapped onto two lines. Whitespace is not a change, so this passes.",
+  "edits": [
+    { "find": "from the inventory page. When a user clicks", "replace": "from the inventory page.\nWhen a user clicks" }
+  ],
+  "expect": ["PASS"],
+  "assert": { "retries": 0 }
+}

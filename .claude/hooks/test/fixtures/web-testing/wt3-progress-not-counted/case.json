@@ -1,0 +1,18 @@
+{
+  "description": "The agent executes the missing test cases one by one after the first feedback and rewrites the report each time: 3 → 2 → 1 missing rows → complete. Only the first failure uses a retry; the shrinking ones are progress (feedback, no retry), so the loop never runs out of retries while work is being done. The reviewer runs once, on the complete report.",
+  "versions": {
+    "missing3": [
+      { "find": "| TC-REQ-14a.1 | Added on the inventory page → 'Remove' on the details page | PASS | PASS | — |\n", "replace": "" },
+      { "find": "| TC-REQ-14a.2 | Removed on the inventory page → 'Add to cart' on the details page | PASS | PASS | — |\n", "replace": "" },
+      { "find": "| TC-REQ-14b.1 | Added on the details page → 'Remove' on the inventory page | PASS | PASS | — |\n", "replace": "" }
+    ],
+    "missing2": [
+      { "find": "| TC-REQ-14a.2 | Removed on the inventory page → 'Add to cart' on the details page | PASS | PASS | — |\n", "replace": "" },
+      { "find": "| TC-REQ-14b.1 | Added on the details page → 'Remove' on the inventory page | PASS | PASS | — |\n", "replace": "" }
+    ],
+    "missing1": [{ "find": "| TC-REQ-14b.1 | Added on the details page → 'Remove' on the inventory page | PASS | PASS | — |\n", "replace": "" }]
+  },
+  "writes": ["missing3", "missing2", "missing1", "fixed"],
+  "expect": ["BLOCK", "BLOCK", "BLOCK", "PASS"],
+  "assert": { "retries": 1, "reason_includes": "not counted as a retry", "layers": ["script", "script", "script", "reviewer"], "reviewer_calls": 1 }
+}

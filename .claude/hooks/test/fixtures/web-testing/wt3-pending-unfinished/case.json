@@ -1,0 +1,6 @@
+{
+  "description": "The report has no '## Statistics' section yet (stage 8 is still running and writing rows as it goes). PENDING, silent, no reviewer call — so a report built row by row is not reviewed per row.",
+  "edits": [{ "find": "## Statistics", "replace": "Statistics:" }],
+  "expect": ["PENDING"],
+  "assert": { "reviewer_calls": 0 }
+}

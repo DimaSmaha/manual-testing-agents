@@ -1,0 +1,9 @@
+{
+  "description": "REQ-3 and REQ-5 are worded differently from the context (as after an agreed rewrite), but every context requirement still has its REQ number. Only the count matters, so this passes.",
+  "edits": [
+    { "find": "- REQ-3: The product details page must include the product name.", "replace": "- REQ-3: The product name is shown on the product details page." },
+    { "find": "- REQ-5: The product details page must include the price.", "replace": "- REQ-5: The product details page shows the product price." }
+  ],
+  "expect": ["PASS"],
+  "assert": { "retries": 0 }
+}

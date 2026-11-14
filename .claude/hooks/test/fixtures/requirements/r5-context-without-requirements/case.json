@@ -1,0 +1,5 @@
+{
+  "description": "The context file says 'Not specified in the tracker' under Requirements (this case folder has its own TASK-114-1-context.md). There is nothing to count, so the count check is skipped with a visible note. The Goal is still checked.",
+  "expect": ["PASS"],
+  "assert": { "retries": 0, "reason_includes": "requirement count was not checked" }
+}

@@ -99,24 +99,50 @@ Before launching a stage, check that its required input files exist in
   (`<ISSUEKEY>-5-pr-summary.md` is recommended but the skill can work without it).
 - Stage 7 needs `<ISSUEKEY>-4-test-cases.md`, `<ISSUEKEY>-5-pr-summary.md`,
   `<ISSUEKEY>-6-code-review.md` and the PR URL or branch name.
-- Stage 8 needs `<ISSUEKEY>-6-code-review.md` and `<ISSUEKEY>-4-test-cases.md`.
+- Stage 8 needs `<ISSUEKEY>-4-test-cases.md` (it runs every test case in it).
+  `<ISSUEKEY>-6-code-review.md` is recommended: it sets each test case's Source (QA / FAIL / PASS / N/A)
+  and the FAIL items to confirm; without it every test case runs with Source QA.
   `<ISSUEKEY>-7-impact-analysis.md` is optional: if it exists, stage 8 also runs its
   retest rows.
 
 If a required file is missing, tell the user which stage produces it and offer to run
 that stage first. If the chat is new, the user can upload the files instead.
 
+### Feedback-loop status (stages 2, 3, 4 and 8)
+
+A project hook (`.claude/hooks/artifact-gate.mjs`) checks the outputs of stages 2, 3, 4 and 8 every time
+the stage writes them, and the stage fixes its own file when the hook gives feedback. Stages 4 and 8 are
+checked in two layers: script checks first, then, only when those pass on a finished file, an independent
+reviewer subagent. The hook writes the result next to the artifact. These validation files are hook-owned,
+like the metrics files: never create, edit or "correct" them.
+
+| After stage | Status file | Checked against |
+|-------------|-------------|-----------------|
+| 2 | `<ISSUEKEY>-2-requirements.validation.json` | `<ISSUEKEY>-1-context.md`: Goal copied unchanged, one REQ number per context requirement |
+| 3 | `<ISSUEKEY>-3-checklist.validation.json` | `<ISSUEKEY>-2-requirements.md`: one heading per REQ with its exact text, in order, each with numbered checks |
+| 4 | `<ISSUEKEY>-4-test-cases.validation.json` | `<ISSUEKEY>-3-checklist.md`: every checklist check covered with its data and conditions, no contradictions (reviewer `expl1-test-cases-reviewer`) |
+| 8 | `<ISSUEKEY>-8-web-testing.validation.json` | `<ISSUEKEY>-4-test-cases.md`: every test case executed in the live app and reported, whatever the result (reviewer `expl1-web-testing-reviewer`) |
+
+After stage 2, 3 or 4 finishes, and before launching the next stage, read the `status` field of that
+file (read-only); after stage 8, read it before the final report. Add it to the stage report:
+- `PASSED`: continue as usual.
+- `UNVERIFIED`: the input file was not next to the artifact, or the reviewer could not run, so nothing
+  was checked. Say so in one line and continue.
+- `PENDING` (the file was never finished — it has no `## Statistics` section), `RETRYING`, `FAILED`, or
+  the file is missing (the hook did not run): show the `notes` to the user and offer to rerun the stage.
+  Do not start the next stage without the user's go-ahead, and do not fix the artifact yourself.
+
 ## Conditional stages
 
-- **Stages 5–6 (PR):** if the task has no PR or branch yet, offer to stop after stage 4.
-  Stage 8 cannot run without `<ISSUEKEY>-6-code-review.md`.
+- **Stages 5–6 (PR):** if the task has no PR or branch yet, offer to stop after stage 4, or to go
+  on to stage 8 without stages 5–7 (every test case then runs with Source QA).
 - **Stage 7 (impact analysis):** optional. It needs the PR (stages 5–6 done). It compares
   the PR with the commit before it and checks the files the PR did not change. Offer it
   after stage 6; the user may skip it. Stage 8 does not need it, but when it exists
   stage 8 runs the rows of its "Retest in stage 8" section (live-app browser checks only).
-- **Stage 8 (web testing):** if `<ISSUEKEY>-6-code-review.md` has no test cases with
-  status `QA` or `FAIL` and `<ISSUEKEY>-7-impact-analysis.md` is absent or has no
-  retest rows, the stage has nothing to do — say so and skip it.
+- **Stage 8 (web testing):** it runs every test case of `<ISSUEKEY>-4-test-cases.md`, whatever its
+  code-review status. Only if that file has no test cases and `<ISSUEKEY>-7-impact-analysis.md` is
+  absent or has no retest rows does the stage have nothing to do — say so and skip it.
 
 ## Optional helpers (not stages)
 
@@ -129,7 +155,7 @@ report. They write `<ISSUEKEY>-x-*.md` files into `.workflow-artifacts/<ISSUEKEY
 |-------------|--------|--------|--------------|
 | stage 2 | `qa-thinking` | `<ISSUEKEY>-x-risk-questions.md` | up to 5 "What if" questions and 5 risk scenarios on the groomed requirements |
 | stage 4 | `qa-detect-useless-tests` | `<ISSUEKEY>-x-test-pruning.md` | read-only list of test cases to merge, simplify or drop (it edits nothing) |
-| before stage 8, only if QA/FAIL or retest rows need data that is missing | `qa-data-seeder` | `<ISSUEKEY>-x-seed-data.md` | **creates marked records in a live non-production environment**; it asks the user itself (Step 0) and again before writing; stage 8 may use only the records it lists |
+| before stage 8, only if test cases or retest rows need data that is missing | `qa-data-seeder` | `<ISSUEKEY>-x-seed-data.md` | **creates marked records in a live non-production environment**; it asks the user itself (Step 0) and again before writing; stage 8 may use only the records it lists |
 | stage 8 (or when the pipeline stops after 6/7) | `qa-review-pr` | `<ISSUEKEY>-x-pr-verdict.md` | short PR verdict: is it done, merge risks, what must be verified; needs the PR (stage 5) |
 
 Rules for the helpers:
@@ -159,13 +185,13 @@ run / skipped / not run, its output file path, and its key counters:
 | Stage | Status | Output | Key result |
 |-------|--------|--------|------------|
 | 1 expl1-1-task-context | run | `<ISSUEKEY>-1-context.md` | — |
-| 2 expl1-2-requirements-grooming | run | `<ISSUEKEY>-2-requirements.md` | N requirements |
-| 3 expl1-3-qa-checklist | run | `<ISSUEKEY>-3-checklist.md` | N checks |
-| 4 expl1-4-qa-test-cases | run | `<ISSUEKEY>-4-test-cases.md` | N test cases, N requirements covered |
+| 2 expl1-2-requirements-grooming | run | `<ISSUEKEY>-2-requirements.md` | N requirements, validation PASSED |
+| 3 expl1-3-qa-checklist | run | `<ISSUEKEY>-3-checklist.md` | N checks, validation PASSED |
+| 4 expl1-4-qa-test-cases | run | `<ISSUEKEY>-4-test-cases.md` | N test cases, N requirements covered, validation PASSED |
 | 5 expl1-5-pr-summary | run | `<ISSUEKEY>-5-pr-summary.md` | N changed files |
 | 6 expl1-6-code-review | run | `<ISSUEKEY>-6-code-review.md` | PASS / FAIL / QA / N/A counters |
 | 7 expl1-7-impact-analysis | run | `<ISSUEKEY>-7-impact-analysis.md` | PASS / FAIL / QA / N/A counters |
-| 8 expl1-8-web-testing | run | `<ISSUEKEY>-8-web-testing.md` | counters + verdict |
+| 8 expl1-8-web-testing | run | `<ISSUEKEY>-8-web-testing.md` | counters + verdict, validation PASSED |
 
 If any optional helper ran, add one line per helper under the table (`qa-thinking` /
 `qa-detect-useless-tests` / `qa-data-seeder` / `qa-review-pr`: run or declined, output path, one counter such as the verdict).

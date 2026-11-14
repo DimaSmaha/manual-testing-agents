@@ -1,0 +1,5 @@
+{
+  "description": "A checklist under a dot-folder (.workflow-artifacts/.hook-test/…) is not a pipeline artifact. The gate ignores it and writes no status.",
+  "location": "outside",
+  "expect": ["IGNORED"]
+}

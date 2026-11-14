@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-14b.1 is marked PASS on the strength of something 'seen incidentally' during another test case — the real stopped run wrote exactly this kind of note. It was not run on its own.",
+  "edits": [
+    {
+      "find": "| TC-REQ-14b.1 | Added on the details page → 'Remove' on the inventory page | PASS | PASS | — |",
+      "replace": "| TC-REQ-14b.1 | Added on the details page → 'Remove' on the inventory page | PASS | PASS | Incidental: seen while running TC-REQ-9.1; not run on its own |"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-14b\\.1" }
+}

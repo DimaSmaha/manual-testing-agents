@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-8.1 is FAIL (an acceptable result) but the row says nothing about what was expected and what was seen, and there is no Findings entry.",
+  "edits": [
+    {
+      "find": "| TC-REQ-8.1 | 'Add to cart' → 'Remove' with cart count update | PASS | PASS | Count 1 → 2 |",
+      "replace": "| TC-REQ-8.1 | 'Add to cart' → 'Remove' with cart count update | PASS | FAIL | — |"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-8\\.1" }
+}

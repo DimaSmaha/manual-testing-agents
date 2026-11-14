@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-12a.1 is BLOCKED (an acceptable result) but nothing says why — no comment and no Findings entry. 'Something written' fails.",
+  "edits": [
+    {
+      "find": "| TC-REQ-12a.1 | Non-existent product id | PASS | PASS | `?id=99999` opened a page without the data of an existing product; 'Back to products' opened the inventory page |",
+      "replace": "| TC-REQ-12a.1 | Non-existent product id | PASS | BLOCKED | — |"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-12a\\.1" }
+}

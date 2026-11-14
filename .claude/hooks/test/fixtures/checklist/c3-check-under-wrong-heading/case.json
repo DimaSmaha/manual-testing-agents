@@ -1,0 +1,9 @@
+{
+  "description": "A check numbered REQ-6.2 sits under the REQ-5 heading. Its id does not match the requirement it is listed under.",
+  "edits": [
+    { "find": "- [ ] REQ-5.2: ", "replace": "- [ ] REQ-6.2: " }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "check REQ-6\\.2 is under ### REQ-5" }
+}
