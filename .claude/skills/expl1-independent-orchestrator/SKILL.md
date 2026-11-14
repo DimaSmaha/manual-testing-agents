@@ -24,8 +24,8 @@ Usage:
 | Argument | Meaning |
 |----------|---------|
 | item | `TASK-<id>`, `BUG-<id>`, or `<BASE>/tasks/<id>` / `<BASE>/bugs/<id>`. A bare number is probed in both id spaces (below). |
-| `--pr` | PR URL, or a branch name (then `--repo` is required). Without it stages 5–7 are skipped. |
-| `--repo` | `owner/name` for branch mode. Not needed with a PR URL. |
+| `--pr` | PR URL, or a branch name (then `--repo` is required). **Without a PR or branch given at the start, stages 5, 6 and 7 are skipped and the run is stages 1, 2, 3, 4, 8** (see "Stage plan"). |
+| `--repo` | `owner/name` for branch mode. Not needed with a PR URL. `--repo` alone (no `--pr`) is not a code reference: stages 5–7 are still skipped. |
 | `--app-url` | Start URL of the app for stage 8. Without it (and without a Base URL in `login-config.md` or a saved path) the run stops before stage 8, see Pre-flight. |
 | `--base` | Tracker base URL (default `http://localhost:3000`; a tracker URL as the item sets it). |
 | `--from-stage` / `--to-stage` | Run only stages N..M (default 1..8). `--from-stage` > 1 needs `--run-dir`. |
@@ -78,8 +78,11 @@ handoff files, reads hook-owned status files, and writes only its own run log.
    **always pass `--run-dir <RUN_DIR>` as the FIRST argument of every stage skill** (see below).
 3. **Pre-flight** (once; skipped checks for stages that will not run):
    - Tracker (stages 1 only): `curl -s --max-time 5 <BASE>/`. Empty → `STOP: tracker not reachable at <BASE>`.
-   - PR (stages 5–7): no `--pr` → stages 5, 6, 7 are `skipped (no PR)`. With `--pr`: run `gh auth status`; failing →
-     stages 5, 6, 7 are `skipped (gh not available)`. A branch without `--repo` → `skipped (branch given without --repo)`.
+   - PR / code reference (stages 5–7): decided **only from the arguments given at the start**; never ask for a PR or a
+     branch later and never look for one in the tracker or the task text. No `--pr` → stages 5, 6, 7 are
+     `skipped (no PR)` and the **stage plan is 1, 2, 3, 4, 8** (see "Stage plan"). With `--pr`: run `gh auth status`;
+     failing → stages 5, 6, 7 are `skipped (gh not available)`. A branch without `--repo` →
+     `skipped (branch given without --repo)`. In every skipped case the plan is again 1, 2, 3, 4, 8.
    - App (stage 8): `APP_URL` = `--app-url`, else the Base URL in
      `.claude/skills/expl1-8-web-testing/references/login-config.md` if it is set, else the `url` of a saved page in
      `.claude/skills/expl1-8-web-testing/navigation_paths.json`. None and stage 8 is in range →
@@ -87,10 +90,24 @@ handoff files, reads hook-owned status files, and writes only its own run log.
      (stages 1–7 are not worth an hour of model time if stage 8 cannot start).
    - `playwright-cli list` is not needed here; stage 8 opens the session.
 4. **Write the run log** `<RUN_DIR>/<ISSUEKEY>-x-auto-run.md` with the Write tool: arguments (no credentials),
-   `RUN_KEY`, start time, resolved `BASE`, PR / repo / `APP_URL` (or "none"), stages in range, pre-flight outcome, and a
+   `RUN_KEY`, start time, resolved `BASE`, PR / repo / `APP_URL` (or "none"), stages in range, the stage plan
+   (for example `1, 2, 3, 4, 8 (5–7 skipped: no PR)`), pre-flight outcome, and a
    `## Autonomous decisions` heading that later gets the `AUTO-DECISION:` lines. The orchestrator owns this file and
    may rewrite it as the run goes; it is not a stage artifact and the hooks ignore it.
-5. Print one line: `RUN <RUN_KEY> → <RUN_DIR>` and go on.
+5. Print two lines: `RUN <RUN_KEY> → <RUN_DIR>` and `PLAN <stages>` (for example `PLAN 1, 2, 3, 4, 8`), and go on.
+
+## Stage plan
+
+The plan is fixed in Phase 0 and printed in one line (`PLAN 1, 2, 3, 4, 8` or `PLAN 1–8`):
+
+| Start arguments | Plan |
+|-----------------|------|
+| `--pr` given and usable (`gh` works; branch has `--repo`) | 1, 2, 3, 4, 5, 6, 7, 8 (7 also dropped by `--skip-impact`) |
+| no `--pr`, or `--pr` not usable | **1, 2, 3, 4, 8** — stages 5, 6, 7 are listed as `skipped (<reason>)` in the run log and the final table, never silently dropped |
+
+`--from-stage` / `--to-stage` then cut the plan further. With stages 5–7 skipped, stage 8 gets no `-6-code-review.md`, so
+it runs every test case of stage 4 with Source `QA` (no FAIL items, no IMPACT rows). That is the normal path, not a
+failure: it is logged as `AUTO-DECISION: stages 5-7 skipped (no PR); stage 8 runs all test cases with Source QA`.
 
 ## Stages
 
@@ -148,6 +165,7 @@ Always produced, on every exit (complete, aborted, stopped in Phase 0). If it st
 |-------|--------|--------|------------|
 | 1 expl1-1-task-context | run / skipped (reason) / failed | `<ISSUEKEY>-1-context.md` | N requirements in the context |
 | 2 … 8 | … | … | counters from the stage's own final summary, `validation <status>` |
+| 5, 6, 7 without a PR | skipped (no PR) | — | stage 8 ran with Source `QA` |
 
 3. `## Autonomous decisions`: the `AUTO-DECISION:` lines (or "none").
 4. `## Needs attention`: every validation status that was not `PASSED`, every `BLOCKED` / `FAIL` headline from stage 8

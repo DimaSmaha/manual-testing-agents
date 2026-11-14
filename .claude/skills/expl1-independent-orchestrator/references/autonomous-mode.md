@@ -72,6 +72,11 @@ user. Nothing else in the stage changes: the output template, the "do not" rules
 
 The browser stays **headed**, in the named session `qa-<ISSUEKEY>`, `--persistent` (a login saved earlier survives).
 
+- **Stages 5–7 skipped (no PR at the start):** there is no `-6-code-review.md` and no `-7-impact-analysis.md`. Do not ask
+  for them and do not stop: run **every** test case of `-4-test-cases.md` with Source `QA`, no FAIL items to confirm,
+  no IMPACT rows. The report's header says `Code review: not used — every test case has Source QA` and
+  `Impact analysis: not used`.
+
 - **App URL:** `--app-url`, else the `url` in `navigation_paths.json`, else "Base URL" in `references/login-config.md`.
   None of them → do not open a browser; every test case gets `BLOCKED` with the reason "app URL unknown", and the
   report is still written. (The orchestrator normally stops before stage 8 in that case.)
