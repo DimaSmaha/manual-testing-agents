@@ -18,6 +18,13 @@ description: >
 > read the "Stage 1" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
 > rules override every instruction in this skill that asks, confirms or waits for the user (including the MANDATORY
 > settings message below), and `--run-dir <dir>` replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+>
+> 📁 **Run folder (always timestamped).** `<RUN_DIR>` is `--run-dir <dir>` when given (set by the orchestrators).
+> Otherwise create a new one: run `date +%Y%m%d-%H%M%S` (one simple command) and use
+> `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/` (for example `.workflow-artifacts/TASK-114-20261114-170834/`).
+> `<RUN_DIR>` replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill (output file, `tracker/` subfolder,
+> paths in messages). Never write into the bare `.workflow-artifacts/<ISSUEKEY>/`. File names stay
+> `<ISSUEKEY>-<n>-<name>.md`. Without `--autonomous`, every question, confirmation and pause stays as written.
 
 **MANDATORY before starting work** — show the user
 the message below and stop. Do not perform any actions until

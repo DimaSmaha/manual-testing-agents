@@ -14,6 +14,10 @@ author: Testomat.io (adapted)
 
 # QA Data Seeder
 
+> 📁 **Run folder (expl1).** `.workflow-artifacts/<ISSUEKEY>/` below means the timestamped run folder
+> `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/`: the one the caller passes as `--run-dir`, otherwise the newest
+> such folder (Glob). Never use the bare `.workflow-artifacts/<ISSUEKEY>/`.
+
 > ⚙️ Recommended settings: **Sonnet · Effort: Medium · Extended thinking: Off**
 
 > ## ⚠️ Be aware before you use this skill

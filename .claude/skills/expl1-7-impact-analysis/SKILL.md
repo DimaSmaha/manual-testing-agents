@@ -19,6 +19,12 @@ description: >
 > read the "Stage 7" section of `.claude/skills/expl1-independent-orchestrator/references/autonomous-mode.md`. Its
 > rules override every instruction in this skill that asks, confirms or waits for the user, and `--run-dir <dir>`
 > replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill.
+>
+> 📁 **Run folder (always timestamped).** `<RUN_DIR>` is `--run-dir <dir>` when given (set by the orchestrators).
+> Otherwise it is the newest existing folder `.workflow-artifacts/<ISSUEKEY>-<YYYYMMDD-HHMMSS>/` (latest stamp, found
+> with Glob; say which one in a single line). If there is none, stop: stage 1 creates the run folder. `<RUN_DIR>`
+> replaces `.workflow-artifacts/<ISSUEKEY>/` everywhere in this skill. Never write into the bare
+> `.workflow-artifacts/<ISSUEKEY>/`. Without `--autonomous`, every question, confirmation and pause stays as written.
 
 Looks beyond the files changed in the PR. It finds the contracts that changed
 (exports, props, constants, routes, storage keys, selectors), finds the files
