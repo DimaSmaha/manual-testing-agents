@@ -2,8 +2,9 @@
 //
 //   node .claude/hooks/artifact-gate.mjs        (PostToolUse hook input JSON on stdin)
 //
-// Registered in .claude/settings.json as a PostToolUse hook on Write|Edit, with one `if: Edit(<glob>)` file matcher per
-// artifact. Because it is a project hook (not a skill-frontmatter hook) it fires the same way when a stage runs from
+// Registered in .claude/settings.json as a PostToolUse hook on Write|Edit, with two `if:` file matchers per artifact:
+// `Write(**/*-<stage>.md)` and `Edit(**/*-<stage>.md)` (the tool name is matched literally and a leading-slash path never
+// matched); this script filters by file name too and is a silent no-op for other files. Because it is a project hook (not a skill-frontmatter hook) it fires the same way when a stage runs from
 // expl1-orchestrator (inline, through the Skill tool) or on its own (/expl1-2-requirements-grooming …), and for
 // every later Write/Edit of the file, including the agent's own fixes.
 //

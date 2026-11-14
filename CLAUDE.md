@@ -158,9 +158,13 @@ window of the main session, not a subagent). Rules to keep when editing:
 
 ## Feedback loops (hooks, stages 2, 3, 4 and 8)
 
-`.claude/hooks/artifact-gate.mjs` is a `PostToolUse` hook on `Write|Edit` in `.claude/settings.json`, with one
-`if: Edit(/.workflow-artifacts/**/*-<stage>.md)` file matcher per artifact (`-2-requirements`, `-3-checklist`,
-`-4-test-cases`, `-8-web-testing`; timeout 60 s, or 300 s for the two reviewer loops). Because it is a project hook and
+`.claude/hooks/artifact-gate.mjs` is a `PostToolUse` hook on `Write|Edit` in `.claude/settings.json`, with **two**
+`if:` file matchers per artifact, `Write(**/*-<stage>.md)` and `Edit(**/*-<stage>.md)` (`-2-requirements`, `-3-checklist`,
+`-4-test-cases`, `-8-web-testing`; timeout 60 s, or 300 s for the two reviewer loops). The `if:` names the tool
+literally and wants the `**/` path form: the earlier `Edit(/.workflow-artifacts/**/*-<stage>.md)` never fired for a
+Write call (no status file, no log entry; found on the first stamped run, TASK-114). Verified live for stage 2 with
+both Write and Edit; stages 3, 4 and 8 use the same patterns. The script still ignores any file that is not a
+configured `TASK-/BUG-<id>-<stage>.md` artifact in `.workflow-artifacts/<folder>/`. Because it is a project hook and
 not a skill-frontmatter hook, it fires the same way inside `expl1-orchestrator` (stages run inline via the Skill tool)
 and for a single `/expl1-…` call, and again on every fix. Stage 4's skill is not changed by its loop; stage 8's scope
 was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate` / `tc-gate` of

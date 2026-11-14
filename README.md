@@ -470,8 +470,8 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 
 ## Feedback loops: stages check their own output
 
-A `PostToolUse` hook (`.claude/hooks/artifact-gate.mjs`, registered in `.claude/settings.json` with an
-`if: Edit(...)` file matcher per artifact) checks stages 2, 3, 4 and 8 every time they write or edit their artifact.
+A `PostToolUse` hook (`.claude/hooks/artifact-gate.mjs`, registered in `.claude/settings.json` with
+`if: Write(**/*-<stage>.md)` / `Edit(**/*-<stage>.md)` file matchers per artifact) checks stages 2, 3, 4 and 8 every time they write or edit their artifact.
 It works the same inside `expl1-orchestrator` and when you type a stage yourself (`/expl1-4-qa-test-cases …`).
 When a check finds a problem, the stage sees the notes next to its Write result and fixes the file in place.
 After 3 failed retries it stops and reports `… VALIDATION FAILED`.

@@ -10,13 +10,19 @@
       {
         "matcher": "Skill",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --skill-start" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --skill-start"
+          }
         ]
       },
       {
         "matcher": "Task|Agent",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --pre" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --pre"
+          }
         ]
       }
     ],
@@ -24,7 +30,10 @@
       {
         "matcher": "Task|Agent",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --post" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --post"
+          }
         ]
       },
       {
@@ -32,25 +41,49 @@
         "hooks": [
           {
             "type": "command",
-            "if": "Edit(/.workflow-artifacts/**/*-2-requirements.md)",
+            "if": "Write(**/*-2-requirements.md)",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
             "timeout": 60
           },
           {
             "type": "command",
-            "if": "Edit(/.workflow-artifacts/**/*-3-checklist.md)",
+            "if": "Edit(**/*-2-requirements.md)",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
             "timeout": 60
           },
           {
             "type": "command",
-            "if": "Edit(/.workflow-artifacts/**/*-4-test-cases.md)",
+            "if": "Write(**/*-3-checklist.md)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "if": "Edit(**/*-3-checklist.md)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "if": "Write(**/*-4-test-cases.md)",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
             "timeout": 300
           },
           {
             "type": "command",
-            "if": "Edit(/.workflow-artifacts/**/*-8-web-testing.md)",
+            "if": "Edit(**/*-4-test-cases.md)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
+            "timeout": 300
+          },
+          {
+            "type": "command",
+            "if": "Write(**/*-8-web-testing.md)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
+            "timeout": 300
+          },
+          {
+            "type": "command",
+            "if": "Edit(**/*-8-web-testing.md)",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
             "timeout": 300
           }
@@ -61,21 +94,30 @@
       {
         "matcher": "Task|Agent",
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --failed" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --failed"
+          }
         ]
       }
     ],
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --turn-start" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --turn-start"
+          }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --turn-end" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/agent-metrics.mjs\" --turn-end"
+          }
         ]
       }
     ]
