@@ -106,6 +106,27 @@ Before launching a stage, check that its required input files exist in
 If a required file is missing, tell the user which stage produces it and offer to run
 that stage first. If the chat is new, the user can upload the files instead.
 
+### Feedback-loop status (stages 2 and 3)
+
+A project hook (`.claude/hooks/artifact-gate.mjs`) checks the outputs of stages 2 and 3 every time
+the stage writes them, and the stage fixes its own file when the hook gives feedback. The hook writes
+the result next to the artifact. These validation files are hook-owned, like the metrics files: never
+create, edit or "correct" them.
+
+| After stage | Status file | Checked against |
+|-------------|-------------|-----------------|
+| 2 | `<ISSUEKEY>-2-requirements.validation.json` | `<ISSUEKEY>-1-context.md`: Goal copied unchanged, one REQ number per context requirement |
+| 3 | `<ISSUEKEY>-3-checklist.validation.json` | `<ISSUEKEY>-2-requirements.md`: one heading per REQ with its exact text, in order, each with numbered checks |
+
+After stage 2 or 3 finishes, and before launching stage 3 or 4, read the `status` field of that file
+(read-only). Add it to the stage report:
+- `PASSED`: continue as usual.
+- `UNVERIFIED`: the input file was not next to the artifact, so nothing was checked. Say so in one
+  line and continue.
+- `RETRYING`, `FAILED`, or the file is missing (the hook did not run): show the `notes` to the user and
+  offer to rerun the stage. Do not start the next stage without the user's go-ahead, and do not fix the
+  artifact yourself.
+
 ## Conditional stages
 
 - **Stages 5–6 (PR):** if the task has no PR or branch yet, offer to stop after stage 4.
@@ -159,8 +180,8 @@ run / skipped / not run, its output file path, and its key counters:
 | Stage | Status | Output | Key result |
 |-------|--------|--------|------------|
 | 1 expl1-1-task-context | run | `<ISSUEKEY>-1-context.md` | — |
-| 2 expl1-2-requirements-grooming | run | `<ISSUEKEY>-2-requirements.md` | N requirements |
-| 3 expl1-3-qa-checklist | run | `<ISSUEKEY>-3-checklist.md` | N checks |
+| 2 expl1-2-requirements-grooming | run | `<ISSUEKEY>-2-requirements.md` | N requirements, validation PASSED |
+| 3 expl1-3-qa-checklist | run | `<ISSUEKEY>-3-checklist.md` | N checks, validation PASSED |
 | 4 expl1-4-qa-test-cases | run | `<ISSUEKEY>-4-test-cases.md` | N test cases, N requirements covered |
 | 5 expl1-5-pr-summary | run | `<ISSUEKEY>-5-pr-summary.md` | N changed files |
 | 6 expl1-6-code-review | run | `<ISSUEKEY>-6-code-review.md` | PASS / FAIL / QA / N/A counters |

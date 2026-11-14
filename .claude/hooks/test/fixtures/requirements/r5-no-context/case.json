@@ -1,0 +1,6 @@
+{
+  "description": "There is no TASK-114-1-context.md next to the requirements file, for example when it was uploaded in a new chat. Nothing can be checked, so the status is UNVERIFIED and the user is told. There is no block and no retry is spent, because the agent cannot fix this by editing the file.",
+  "remove": ["TASK-114-1-context.md"],
+  "expect": ["UNVERIFIED"],
+  "assert": { "reason_includes": "NOT VERIFIED" }
+}

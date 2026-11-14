@@ -1,0 +1,12 @@
+{
+  "description": "The Goal section was not carried over from the context file. The next stages need it.",
+  "edits": [
+    {
+      "find": "## Goal\nImplement the product details experience accessible from the inventory page. When a user clicks on a product name, they are navigated to a dedicated product details page displaying full product information and maintaining consistent cart functionality.\n\n",
+      "replace": ""
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "\"## Goal\" section is missing" }
+}

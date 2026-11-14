@@ -1,0 +1,9 @@
+{
+  "description": "The file goes bad → fixed → bad again (a later edit in the same session). The second failure is a new problem, so its feedback says retry 1/3, not 2/3.",
+  "edits": [
+    { "find": "- REQ-9: The product details page maintains consistent cart functionality.\n", "replace": "" }
+  ],
+  "writes": ["bad", "fixed", "bad"],
+  "expect": ["BLOCK", "PASS", "BLOCK"],
+  "assert": { "retries": 1, "last_reason_includes": "retry 1/3" }
+}

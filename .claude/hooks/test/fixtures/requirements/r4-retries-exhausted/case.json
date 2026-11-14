@@ -1,0 +1,8 @@
+{
+  "description": "The agent never restores REQ-9. It gets 3 feedback blocks, then a final block asking for the failure report, then silence.",
+  "edits": [
+    { "find": "- REQ-9: The product details page maintains consistent cart functionality.\n", "replace": "" }
+  ],
+  "expect": ["BLOCK", "BLOCK", "BLOCK", "FINAL", "SILENT"],
+  "assert": { "retries": 3, "reason_includes": "REQUIREMENTS VALIDATION FAILED after 3 retries" }
+}

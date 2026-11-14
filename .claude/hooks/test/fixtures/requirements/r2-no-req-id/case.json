@@ -1,0 +1,9 @@
+{
+  "description": "The REQ-7 bullet lost its id. One problem gives one note: the bullet stands where REQ-7 belongs, with no separate 'requirement #7 is missing' note.",
+  "edits": [
+    { "find": "- REQ-7: ", "replace": "- " }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "stands where REQ-7 belongs" }
+}

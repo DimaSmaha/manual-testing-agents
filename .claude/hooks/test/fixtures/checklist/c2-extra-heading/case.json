@@ -1,0 +1,20 @@
+{
+  "description": "The checklist has one '### REQ-14' (the context wording) where the requirements file split it into REQ-14a and REQ-14b. One problem gives one note naming both sub-items.",
+  "edits": [
+    {
+      "find": "### REQ-14a: State synchronization: a product added to the cart on the inventory page shows 'Remove' on its product details page.\n",
+      "replace": "### REQ-14: Ensure state synchronization between the inventory and product pages.\n"
+    },
+    { "find": "- [ ] REQ-14a.1: ", "replace": "- [ ] REQ-14.1: " },
+    { "find": "- [ ] REQ-14a.2: ", "replace": "- [ ] REQ-14.2: " },
+    {
+      "find": "\n### REQ-14b: State synchronization: a product added to the cart on the product details page shows 'Remove' on the inventory page after returning to it.\n",
+      "replace": ""
+    },
+    { "find": "- [ ] REQ-14b.1: ", "replace": "- [ ] REQ-14.3: " },
+    { "find": "- [ ] REQ-14b.2: ", "replace": "- [ ] REQ-14.4: " }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "### REQ-14 \\(line \\d+\\) is not in TASK-114-2-requirements.md, which splits it into REQ-14a, REQ-14b" }
+}

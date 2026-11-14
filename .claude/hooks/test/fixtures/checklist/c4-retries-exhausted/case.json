@@ -1,0 +1,11 @@
+{
+  "description": "The agent never adds the REQ-9 section back. It gets 3 feedback blocks, then a final block asking for the failure report, then silence.",
+  "edits": [
+    {
+      "find": "### REQ-9: The product details page maintains consistent cart functionality.\n- [ ] REQ-9.1: Opening the product details page does not change the cart count that was shown on the inventory page\n- [ ] REQ-9.2: A product added to the cart on the product details page is listed on the cart page\n- [ ] REQ-9.3: A product removed from the cart on the product details page is not listed on the cart page\n\n",
+      "replace": ""
+    }
+  ],
+  "expect": ["BLOCK", "BLOCK", "BLOCK", "FINAL", "SILENT"],
+  "assert": { "retries": 3, "reason_includes": "CHECKLIST VALIDATION FAILED after 3 retries" }
+}

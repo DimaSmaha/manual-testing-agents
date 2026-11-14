@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "expl-bot:run": "tsx --tsconfig tsconfig.scripts.json scripts/expl-bot-run.ts",
-    "expl-bot:typecheck": "tsc -p tsconfig.scripts.json"
+    "expl-bot:typecheck": "tsc -p tsconfig.scripts.json",
+    "test:artifact-gate": "node .claude/hooks/test/run-artifact-gate-cases.mjs"
   },
   "keywords": [],
   "author": "",

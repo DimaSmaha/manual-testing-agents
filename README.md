@@ -29,6 +29,7 @@ More flows will be added next to it under `.claude/skills/`.
 - [Issue tracker integration](#issue-tracker-integration)
 - [Exploratory flow: `expl-bot-*`](#exploratory-flow-expl-bot-)
 - [Run metrics: tokens, cost and time per skill](#run-metrics-tokens-cost-and-time-per-skill)
+- [Feedback loops: stages 2 and 3 check their own output](#feedback-loops-stages-2-and-3-check-their-own-output)
 - [Repository layout](#repository-layout)
 - [Configuring and adapting the skills](#configuring-and-adapting-the-skills)
 - [Design principles](#design-principles)
@@ -465,13 +466,39 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 
 ---
 
+## Feedback loops: stages 2 and 3 check their own output
+
+A `PostToolUse` hook (`.claude/hooks/artifact-gate.mjs`, registered in `.claude/settings.json` with an
+`if: Edit(...)` file matcher) runs a deterministic script every time a stage writes or edits its artifact.
+It works the same inside `expl1-orchestrator` and when you type `/expl1-2-requirements-grooming` or
+`/expl1-3-qa-checklist` yourself. When the script finds a problem, the stage sees the notes next to its Write
+result and fixes the file in place. After 3 failed retries it stops and reports `… VALIDATION FAILED`.
+
+| Loop | Artifact | Checked against | What must hold |
+|------|----------|-----------------|----------------|
+| 1 | `<KEY>-2-requirements.md` | `<KEY>-1-context.md` | `## Goal` copied unchanged; one REQ number per context requirement (REQ-k or sub-items REQ-ka/kb), nothing above the count, no duplicate or out-of-order ids. Wording is **not** compared: agreed rewrites are fine |
+| 2 | `<KEY>-3-checklist.md` | `<KEY>-2-requirements.md` | one `### REQ-<id>: <text>` heading per REQ with the exact text, in order; every heading has checks numbered `REQ-<id>.1…n` |
+
+The result is saved next to the artifact, in `<KEY>-2-requirements.validation.json` and
+`<KEY>-3-checklist.validation.json`, with the status `PASSED`, `RETRYING`, `FAILED` or `UNVERIFIED`. The orchestrator
+reads it before the next stage. Retry state and the log are in `.workflow-artifacts/.hook-state/`.
+
+```
+npm run test:artifact-gate                                   # all offline cases (TASK-114 fixtures)
+npm run test:artifact-gate -- --artifact checklist --verbose # one loop, with the feedback text
+node .claude/hooks/lib/validate-requirements.mjs .workflow-artifacts/TASK-114/TASK-114-2-requirements.md
+node .claude/hooks/lib/validate-checklist.mjs    .workflow-artifacts/TASK-114/TASK-114-3-checklist.md
+```
+
+---
+
 ## Repository layout
 
 ```
 .
 ├── CLAUDE.md                      Guidance for Claude Code working in this repo
 ├── README.md                      This file
-├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck
+├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck, test:artifact-gate
 ├── scripts/                       expl-bot-run.ts (Flow 2 runner) and utils/colors.ts
 ├── .env.sample                    Env template for the runner and explorbot (copy to .env, git-ignored)
 ├── explorbot.config.mjs           Config for Flow 3 (explorbot as-is)
@@ -501,6 +528,7 @@ loads project hooks via `settingSources: ["project"]`, so Flow 2 is measured the
 │   │   └── playwright-cli/        Browser automation skill used by stage 8 and expl-bot-*
 │   ├── agents/                    Subagents: expl-bot-researcher, expl-bot-tester
 │   ├── hooks/                     Run-metrics hooks: agent-metrics.mjs, metrics-report.mjs, lib/
+│   │                              Feedback loops: artifact-gate.mjs (+ .json), lib/validate-*.mjs, test/
 │   ├── settings.json              Registers the hooks (settings.local.json stays personal)
 │   └── skills-archive/            Retired skill versions (inert)
 └── .workflow-artifacts/           Git-ignored: per-task artifacts and scratch files

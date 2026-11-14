@@ -1,0 +1,12 @@
+{
+  "description": "The REQ-3 and REQ-4 sections are swapped. The checklist must keep the order of the requirements file.",
+  "edits": [
+    {
+      "find": "### REQ-3: The product details page must include the product name.\n- [ ] REQ-3.1: The product name is displayed on the product details page\n- [ ] REQ-3.2: The product name on the product details page is identical to the name of the same product on the inventory page\n\n### REQ-4: The product details page must include a detailed description.\n- [ ] REQ-4.1: A non-empty description text is displayed on the product details page\n",
+      "replace": "### REQ-4: The product details page must include a detailed description.\n- [ ] REQ-4.1: A non-empty description text is displayed on the product details page\n\n### REQ-3: The product details page must include the product name.\n- [ ] REQ-3.1: The product name is displayed on the product details page\n- [ ] REQ-3.2: The product name on the product details page is identical to the name of the same product on the inventory page\n"
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "### REQ-3 \\(line \\d+\\) comes after ### REQ-4" }
+}

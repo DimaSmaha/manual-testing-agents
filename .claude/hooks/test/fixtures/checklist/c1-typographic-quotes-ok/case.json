@@ -1,0 +1,8 @@
+{
+  "description": "The REQ-7 heading uses typographic quotes (‘Add to cart’) where the requirements file has straight ones. The quote style is not a wording change, so this passes.",
+  "edits": [
+    { "find": "### REQ-7: The product details page must include an 'Add to cart' button.", "replace": "### REQ-7: The product details page must include an ‘Add to cart’ button." }
+  ],
+  "expect": ["PASS"],
+  "assert": { "retries": 0 }
+}

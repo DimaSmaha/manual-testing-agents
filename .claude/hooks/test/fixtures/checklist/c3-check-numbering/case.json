@@ -1,0 +1,9 @@
+{
+  "description": "REQ-8.2 was removed and the rest were not renumbered (8.1, 8.3, 8.4). Sub-numbers must run without gaps, because later stages refer to them.",
+  "edits": [
+    { "find": "- [ ] REQ-8.2: Clicking 'Add to cart' on the product details page increases the cart count by 1\n", "replace": "" }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "numbered REQ-8\\.1, REQ-8\\.3, REQ-8\\.4" }
+}

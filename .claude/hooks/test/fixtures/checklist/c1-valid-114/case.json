@@ -1,0 +1,5 @@
+{
+  "description": "The real TASK-114 stage-3 output. Every REQ of the requirements file, including REQ-12a, REQ-14a and REQ-14b, has a heading with its exact text and numbered checks.",
+  "expect": ["PASS"],
+  "assert": { "retries": 0 }
+}

@@ -135,6 +135,46 @@ window of the main session, not a subagent). Rules to keep when editing:
 - Synthetic checks used to verify the model live in the (git-ignored) scratch folder only; re-create them from the
   report-model rules if you change the window logic.
 
+## Feedback loops (hooks, stages 2 and 3)
+
+`.claude/hooks/artifact-gate.mjs` is a `PostToolUse` hook on `Write|Edit` in `.claude/settings.json`, with one
+`if: Edit(/.workflow-artifacts/**/*-2-requirements.md)` / `*-3-checklist.md` file matcher per artifact. Because it is a
+project hook and not a skill-frontmatter hook, it fires the same way inside `expl1-orchestrator` (stages run inline via
+the Skill tool) and for a single `/expl1-2-…` or `/expl1-3-…` call, and again on every fix. Ported from the
+`artifact-gate` of `user-story-to-test-case-agent-generator`, with the write trigger only.
+
+- Config: `.claude/hooks/artifact-gate.json` (file-name suffix after `<ISSUEKEY>-` → `validator`, `max_retries`).
+  Validators export `validateArtifact(absPath) → { errors, warnings, unverified?, source }` and also work as a CLI:
+  `node .claude/hooks/lib/validate-requirements.mjs <file>`.
+- **Loop 1**, `lib/validate-requirements.mjs`: `<KEY>-2-requirements.md` is checked against the sibling
+  `<KEY>-1-context.md`. `## Goal` must be copied unchanged. The count is checked: N context requirements (the
+  `## Requirements` bullets, then the `## Additional requirements (from comments)` bullets) need REQ-1 … REQ-N, where
+  REQ-k may be replaced or extended by sub-items REQ-ka, REQ-kb. There must be nothing above N, no duplicate ids,
+  ids in ascending order, and every bullet must carry an id. **Wording is not compared**, because grooming may
+  rewrite after the user agrees. That was the user's decision.
+- **Loop 2**, `lib/validate-checklist.mjs`: `<KEY>-3-checklist.md` is checked against the sibling `<KEY>-2-requirements.md`.
+  Every REQ needs exactly one `### REQ-<id>: <text>` heading with the exact text (whitespace and quote style may
+  differ), in order, with no unknown headings. Every heading needs at least one check, numbered `REQ-<id>.1…n` with no
+  gaps and under the matching heading.
+- Shared parsing lives in `lib/expl1-markdown.mjs`. **Changing the output template of stage 1, 2 or 3 means changing
+  this parser, the validators and the fixtures together.**
+- Feedback is `{"decision":"block","reason":…}`, shown next to the Write/Edit result. It is one note per problem with
+  one fix each. The loop is bounded per (session, run folder, artifact): 3 blocks, then a final block asking for a
+  `REQUIREMENTS|CHECKLIST VALIDATION FAILED after 3 retries — <path>` reply, then silence. A PASS resets the count.
+  A missing ground-truth sibling gives `UNVERIFIED`: a `systemMessage`, no block and no retry. The ground truth is
+  never fabricated. A gate crash also gives a `systemMessage`, and every path exits 0.
+- Status: `.workflow-artifacts/<KEY>/<KEY>-2-requirements.validation.json` / `-3-checklist.validation.json`
+  (`PASSED | RETRYING | FAILED | UNVERIFIED`). These are **hook-owned**: the orchestrator reads them in its handoff
+  checks and never edits them. Retry state and the log are in `.workflow-artifacts/.hook-state/`
+  (`artifact-gate-<run>-<stem>.json`, `artifact-gate.log`).
+- Only files in `.workflow-artifacts/<folder>/` named `TASK-<id>-…` / `BUG-<id>-…` are checked. Dot-folders such as
+  `.hook-state` and `.hook-test` are ignored.
+- Offline tests: `npm run test:artifact-gate` (`-- --artifact requirements|checklist`, `--case <substr>`, `--verbose`,
+  `--keep`). The runner plays the agent and pipes `PostToolUse` inputs into the real gate. Fixtures are in
+  `.claude/hooks/test/fixtures/<artifact>/`: `_base/` is copied from the real TASK-114 run, and each case folder holds a
+  `case.json` with find/replace `edits`, the expected outcome sequence and asserts. Run folders are created under
+  `.workflow-artifacts/gate-test-*` and deleted afterwards.
+
 ## External dependencies
 
 - **Issue tracker**: a REST API read with `curl` (no auth), default `http://localhost:3000`, with an ngrok alternative. Tasks (`/tasks/<id>`) and bugs (`/bugs/<id>`) have **separate id spaces**, so the kind must always be known. Commands, retry flags and response shapes: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`. Pre-flight health check is `curl -s --max-time 5 <BASE>/`; if it fails, stop and ask rather than work around it. Comments, attachments and linked items are not exposed by the tracker.
@@ -145,7 +185,7 @@ window of the main session, not a subagent). Rules to keep when editing:
 
 - `.claude/skills/` is the only folder Claude Code loads. `.claude/skills-archive/` holds retired versions (currently the Claude Desktop variant of stage 8) and is inert. To restore one, copy it into `skills/` under a non-clashing name.
 - `.claude/skills-archive/testomat-skills/` is the imported `testomatio/skills` set. Five were promoted (moved out: `qa-thinking`, `qa-review-pr`, `qa-explain-behavior`, `qa-detect-useless-tests` (renamed from `detect-useless-tests`), `qa-data-seeder`); useful rules from `qa-write-test-cases`, `epic-requirement-reviewer`, `write-user-story`, `pull-request-diff-analyzer`, `wiki-from-code`, `detect-product-mismatches`, `qa-pr-requirements-analyzer`, `detect-duplicate-test-cases` and the three `explorbot-*` skills were merged into stages 2–7 and the explorbot flow (the archive copies stay). The rest are Testomat/TMS- or automation-tied and are not used. Do not import their `.test.md` format, ids, `.testeiya/` folder or "never generate IDs" rule: they conflict with `REQ-N` / `TC-REQ-N.N` and the artifact layout.
-- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks.
+- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks. For stages 1–3, they must also be matched in the feedback-loop validators and fixtures (`.claude/hooks/lib/expl1-markdown.mjs`, `validate-*.mjs`, `.claude/hooks/test/fixtures/`).
 - `setup-guide.md` in each stage records how to reconfigure that stage for another tracker or project. Stages 1 and 7 also keep `references/configure-blocks-original.md` with the original `⚠️ CONFIGURE` placeholder blocks.
 - Skill text is written in English, with short chat messages and no invented data. Several skills have hard "do not" rules (do not reword requirements, do not invent test data, uncovered files never get FAIL). Preserve them when editing.
 

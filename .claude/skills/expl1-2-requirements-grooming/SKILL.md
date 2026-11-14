@@ -66,15 +66,20 @@ regenerated with the context-collection skill.
 
 ## Requirement numbering
 
-Assign a sequential ID to each item from the "Requirements" section of the context file:
+Assign a sequential ID to each item from the "Requirements" section of the context file,
+then to each item from its "Additional requirements (from comments)" section, if there is one:
 REQ-1, REQ-2, REQ-3...
 
 Numbering is sequential, with no gaps, in the order the items
-appear in the context file.
+appear in the context file. Every context requirement keeps its own number:
+do not drop, merge, or renumber context requirements. N context
+requirements give REQ-1 ... REQ-N, and nothing above REQ-N.
 
 If during grooming a requirement contains several different things —
 split it into sub-items: REQ-5a, REQ-5b. The main number
-is kept, sub-items are added.
+is kept, sub-items are added. A new requirement agreed with the user
+(for example an uncovered case) is added as a sub-item of the requirement
+it belongs to (REQ-12a), never as a number after the last one.
 
 These IDs are permanent — they do not change throughout the work
 of all following skills in the chain. REQ-5 in the grooming file
@@ -218,6 +223,39 @@ in the same chat picks it up automatically.
 If the file already exists — delete it completely and create a new one.
 
 The template is in references/output-template.md.
+
+`.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-2-requirements.validation.json` is written by
+the validation hook, not by this skill. Do not create or edit it.
+
+## Validation feedback
+
+A project hook (`.claude/hooks/artifact-gate.mjs`, registered in `.claude/settings.json`)
+checks the file right after every Write/Edit of it, both inside `expl1-orchestrator` and
+when this skill runs on its own. It compares the file with
+`<ISSUEKEY>-1-context.md` in the same folder:
+- The "Goal" section is the context Goal, unchanged.
+- Every context requirement #k has REQ-k or sub-items REQ-ka, REQ-kb, and no REQ number
+  is above the number of context requirements.
+- Every bullet starts with `REQ-<k>:` or `REQ-<k><letter>:`, no id appears twice, and the
+  ids are in ascending order.
+
+Wording is not compared: rewrites agreed with the user are fine.
+
+When feedback starting with `<ISSUEKEY>-2-requirements.md validation FAILED (retry N/3)`
+appears next to the Write/Edit result:
+1. Fix the requirements file **in place**, so every listed point is resolved: same folder, same path.
+2. Each note names one problem and one fix. Do not edit the context file. Do not
+   invent, pad, or merge requirements to make the count match. A context requirement that was
+   dropped is restored under its own number.
+3. If you cannot fix it (for example, the context file itself is wrong or duplicated), stop
+   and tell the user why. Do not write a placeholder.
+
+When the feedback says all retries are used up, stop fixing. Reply with a message that starts
+with `REQUIREMENTS VALIDATION FAILED after 3 retries — <path>`, followed by the unresolved problems.
+A later passing version resets the retry count.
+
+If the hook says the file was NOT VERIFIED (the context file is not in the same folder),
+mention it in one line in the final response.
 
 ## Final response
 

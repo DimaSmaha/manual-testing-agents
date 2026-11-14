@@ -137,6 +137,37 @@ Before finishing, check:
 The file structure template is in references/output-template.md.
 An example of the level of detail is in references/checklist-example.md.
 
+`.workflow-artifacts/<ISSUEKEY>/<ISSUEKEY>-3-checklist.validation.json` is written by
+the validation hook, not by this skill. Do not create or edit it.
+
+## Validation feedback
+
+A project hook (`.claude/hooks/artifact-gate.mjs`, registered in `.claude/settings.json`)
+checks the file right after every Write/Edit of it, both inside `expl1-orchestrator` and
+when this skill runs on its own. It compares the file with
+`<ISSUEKEY>-2-requirements.md` in the same folder:
+- Every REQ of the requirements file has exactly one `### REQ-<id>: <text>` heading. The
+  text is copied exactly from the requirements file. The headings are in the same order,
+  and there is no heading for a REQ the requirements file does not have.
+- Every heading has at least one check. Checks are `- [ ] REQ-<id>.<n>: …` with the
+  heading's id and n = 1, 2, 3… without gaps. There are no checks outside a heading.
+
+When feedback starting with `<ISSUEKEY>-3-checklist.md validation FAILED (retry N/3)`
+appears next to the Write/Edit result:
+1. Fix the checklist **in place**, so every listed point is resolved: same folder, same path.
+2. Each note names one problem and one fix. Copy heading text from the requirements file
+   (not from the context file). Do not edit the requirements file, and do not add filler
+   checks.
+3. If you cannot fix it (for example, the requirements file itself is wrong), stop and tell
+   the user that expl1-2-requirements-grooming must be re-run. Do not write a placeholder.
+
+When the feedback says all retries are used up, stop fixing. Reply with a message that starts
+with `CHECKLIST VALIDATION FAILED after 3 retries — <path>`, followed by the unresolved problems.
+A later passing version resets the retry count.
+
+If the hook says the file was NOT VERIFIED (the requirements file is not in the same folder),
+mention it in one line in the final response.
+
 ## Final response
 
 After saving the file, report:

@@ -1,0 +1,12 @@
+{
+  "2-requirements.md": {
+    "skill": "expl1-2-requirements-grooming",
+    "validator": "lib/validate-requirements.mjs",
+    "max_retries": 3
+  },
+  "3-checklist.md": {
+    "skill": "expl1-3-qa-checklist",
+    "validator": "lib/validate-checklist.mjs",
+    "max_retries": 3
+  }
+}
