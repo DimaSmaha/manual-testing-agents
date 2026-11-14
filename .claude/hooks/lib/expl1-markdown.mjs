@@ -105,6 +105,55 @@ export function requirementsOf(md) {
   return { found: sec.found, ...parseReqs(sec) };
 }
 
+/**
+ * `<#…#> REQ-<id>: <text>` headings of the given level (2 = `## REQ-…` in test cases, 3 = `### REQ-…` in the checklist).
+ * @returns {{ id, base, suffix, text, line }[]}  line = 1-based
+ */
+export function reqHeadings(lines, level) {
+  const head = new RegExp(String.raw`^#{${level}}\s+(.*?)\s*$`);
+  const out = [];
+  lines.forEach((l, i) => {
+    const h = head.exec(l);
+    if (!h || /^#/.test(h[1])) return;
+    const m = REQ_BULLET.exec(h[1]);
+    if (!m) return;
+    const base = Number(m[1]);
+    const suffix = (m[2] ?? "").toLowerCase();
+    out.push({ id: `REQ-${base}${suffix}`, base, suffix, text: norm(m[3]), line: i + 1 });
+  });
+  return out;
+}
+
+/** `TC-REQ-<n>[a-z].<k>` found anywhere in a string, normalised, or null. */
+export function tcIdIn(s) {
+  const m = /TC-REQ-(\d+)([a-zA-Z])?\.(\d+)/.exec(String(s ?? ""));
+  return m ? `TC-REQ-${Number(m[1])}${(m[2] ?? "").toLowerCase()}.${Number(m[3])}` : null;
+}
+
+/**
+ * The first Markdown table of a section: header cells and data rows (separator row skipped).
+ * @returns {{ header: string[], rows: { cells: string[], line: number }[] } | null}
+ */
+export function firstTable(sec) {
+  const cellsOf = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+  let header = null;
+  const rows = [];
+  for (let i = 0; i < sec.lines.length; i++) {
+    const l = sec.lines[i];
+    if (!/^\s*\|/.test(l)) {
+      if (header && rows.length) break; // the table ended
+      continue;
+    }
+    if (!header) {
+      header = cellsOf(l);
+      continue;
+    }
+    if (/^\s*\|?\s*:?-{2,}/.test(l)) continue; // |---|---|
+    rows.push({ cells: cellsOf(l), line: sec.start + i });
+  }
+  return header ? { header, rows } : null;
+}
+
 /** `<ISSUEKEY>` of a stage artifact file name such as `TASK-114-2-requirements.md`, or null. */
 export function issueKeyOf(fileName, suffix) {
   const m = /^((?:TASK|BUG)-\d+)-(.+)$/i.exec(fileName);

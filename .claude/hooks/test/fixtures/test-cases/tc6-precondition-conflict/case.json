@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-8.2 says the cart is empty, but its first step clicks 'Remove' and expects the count to drop to 1 — not executable as written.",
+  "edits": [
+    {
+      "find": "**Precondition:** Products A and B are in the cart (cart count = 2); the details page of Product A is open and shows 'Remove'",
+      "replace": "**Precondition:** The cart is empty; the details page of Product A is open"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-8\\.2" }
+}

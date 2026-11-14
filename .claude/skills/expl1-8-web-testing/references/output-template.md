@@ -1,6 +1,6 @@
 # <ISSUEKEY> - Web testing
 
-Code review: <path to the code-review file>
+Code review: <path to the code-review file, or "not used — every test case has Source QA">
 Test cases: <path to the test-cases file>
 Impact analysis: <path to the impact-analysis file, or "not used">
 Date: <YYYY-MM-DD>
@@ -8,8 +8,7 @@ Date: <YYYY-MM-DD>
 ## Scope
 
 Items for web testing: <N>
-- QA (verification in the UI): <N>
-- FAIL (bug confirmation): <N>
+- Test cases: <N> (Source QA: <N>, FAIL: <N>, PASS: <N>, N/A: <N>)
 - IMPACT (retest from the impact analysis): <N>
 
 ## Results
@@ -22,6 +21,8 @@ Items for web testing: <N>
 | TC-REQ-2.2 | <scenario name> | FAIL | FAIL REJECTED | The UI works correctly |
 | TC-REQ-3.1 | <scenario name> | QA | BLOCKED | Element not found |
 | TC-REQ-4.1 | <scenario name> | QA | PASS | OBSERVATION: <what was noticed> |
+| TC-REQ-5.1 | <scenario name> | PASS | PASS | — |
+| TC-REQ-5.2 | <scenario name> | N/A | PASS | — |
 | IMP-1 | <retest name from the impact analysis> | IMPACT | PASS | — |
 
 ## Findings
@@ -65,9 +66,10 @@ Items for web testing: <N>
 ---
 
 Section rules:
-- Results — a table of all QA and FAIL test cases in the order from the test-cases file,
-  then the IMPACT items in the order of the impact-analysis file.
-- The Source column: QA or FAIL — where the test case came from in the code review;
+- Results — a table of **all** test cases of the test-cases file, in its order (one row each,
+  whatever the code-review status), then the IMPACT items in the order of the impact-analysis file.
+- The Source column: QA, FAIL, PASS or N/A — the test case's status in the code review
+  (QA when there is no code review or the test case is not in it);
   IMPACT — a browser retest row from the impact analysis (ID `IMP-<n>`).
 - The Comment column: for PASS — a dash or OBSERVATION. For FAIL — a short description. For BLOCKED — the reason. For FAIL CONFIRMED/REJECTED — a short description.
 - Findings — for FAIL, FAIL CONFIRMED, FAIL REJECTED, and BLOCKED.

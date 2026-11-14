@@ -38,11 +38,22 @@ export function listCases(fixturesDir, filter) {
     .sort();
 }
 
-/** Common assertions over the steps of one case. `steps[i].status` = the status file after call i. */
-export function checkAsserts(a, steps) {
+/**
+ * Common assertions over the steps of one case. `steps[i].status` = the status file after call i.
+ * `ctx.reviewerCalls` = how often the (fake) reviewer ran, or null when it cannot be counted (real reviewer).
+ */
+export function checkAsserts(a, steps, ctx = {}) {
   const lastStatus = [...steps].reverse().find((s) => s.status)?.status ?? {};
   const firstNotes = steps.find((s) => s.status?.notes?.length && s.feedback)?.status.notes ?? [];
   const errors = [];
+  if ("reviewer_calls" in a && ctx.reviewerCalls != null && ctx.reviewerCalls !== a.reviewer_calls) {
+    errors.push(`the reviewer ran ${ctx.reviewerCalls} times, expected ${a.reviewer_calls}`);
+  }
+  if ("cached" in a && Boolean(lastStatus.cached) !== a.cached) errors.push(`last status cached is ${Boolean(lastStatus.cached)}, expected ${a.cached}`);
+  if (a.layers) {
+    const layers = steps.map((s) => s.status?.layer ?? "-");
+    if (layers.join(" ") !== a.layers.join(" ")) errors.push(`layers were ${layers.join(" → ")}, expected ${a.layers.join(" → ")}`);
+  }
   if ("retries" in a && lastStatus.retries !== a.retries) errors.push(`retries is ${lastStatus.retries}, expected ${a.retries}`);
   if ("notes_count" in a && firstNotes.length !== a.notes_count) errors.push(`first feedback has ${firstNotes.length} notes, expected ${a.notes_count}`);
   if (a.notes_match && !new RegExp(a.notes_match, "i").test(firstNotes.join("\n"))) errors.push(`first feedback notes do not match /${a.notes_match}/i`);
@@ -91,6 +102,9 @@ export function printSummary(rs, label) {
   const calls = ran.reduce((n, r) => n + r.ms.length, 0);
   const totalMs = ran.reduce((n, r) => n + r.ms.reduce((a, b) => a + b, 0), 0);
   console.log(`\n${label}: ${ran.length - bad.length}/${ran.length} cases as expected, ${rs.length - ran.length} skipped — ${calls} gate calls, ${fmtMs(totalMs)} total`);
+  const reviews = ran.reduce((n, r) => n + (r.reviews ?? 0), 0);
+  const cost = ran.reduce((n, r) => n + (r.review_cost_usd ?? 0), 0);
+  if (reviews) console.log(`reviewer runs: ${reviews}${cost ? `, $${cost.toFixed(2)} (API list price, from the CLI result)` : ""}`);
   if (bad.length) console.log(`MISMATCH: ${bad.map((r) => `${r.name} (${r.kind})`).join("; ")}`);
 }
 

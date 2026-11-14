@@ -1,0 +1,5 @@
+{
+  "description": "The REAL TASK-114 report from the old stage 8, which ran only the 5 QA rows of the code review (+3 IMPACT rows). Under the new rule every test case must be executed, so the 18 code-review PASS test cases without a row each get a note (script layer, no reviewer call).",
+  "expect": ["BLOCK"],
+  "assert": { "retries": 1, "notes_count": 18, "notes_match": "TC-REQ-1\\.1 .*has no row", "layers": ["script"], "reviewer_calls": 0 }
+}

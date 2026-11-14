@@ -1,0 +1,12 @@
+{
+  "description": "REQ-12a's test case was replaced by a structural note. The script layer accepts it (the section has a note), but REQ-12a.1/12a.2 are behavioral checks that no test case covers any more.",
+  "edits": [
+    {
+      "find": "Applied techniques: EP (invalid partition)\n\n### TC-REQ-12a.1: Non-existent product id\n\n**Precondition:** The details page of Product A is open; its address is copied from the browser address bar\n\n| # | Step | Test data | Expected result |\n|---|------|-----------|-----------------|\n| 1 | Replace the product id in the address with an id of a product that does not exist and open the address | Product id 99999 [test data] | The page is not blank and the application does not crash |\n| 2 | Use the control on the page that leads to the inventory page | — | The inventory page is opened |\n",
+      "replace": "> ℹ️ Structural requirement (the page for a non-existent product id). Covered by the checklist (REQ-12a.1, REQ-12a.2); no test case generated.\n"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "layers": ["reviewer"], "notes_match": "REQ-12a" }
+}

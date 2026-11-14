@@ -1,0 +1,5 @@
+{
+  "description": "A complete stage-8 report in the new format: all 23 test cases of TASK-114 executed (Source QA or PASS from the code review), plus 2 IMPACT rows. Rows the real runs executed keep their real evidence; the rest were written for this fixture. Script layer passes; confirmed PASS with the real expl1-web-testing-reviewer.",
+  "expect": ["PASS"],
+  "assert": { "retries": 0, "layers": ["reviewer"], "reviewer_calls": 1 }
+}

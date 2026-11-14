@@ -1,0 +1,6 @@
+{
+  "description": "The file has no '## Statistics' section yet (stage 4 is still writing it). Status PENDING, no feedback, and the reviewer is not called — a partial write never costs a review.",
+  "edits": [{ "find": "## Statistics", "replace": "Statistics:" }],
+  "expect": ["PENDING"],
+  "assert": { "reviewer_calls": 0 }
+}

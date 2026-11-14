@@ -1,7 +1,7 @@
 # Setup guide for the Web Testing skill
 
-This skill executes the QA and FAIL test cases in a real, visible (headed) browser
-through `playwright-cli`. The testing logic, classification, and navigation memory are
+This skill executes every test case of the test-cases file (whatever its code-review
+status: QA, FAIL, PASS or N/A) in a real, visible (headed) browser through `playwright-cli`. The testing logic, classification, and navigation memory are
 universal. Almost nothing needs to be configured: the user logs in themselves and the
 agent asks for help when it needs it.
 

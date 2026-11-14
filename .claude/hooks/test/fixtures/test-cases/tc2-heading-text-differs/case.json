@@ -1,0 +1,12 @@
+{
+  "description": "The REQ-6 section heading uses the stage-1 wording instead of the checklist text. Script layer: one note with the exact heading.",
+  "edits": [
+    {
+      "find": "## REQ-6: The product details page must include a product image that is larger than the product image on the inventory page.",
+      "replace": "## REQ-6: The product details page must include a larger product image."
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "## REQ-6 \\(line \\d+\\) text differs", "layers": ["script", "reviewer"] }
+}

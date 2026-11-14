@@ -1,0 +1,12 @@
+{
+  "description": "The agent never fixes what the reviewer reported: 3 feedback blocks, a final block asking for the failure report, then silence. The reviewer runs once; the rest are cached verdicts.",
+  "edits": [
+    {
+      "find": "# TASK-114 - Test cases\n",
+      "replace": "# TASK-114 - Test cases\n<!-- fake-review: FAIL REQ-11.5: no test case checks the empty-cart state (rule 1) → add a test case under REQ-11 -->\n"
+    }
+  ],
+  "expect": { "fake": ["BLOCK", "BLOCK", "BLOCK", "FINAL", "SILENT"] },
+  "skip_reason": { "real": "loop mechanics with a fake-review marker" },
+  "assert": { "retries": 3, "reviewer_calls": 1, "reason_includes": "TEST-CASES VALIDATION FAILED after 3 retries" }
+}

@@ -1,0 +1,7 @@
+{
+  "description": "The reviewer runs but ends with an error result. UNVERIFIED with a visible message, not counted as a retry.",
+  "edits": [{ "find": "# TASK-114 - Test cases\n", "replace": "# TASK-114 - Test cases\n<!-- fake-review: ERROR -->\n" }],
+  "expect": { "fake": ["UNVERIFIED"] },
+  "skip_reason": { "real": "loop mechanics with a fake-review marker" },
+  "assert": { "retries": 0, "reviewer_calls": 1, "reason_includes": "could not run" }
+}

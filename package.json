@@ -6,7 +6,8 @@
   "scripts": {
     "expl-bot:run": "tsx --tsconfig tsconfig.scripts.json scripts/expl-bot-run.ts",
     "expl-bot:typecheck": "tsc -p tsconfig.scripts.json",
-    "test:artifact-gate": "node .claude/hooks/test/run-artifact-gate-cases.mjs"
+    "test:artifact-gate": "node .claude/hooks/test/run-artifact-gate-cases.mjs",
+    "test:artifact-gate:real": "node .claude/hooks/test/run-artifact-gate-cases.mjs --reviewer real --artifact test-cases,web-testing"
   },
   "keywords": [],
   "author": "",

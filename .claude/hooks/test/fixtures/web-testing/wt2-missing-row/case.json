@@ -1,0 +1,7 @@
+{
+  "description": "TC-REQ-9.1 (a code-review PASS test case) has no row. The fixed report has it, so the reviewer runs once and passes.",
+  "edits": [{ "find": "| TC-REQ-9.1 | Adding two products from their details pages | PASS | PASS | Count 2; both products on the cart page |\n", "replace": "" }],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "TC-REQ-9\\.1", "layers": ["script", "reviewer"], "reviewer_calls": 1 }
+}

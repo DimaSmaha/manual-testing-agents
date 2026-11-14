@@ -1,0 +1,6 @@
+{
+  "description": "A report under a dot-folder (.workflow-artifacts/.hook-test/…) is not a pipeline artifact: ignored, no status, no reviewer call.",
+  "location": "outside",
+  "expect": ["IGNORED"],
+  "assert": { "reviewer_calls": 0 }
+}

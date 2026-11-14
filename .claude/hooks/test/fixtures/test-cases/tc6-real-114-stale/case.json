@@ -1,0 +1,6 @@
+{
+  "description": "The REAL stage-4 output of TASK-114 (this folder's own TASK-114-4-test-cases.md), written on 2026-11-05 from an older checklist than the one beside it (2026-11-06). Structure is fine, but the content misses checks of the current checklist. The first real review reported: REQ-2.1 (description and image never verified), REQ-11.5 (empty-cart state), REQ-12a.1 (no blank page / crash), REQ-14b.2 (browser Back variant), REQ-13.1 (header position), and an ambiguous TC-REQ-11.2 precondition. A second review also flagged the invented 'data of an existing product is not displayed'. The _base file is this one with those fixes.",
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "layers": ["reviewer"], "notes_match": "REQ-2\\.1" }
+}

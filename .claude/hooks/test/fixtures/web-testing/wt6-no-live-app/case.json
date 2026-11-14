@@ -1,0 +1,12 @@
+{
+  "description": "Every row looks executed, but the header says the steps were checked against the PR code and no browser was used — the report is not a live-app run.",
+  "edits": [
+    {
+      "find": "App under test: https://www.saucedemo.com/ (live site, standard user; headed browser, `playwright-cli` session `qa-TASK-114`).",
+      "replace": "App under test: none — the steps were checked against the PR code; no browser was used."
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "browser|live|code" }
+}

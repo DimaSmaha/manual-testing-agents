@@ -1,0 +1,12 @@
+{
+  "description": "TC-REQ-10.2 is marked PASS, but its comment (taken from the real stopped run) says steps 3–4 were not checked. The status contradicts the comment.",
+  "edits": [
+    {
+      "find": "| TC-REQ-10.2 | Browser Back button keeps the cart contents | PASS | PASS | `go-back` opened `inventory.html`; count 1, Product B shows 'Remove' |",
+      "replace": "| TC-REQ-10.2 | Browser Back button keeps the cart contents | PASS | PASS | Steps 1–2 done: the browser Back button opened `inventory.html`. Steps 3–4 (cart count 1, Product B 'Remove') not checked |"
+    }
+  ],
+  "expect": { "real": ["BLOCK"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "notes_match": "TC-REQ-10\\.2" }
+}

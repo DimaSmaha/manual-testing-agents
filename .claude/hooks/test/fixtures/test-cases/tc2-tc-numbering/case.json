@@ -1,0 +1,7 @@
+{
+  "description": "TC-REQ-8.2 was numbered TC-REQ-8.3 (a gap). Later stages key on the test-case ids, so numbering is checked by the script layer.",
+  "edits": [{ "find": "### TC-REQ-8.2:", "replace": "### TC-REQ-8.3:" }],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "numbered TC-REQ-8\\.1, TC-REQ-8\\.3", "layers": ["script", "reviewer"] }
+}

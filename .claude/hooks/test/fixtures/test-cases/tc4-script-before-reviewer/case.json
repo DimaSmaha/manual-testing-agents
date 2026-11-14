@@ -1,0 +1,14 @@
+{
+  "description": "Layering: the file has a script-layer defect (reworded REQ-6 heading) AND a reviewer-layer defect. Only the script layer runs and blocks; the reviewer is not paid for until the structure is right. The fix removes both, so the reviewer runs once and passes.",
+  "edits": [
+    { "find": "# TASK-114 - Test cases\n", "replace": "# TASK-114 - Test cases\n<!-- fake-review: FAIL REQ-11.5: no test case checks the empty-cart state (rule 1) → add a test case under REQ-11 -->\n" },
+    {
+      "find": "## REQ-6: The product details page must include a product image that is larger than the product image on the inventory page.",
+      "replace": "## REQ-6: The product details page must include a larger product image."
+    }
+  ],
+  "fix": true,
+  "expect": { "fake": ["BLOCK", "PASS"] },
+  "skip_reason": { "real": "loop mechanics with a fake-review marker" },
+  "assert": { "retries": 1, "layers": ["script", "reviewer"], "reviewer_calls": 1, "notes_match": "REQ-6" }
+}

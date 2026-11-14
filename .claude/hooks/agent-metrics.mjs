@@ -311,6 +311,10 @@ function main() {
 
 const invokedDirectly =
   Boolean(process.argv[1]) && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url));
+// A feedback-loop reviewer session (`claude -p --agent …` started by artifact-gate.mjs, EXPL1_REVIEW_CHILD=1) is not a
+// skill run: its Read calls name the task's artifacts, so it would otherwise be billed to — and overwrite the saved
+// metrics of — the task it reviews. Its cost is recorded by the gate instead (review_cost_usd in the .validation.json).
+if (invokedDirectly && process.env.EXPL1_REVIEW_CHILD) process.exit(0);
 if (invokedDirectly) {
   try {
     main();

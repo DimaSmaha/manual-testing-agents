@@ -1,0 +1,6 @@
+{
+  "description": "No TASK-114-3-checklist.md next to the test cases. Nothing can be checked: UNVERIFIED with a visible message, no block, no retry, no reviewer call.",
+  "remove": ["TASK-114-3-checklist.md"],
+  "expect": ["UNVERIFIED"],
+  "assert": { "retries": 0, "reason_includes": "NOT VERIFIED", "reviewer_calls": 0 }
+}

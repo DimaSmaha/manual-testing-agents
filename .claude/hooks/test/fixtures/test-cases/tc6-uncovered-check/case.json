@@ -1,0 +1,13 @@
+{
+  "description": "TC-REQ-8.2 no longer checks the cart count after 'Remove', so checklist check REQ-8.4 (decreases the cart count by 1) is covered by no test case. The fixed version restores the step (closes the loop with the real reviewer).",
+  "edits": [
+    {
+      "find": "| 1 | Click 'Remove' | — | The button text changes to 'Add to cart' |\n| 2 | Check the cart count | — | The cart count is 1 |\n| 3 | Click the cart icon/button | — | The cart page lists Product B and does not list Product A |",
+      "replace": "| 1 | Click 'Remove' | — | The button text changes to 'Add to cart' |\n| 2 | Click the cart icon/button | — | The cart page lists Product B and does not list Product A |"
+    }
+  ],
+  "fix": true,
+  "expect": { "real": ["BLOCK", "PASS"] },
+  "skip_reason": { "fake": "semantic defect — only the real reviewer can see it" },
+  "assert": { "retries": 1, "layers": ["reviewer", "reviewer"], "notes_match": "REQ-8\\.4" }
+}

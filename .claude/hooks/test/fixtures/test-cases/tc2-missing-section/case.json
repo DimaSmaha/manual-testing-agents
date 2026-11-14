@@ -1,0 +1,12 @@
+{
+  "description": "The REQ-9 section is missing. The script layer blocks without calling the reviewer; after the fix the reviewer runs once and passes.",
+  "edits": [
+    {
+      "find": "## REQ-9: The product details page maintains consistent cart functionality.\n\nApplied techniques: Use Case\n\n### TC-REQ-9.1: Adding two products from their details pages\n\n**Precondition:** The cart is empty; the inventory page is open\n\n| # | Step | Test data | Expected result |\n|---|------|-----------|-----------------|\n| 1 | Click the name of Product A, then click 'Add to cart' | Product A [test data] | The button text is 'Remove'; the cart count is 1 |\n| 2 | Click 'Back to products', click the name of Product B, then click 'Add to cart' | Product B [test data] | The button text is 'Remove'; the cart count is 2 |\n| 3 | Click the cart icon/button | — | The cart page lists Product A and Product B |\n\n**Postcondition:** Products A and B are in the cart\n\n---\n\n",
+      "replace": ""
+    }
+  ],
+  "fix": true,
+  "expect": ["BLOCK", "PASS"],
+  "assert": { "retries": 1, "notes_count": 1, "notes_match": "REQ-9 of TASK-114-3-checklist.md has no section", "layers": ["script", "reviewer"], "reviewer_calls": 1 }
+}

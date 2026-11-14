@@ -41,6 +41,18 @@
             "if": "Edit(/.workflow-artifacts/**/*-3-checklist.md)",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "if": "Edit(/.workflow-artifacts/**/*-4-test-cases.md)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
+            "timeout": 300
+          },
+          {
+            "type": "command",
+            "if": "Edit(/.workflow-artifacts/**/*-8-web-testing.md)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\"",
+            "timeout": 300
           }
         ]
       }

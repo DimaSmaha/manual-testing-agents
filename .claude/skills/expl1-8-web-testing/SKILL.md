@@ -1,8 +1,8 @@
 ---
 name: expl1-8-web-testing
 description: >
-  Eighth stage of task processing. Takes the QA items and FAIL items
-  from the code review and the test cases, executes them in a headed browser
+  Eighth stage of task processing. Takes every test case from the test cases file
+  (with its code-review status — QA, FAIL, PASS or N/A — as the source), executes them in a headed browser
   through playwright-cli (with a named session), verifies the expected results,
   asks the user for help when needed (login, missing data, unclear steps), and
   produces a detailed report. Also executes the browser retest notes from the
@@ -15,13 +15,16 @@ description: >
 
 > Recommended settings: **Sonnet · Effort: High · Extended thinking: Off**
 
-Executes the QA and FAIL test cases in a real, visible browser using `playwright-cli`.
+Executes **every test case** of the test-cases file in a real, visible browser using `playwright-cli`,
+whatever its code-review status. The code-review status becomes the item's Source:
 QA — items that cannot be verified from the code.
 FAIL — items that the code review identified as problematic
 and that need confirmation in the UI that the bug really exists.
+PASS / N/A — items the code review verified (or found not applicable) from the code;
+they are still run in the browser, because only the live app shows the real behavior.
 IMPACT — browser retest notes from the impact analysis (stage 7): QA and N/A results
 for files the PR did not change, which only the UI can confirm.
-Input — the code review and test cases files (and optionally the impact analysis). Output —
+Input — the test cases and code review files (and optionally the impact analysis). Output —
 a detailed report with the results of each test case and retest note
 executed in the UI.
 
@@ -32,12 +35,15 @@ show the right page — and the agent continues from the same browser.
 ## Input
 
 Required from the user:
-1. The code review file `<ISSUEKEY>-6-code-review.md` created
-   by the expl1-6-code-review skill. In the same chat the file is available
+1. The test cases file `<ISSUEKEY>-4-test-cases.md` created
+   by the expl1-4-qa-test-cases skill. In the same chat the file is available
    in `.workflow-artifacts/<ISSUEKEY>/` automatically. If the chat is new —
    the user uploads the file to the chat.
-2. The test cases file `<ISSUEKEY>-4-test-cases.md` created
-   by the expl1-4-qa-test-cases skill. In the same chat it is available automatically.
+
+Recommended input:
+- The code review file `<ISSUEKEY>-6-code-review.md` created
+  by the expl1-6-code-review skill (in the same chat it is available automatically).
+  It sets the Source of each test case and gives the findings of the FAIL items.
 
 Optional input:
 - The checklist file `<ISSUEKEY>-3-checklist.md` — for structural
@@ -47,17 +53,17 @@ Optional input:
   (source IMPACT) to the scope. If the file does not exist or has no such section —
   continue without it and say so in one line.
 
-If the code-review file is not provided — ask before starting. Offer the fallback:
-"Run all test cases from the test-cases file as QA items?" If the user agrees,
-treat every test case as `QA` (Source = QA) and say so in the report.
+If the code-review file is not provided — say so in one line and continue:
+every test case gets Source = `QA` (there are no FAIL items to confirm). Say so in the report.
 If the test-cases file is not provided — ask before starting.
 If any file is empty or corrupted — stop
 and tell the user.
 
 Data sources for this skill:
-- the code-review file — the source of QA and FAIL items
-- the test-cases file — the source of steps, test data,
-  and expected results
+- the test-cases file — the list of test cases to execute (all of them), and the source of steps,
+  test data, and expected results
+- the code-review file — the Source of each test case (QA, FAIL, PASS, N/A) and the findings
+  of FAIL items
 - the checklist file (optional) — structural checks
 - the impact analysis file (optional) — the section "Retest in stage 8": steps and
   expected results for IMPACT items
@@ -83,8 +89,9 @@ do not inspect code.
   (`--headed`). Never run headless.
 - **Ask the user for help whenever you need it** — see "Asking the user for help".
   Do not guess, do not work around a blocker, do not bypass a login.
-- Test cases with the statuses PASS and N/A in the code review
-  are not executed in the browser. Only QA and FAIL are executed.
+- Every test case of the test-cases file is executed in the browser, whatever its
+  code-review status (QA, FAIL, PASS or N/A). The status only sets the Source column,
+  and items that came as FAIL end as FAIL CONFIRMED or FAIL REJECTED.
 - From the impact analysis execute the rows of the section "Retest in stage 8" (all of them
   are browser checks against the live app). Use the steps and the expected result of the
   row literally; do not add checks. Do not look at code, CI files or build output.
@@ -144,26 +151,23 @@ If the user cannot help or says skip — mark the test case BLOCKED with that re
 
 ### Step 1 — Gather the scope
 
-Read `<ISSUEKEY>-6-code-review.md`. Find all test cases
-with the status `QA` or `FAIL` in the results table.
-This is the working list for execution in the browser.
+Read `<ISSUEKEY>-4-test-cases.md`. **Every test case in it** is in the working list
+for execution in the browser, in the order of the file. For each test case extract
+the full data:
+- Precondition
+- The steps table (step, test data, expected result)
+- Postcondition (if any)
+
+Then read `<ISSUEKEY>-6-code-review.md` (if provided) and take each test case's status
+from its results table as the test case's Source:
 
 - `QA` — needs manual verification because the code review
   could not verify it from the code.
 - `FAIL` — the code review found a problem in the code,
   it must be confirmed or refuted in the UI.
-
-Test cases with the statuses `PASS` and `N/A` in the code review
-are not included in the scope — they have already been verified from the code.
-
-(If there is no code-review file and the user chose the fallback — the scope is
-every test case in the test-cases file, all treated as `QA`.)
-
-Then read `<ISSUEKEY>-4-test-cases.md`. For each
-QA and FAIL test case extract the full data:
-- Precondition
-- The steps table (step, test data, expected result)
-- Postcondition (if any)
+- `PASS` / `N/A` — the code review verified it (or found it not applicable) from the code.
+  It is still executed in the browser: the live app is the final check.
+- A test case missing from the code review, or no code-review file — Source `QA`.
 
 For FAIL items additionally extract the finding from the code-review:
 file, line, what was expected, what is actually in the code.
@@ -173,18 +177,17 @@ Then, if `<ISSUEKEY>-7-impact-analysis.md` exists, read its section "Retest in s
 - Each row is added to the scope as an item with Source `IMPACT`
   (id `IMP-<n>`; page, precondition, steps and expected result come from the row).
   They are executed after the test cases, in the order of the file.
-- If an IMPACT row has a "Linked TC" that is already in the scope (QA or FAIL) — do not
+- If an IMPACT row has a "Linked TC" (every test case is in the scope) — do not
   run it twice. Execute the test case once and add `also IMP-<n>` to its comment.
   If two IMPACT rows have the same steps — execute once and report both ids.
 
-If there are no QA, FAIL or IMPACT items — tell the user that there are no items
-for web testing and stop.
+If the test-cases file has no test cases and there are no IMPACT items — tell the user
+that there are no items for web testing and stop.
 
 Briefly tell the user:
 ```
 Scope: [N] items to execute in the browser.
-- QA (verification in the UI): [N]
-- FAIL (bug confirmation): [N]
+- Test cases: [N] (Source QA: [N], FAIL: [N], PASS: [N], N/A: [N])
 - IMPACT (retest from the impact analysis): [N]
 Session: [SESSION], headed browser. I will ask if I need your help.
 ```
@@ -368,7 +371,8 @@ Each test case gets one status:
 - `FAIL` — the UI behavior does not match the expected result.
   There is a concrete discrepancy between expected and actual.
   Used for test cases that came with the status
-  QA from the code review, and for IMPACT items.
+  QA, PASS or N/A from the code review, and for IMPACT items.
+  For a test case that came as PASS, say in the finding that the code review marked it PASS.
 - `FAIL CONFIRMED` — the test case came with the status FAIL
   from the code review and the UI confirms: the bug really manifests
   in the interface. Include the finding from the code review + what the
@@ -431,10 +435,12 @@ caught the eye while going through the test cases.
 Before saving, check:
 
 - The number of items in the report equals the number
-  of QA + FAIL items from the code-review file (or of all test cases when the
-  fallback was used) plus the IMPACT items from the impact-analysis file (without the ones
+  of test cases in the test-cases file (all of them, whatever their code-review status)
+  plus the IMPACT items from the impact-analysis file (without the ones
   merged into a test case or into another row). If it does not match — find the missing
-  ones and add them.
+  ones, execute them, and add them.
+- Every test case row has a status from "Classification": no test case is left
+  not run or half-run.
 - The order of test cases matches the order in the test-cases file; IMPACT items follow
   them in the order of the impact-analysis file.
 - Every FAIL and FAIL CONFIRMED has: which step,
