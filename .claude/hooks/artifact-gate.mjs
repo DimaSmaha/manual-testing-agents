@@ -31,13 +31,15 @@
 // so the status can still flip to PASSED). A PASS resets the count: a later failure is a new problem.
 // Progress is free: a script-layer failure with fewer problems than the previous script-layer check still gets
 // feedback but does not use up a retry (stage 8 adding executed test cases one by one must not hit FAILED).
-// Status: <run_dir>/<ISSUEKEY>-<stage>.validation.json   State + log: .workflow-artifacts/.hook-state/
+// Status: <run_dir>/<ISSUEKEY>-<stage>.validation.json (latest check, overwritten)   State + log: .workflow-artifacts/.hook-state/
+// History: <run_dir>/validations/<ISSUEKEY>-<stage>.validation-<NNN>.json — one numbered file per check (PENDING, RETRYING,
+//          PASSED, FAILED, UNVERIFIED alike), never overwritten, so every validation the loop ran stays on disk.
 // Every path exits 0: a gate bug never wedges the session (it is reported as a systemMessage instead).
 // Recursion guard: EXPL1_REVIEW_CHILD=1 (set for the nested reviewer session) makes this gate a no-op.
 // Test cases: .claude/hooks/test/run-artifact-gate-cases.mjs (npm run test:artifact-gate).
 // Ported from the artifact-gate / us-json-gate / tc-gate of user-story-to-test-case-agent-generator (write trigger only).
 
-import { readFileSync, writeFileSync, appendFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, appendFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname, relative, isAbsolute, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -99,8 +101,10 @@ async function main() {
   let notes = v.errors;
   let review = {}; // review_ms, review_cost_usd, cached
 
-  const record = (status, extra = {}) =>
-    writeJson(validationPath, {
+  // Every check writes two files: the latest status `<stem>.validation.json` (overwritten, read by the orchestrators)
+  // and a numbered history file `validations/<stem>.validation-<NNN>.json` that is never overwritten.
+  const record = (status, extra = {}) => {
+    const body = {
       status,
       retries: state.attempts,
       max_retries: maxRetries,
@@ -113,7 +117,21 @@ async function main() {
       ...review,
       ...extra,
       checked_at: new Date().toISOString(),
-    });
+    };
+    let historyRel = null;
+    try {
+      const historyDir = join(runDir.dir, "validations");
+      const seq = nextSequence(historyDir, stem);
+      const historyPath = join(historyDir, `${stem}.validation-${String(seq).padStart(3, "0")}.json`);
+      historyRel = toRel(historyPath);
+      writeJson(historyPath, { sequence: seq, tool: input.tool_name ?? null, session_id: sessionId, ...body });
+      body.sequence = seq;
+      body.history = historyRel;
+    } catch {
+      /* the history must never break the gate; the latest status below is still written */
+    }
+    writeJson(validationPath, body);
+  };
 
   if (v.unverified) {
     notes = [];
@@ -314,6 +332,22 @@ function log(fields) {
 
 function emit(obj) {
   process.stdout.write(JSON.stringify(obj) + "\n");
+}
+
+/** Next number for `<stem>.validation-<NNN>.json` in the history folder (1 when there is none yet). */
+function nextSequence(historyDir, stem) {
+  let max = 0;
+  try {
+    const prefix = `${stem}.validation-`;
+    for (const f of readdirSync(historyDir)) {
+      if (!f.startsWith(prefix)) continue;
+      const n = Number.parseInt(f.slice(prefix.length), 10);
+      if (Number.isInteger(n) && n > max) max = n;
+    }
+  } catch {
+    /* folder does not exist yet */
+  }
+  return max + 1;
 }
 
 function writeJson(path, obj) {

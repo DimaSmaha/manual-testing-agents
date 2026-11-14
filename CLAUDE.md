@@ -217,7 +217,11 @@ was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate`
   The ground truth is never fabricated. A gate crash also gives a `systemMessage`, and every path exits 0.
 - Status: `.workflow-artifacts/<KEY>/<KEY>-<stage>.validation.json` (`PASSED | RETRYING | FAILED | UNVERIFIED | PENDING`,
   plus `layer`, `checked_by`, `notes`, `review_ms`, `review_cost_usd`, `cached`). These are **hook-owned**: the
-  orchestrator reads them in its handoff checks and never edits them. Retry state and the log are in
+  orchestrator reads them in its handoff checks and never edits them. That file is the **latest** check only, and it is
+  overwritten each time. **Every** check (PENDING, RETRYING, PASSED, FAILED, UNVERIFIED) also writes its own numbered,
+  never-overwritten file `.workflow-artifacts/<KEY>/validations/<KEY>-<stage>.validation-<NNN>.json` (same fields plus
+  `sequence`, `tool`, `session_id`); the latest file carries `sequence` and `history` pointing at it. Checks made before
+  this change have no history file. Retry state and the log are in
   `.workflow-artifacts/.hook-state/` (`artifact-gate-<run>-<stem>.json`, `artifact-gate.log`).
 - **Nested reviewer sessions** run with `EXPL1_REVIEW_CHILD=1`: `artifact-gate.mjs` and `agent-metrics.mjs` are no-ops
   inside them (no recursion, and the reviewer's Read calls must not be billed to — or overwrite the saved metrics of —
