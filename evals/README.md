@@ -82,6 +82,10 @@ through `reviewWithSubagent`) only warn. The stage 4 reviewer already judges cov
 - Regression = a case that passed in the baseline and fails now, even if the average rose.
 - The baseline moves up freely with `--update-baseline --reason "…"`; down only with `--allow-decrease` and a reason.
   A partial `--only` run merges only its cases and cannot replace a baseline whose cases changed.
+- **From a finished run, without re-running** (no model calls):
+  `npm run eval:set-baseline -- evals/results/<ts> --reason "…" [--skill <name|all>] [--allow-decrease]`
+  (`evals/set-baseline.ts`, same `updateBaseline()` and rules). It refuses an incomplete run and a run whose
+  `cases_hash` differs from the current cases/inputs.
 - Changing a check in `checks.ts` can change outcomes without changing the hash: run `eval:selftest`, then re-baseline
   with a reason that names the check.
 

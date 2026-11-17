@@ -257,7 +257,8 @@ rules and options: `evals/README.md`. Rules to keep when editing:
   `Execution_Examples/**` and the gate fixtures **denied** (`npm run eval -- --probe-leak` proves it) and Write/Edit allowed
   in `.eval-runs/` only. Stage 1 reads a stub tracker (`evals/lib/stub-tracker.ts`) serving the frozen `tracker.json`.
 - Baselines (`<skill>/baseline.json`) are committed and move only with `--update-baseline --reason "…"`; down only with
-  `--allow-decrease`. A regression is a case that passed and now fails (exit 1). Changing `cases.jsonl` or `inputs/`
+  `--allow-decrease`. `npm run eval:set-baseline -- evals/results/<ts> --reason "…"` does the same from a finished run
+  without new model calls. A regression is a case that passed and now fails (exit 1). Changing `cases.jsonl` or `inputs/`
   changes `cases_hash` and requires a re-baseline.
 - `evals/self-test/` holds the known-bad fixtures: every deterministic check must have one, and the real gate-validated
   runs must pass. Run `npm run eval:selftest` (free) after any change to a check or to a stage output template.
