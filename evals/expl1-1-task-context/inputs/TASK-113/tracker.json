@@ -1,0 +1,6 @@
+{
+  "id": 113,
+  "title": "Implement reliable logout flow across header and session timeout paths",
+  "description": "Add logout handling that clears the current session, redirects the user to the sign-in screen, and behaves consistently for both manual logout and automatic session expiration.",
+  "type": "story"
+}

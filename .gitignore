@@ -15,6 +15,10 @@ TODO
 # Workflow scratch (tracker responses, helper scripts)
 .workflow-artifacts/
 
+# Skill evals: sandbox run folders and per-run results (baselines and cases are committed)
+.eval-runs/
+evals/results/
+
 # Playwright CLI session data
 .playwright-cli/
 

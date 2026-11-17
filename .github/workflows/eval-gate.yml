@@ -1,0 +1,90 @@
+# Eval gate for the expl1 stage skills 1-4 (see evals/README.md).
+# Runs when a skill, a reviewer agent, the validator libs or the evals themselves change.
+# The exit code is decided by DETERMINISTIC regressions against evals/<skill>/baseline.json only; LLM-judge failures are a
+# warning in the PR comment. A clean checkout has no previous results on the runner, so every run starts from the committed
+# baselines. Needs the repository secret ANTHROPIC_API_KEY (pull requests from forks do not get it and skip the job).
+name: eval-gate
+
+on:
+  pull_request:
+    paths:
+      - ".claude/skills/expl1-*/**"
+      - ".claude/agents/expl1-*"
+      - ".claude/hooks/lib/**"
+      - "evals/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/eval-gate.yml"
+
+concurrency:
+  group: eval-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  eval:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      EVAL_MAX_COST_USD: "40"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # The SDK's bundled CLI can be too old for the pinned models, and the stage 4 reviewer runs through `claude -p`.
+      - name: Install Claude Code CLI
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Typecheck
+        run: npm run eval:typecheck
+
+      - name: Self-test (free)
+        run: npm run eval:selftest
+
+      - name: Evals (3 trials per case)
+        id: evals
+        run: npm run eval -- --skill all --runs 3 --max-cost-usd "$EVAL_MAX_COST_USD"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: |
+            evals/results/*/results.json
+            evals/results/*/report.md
+          if-no-files-found: ignore
+
+      - name: Comment the report on the pull request
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require("fs");
+            const path = require("path");
+            const root = "evals/results";
+            const dirs = fs.existsSync(root) ? fs.readdirSync(root).sort() : [];
+            let body = "## expl1 skill evals\n\nNo report was produced (the run stopped before the first trial; see the job log).";
+            if (dirs.length) {
+              body = fs.readFileSync(path.join(root, dirs[dirs.length - 1], "report.md"), "utf8");
+              if (body.length > 60000) body = body.slice(0, 60000) + "\n\n… (truncated, full report in the eval-results artifact)";
+            }
+            const marker = "<!-- expl1-eval-gate -->";
+            body = `${marker}\n${body}\n\n_LLM-judge failures are warnings; only deterministic regressions fail this check._`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const mine = comments.find((c) => c.body && c.body.includes(marker));
+            if (mine) await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
