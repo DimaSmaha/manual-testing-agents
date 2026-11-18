@@ -97,7 +97,7 @@ async function main(): Promise<void> {
       if (j.error) failures.push(`reviewer ${rc.id}: could not run — ${j.error}`);
       else {
         const verdict = j.results[0]!.pass ? "PASS" : "FAIL";
-        console.log(`   ${rc.id}: reviewer ${verdict} (expected ${rc.expectReviewer}) $${j.costUsd.toFixed(2)}`);
+        console.log(`   ${rc.id}: reviewer ${verdict} (expected ${rc.expectReviewer}) ${j.tokens.total.toLocaleString("en-US")} tok $${j.costUsd.toFixed(2)}`);
         if (verdict !== rc.expectReviewer) failures.push(`reviewer ${rc.id}: verdict ${verdict}, expected ${rc.expectReviewer} — ${j.results[0]!.evidence.slice(0, 200)}`);
       }
     }

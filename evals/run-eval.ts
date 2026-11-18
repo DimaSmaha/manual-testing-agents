@@ -12,8 +12,9 @@ import { diffAgainst, casesHash, passThreshold, updateBaseline } from "./lib/bas
 import { judgeWithGrader, judgeWithReviewer } from "./lib/llm-judge";
 import { errorsOf, failureCounter, renderSkill, writeResults, type SkillReport } from "./lib/report";
 import { probeLeak, resetSandboxRoot, runSkillTrial, SANDBOX_ROOT } from "./lib/run-skill";
+import { addTokens, fmtTokens, noTokens } from "./lib/tokens";
 import { EVALS_DIR, loadCases, loadCriteria, loadGrader, REVIEWER_CRITERIA, STAGES, stageOf } from "./lib/stages";
-import type { Case, CaseResult, CheckCtx, CriterionResult, StageDef, TrialResult } from "./lib/types";
+import type { Case, CaseResult, CheckCtx, CriterionResult, StageDef, Tokens, TrialResult } from "./lib/types";
 
 interface Args {
   skill: string;
@@ -78,7 +79,7 @@ function makeCtx(c: Case, dir: string, reply: string, finalReply: string): Check
   };
 }
 
-async function gradeTrial(stage: StageDef, c: Case, trial: number, ctxArgs: { dir: string; relDir: string; reply: string; finalReply: string }): Promise<{ criteria: CriterionResult[]; judgeCost: number; judgeError?: string }> {
+async function gradeTrial(stage: StageDef, c: Case, trial: number, ctxArgs: { dir: string; relDir: string; reply: string; finalReply: string }): Promise<{ criteria: CriterionResult[]; judgeCost: number; judgeTokens: Tokens; judgeError?: string }> {
   const ctx = makeCtx(c, ctxArgs.dir, ctxArgs.reply, ctxArgs.finalReply);
   const criteria: CriterionResult[] = [];
   const detById = new Map(loadCriteria(stage.skill).map((x) => [x.id, x]));
@@ -94,6 +95,7 @@ async function gradeTrial(stage: StageDef, c: Case, trial: number, ctxArgs: { di
     if (o) criteria.push({ id, kind: "deterministic", pass: o.pass, evidence: o.evidence });
   }
   let judgeCost = 0;
+  let judgeTokens = noTokens();
   let judgeError: string | undefined;
   const graderIds = new Set(loadGrader(stage.skill).map((x) => x.id));
   const wanted = loadGrader(stage.skill).filter((x) => c.criteria.includes(x.id));
@@ -101,6 +103,7 @@ async function gradeTrial(stage: StageDef, c: Case, trial: number, ctxArgs: { di
     const j = await judgeWithGrader(stage, c, ctxArgs.dir, ctxArgs.reply, wanted);
     criteria.push(...j.results);
     judgeCost += j.costUsd;
+    judgeTokens = addTokens(judgeTokens, j.tokens);
     if (j.error) judgeError = j.error;
   }
   for (const [id, { agent }] of Object.entries(REVIEWER_CRITERIA)) {
@@ -110,13 +113,14 @@ async function gradeTrial(stage: StageDef, c: Case, trial: number, ctxArgs: { di
     const j = await judgeWithReviewer(id, agent, ctxArgs.relDir, `${c.key}-${stage.artifact}`, `${c.key}-${stage.inputSuffix}`);
     criteria.push(...j.results);
     judgeCost += j.costUsd;
+    judgeTokens = addTokens(judgeTokens, j.tokens);
     if (j.error) judgeError = `${id}: ${j.error}`;
   }
   void trial;
-  return { criteria, judgeCost, ...(judgeError ? { judgeError } : {}) };
+  return { criteria, judgeCost, judgeTokens, ...(judgeError ? { judgeError } : {}) };
 }
 
-async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget: { spent: number }): Promise<SkillReport> {
+async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget: { spent: number; tokens: Tokens }): Promise<SkillReport> {
   const all = loadCases(stage.skill);
   validateCaseCriteria(stage, all);
   const cases = args.only ? all.filter((c) => args.only!.includes(c.id)) : all;
@@ -128,6 +132,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
   const caseResults: (CaseResult & { trials: TrialResult[] })[] = [];
   let incomplete = false;
   let skillCost = 0;
+  let skillTokens = noTokens();
   console.log(`\n== ${stage.skill}: ${cases.length} case(s) × ${args.runs} trial(s), model ${stage.model}`);
 
   for (const c of cases) {
@@ -140,15 +145,20 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
       const run = await runSkillTrial(stage, c, n, { timeoutMs: args.timeoutMin * 60_000, maxBudgetUsd: Math.max(1, Math.min(8, (args.maxCost ?? 8) - budget.spent)) });
       let criteria: CriterionResult[] = [];
       let judgeCost = 0;
+      let judgeTokens = noTokens();
       if (!run.error) {
         const g = await gradeTrial(stage, c, n, run);
         criteria = g.criteria;
         judgeCost = g.judgeCost;
+        judgeTokens = g.judgeTokens;
         if (g.judgeError) console.log(`   judge problem (ignored for pass/fail): ${g.judgeError}`);
       }
       const cost = run.costUsd + judgeCost;
+      const tokens = addTokens(run.tokens, judgeTokens);
       budget.spent += cost;
+      budget.tokens = addTokens(budget.tokens, tokens);
       skillCost += cost;
+      skillTokens = addTokens(skillTokens, tokens);
       const t: TrialResult = {
         case: c.id,
         trial: n,
@@ -156,6 +166,8 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
         criteria,
         pass: !run.error && criteria.filter((x) => x.kind === "deterministic").every((x) => x.pass),
         cost_usd: cost,
+        tokens,
+        skill_tokens: run.tokens,
         turns: run.turns,
         duration_ms: run.durationMs,
       };
@@ -166,7 +178,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
       t.dir = path.relative(EVALS_DIR, kept).split(path.sep).join("/");
       trials.push(t);
       const bad = criteria.filter((x) => !x.pass).map((x) => `${x.id}${x.kind === "llm" ? "(warn)" : ""}`);
-      console.log(`   ${c.id}#${n}: ${t.error ? `ERROR ${t.error}` : t.pass ? "PASS" : "FAIL"}  $${cost.toFixed(2)}  ${Math.round(run.durationMs / 1000)}s${bad.length ? `  failed: ${bad.join(", ")}` : ""}`);
+      console.log(`   ${c.id}#${n}: ${t.error ? `ERROR ${t.error}` : t.pass ? "PASS" : "FAIL"}  ${tokens.total.toLocaleString("en-US")} tok  $${cost.toFixed(2)}  ${Math.round(run.durationMs / 1000)}s${bad.length ? `  failed: ${bad.join(", ")}` : ""}`);
     }
     if (trials.length === 0) continue;
     const passed = trials.filter((t) => t.pass).length;
@@ -183,6 +195,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
     diff: diffAgainst(stage.skill, results, args.only !== null && cases.length < all.length),
     hash: casesHash(stage.skill),
     costUsd: skillCost,
+    tokens: skillTokens,
     incomplete,
   };
 }
@@ -217,7 +230,7 @@ async function main(): Promise<void> {
   const started = new Date().toISOString();
   const resultsDir = path.join(EVALS_DIR, "results", stamp());
   fs.mkdirSync(resultsDir, { recursive: true });
-  const budget = { spent: 0 };
+  const budget = { spent: 0, tokens: noTokens() };
   const reports: SkillReport[] = [];
   let exit = 0;
 
@@ -249,10 +262,10 @@ async function main(): Promise<void> {
     if (args.maxCost !== null && budget.spent >= args.maxCost) console.log(`!! cost ceiling $${args.maxCost} reached ($${budget.spent.toFixed(2)}); remaining trials were not run`);
   }
 
-  writeResults(resultsDir, reports, { started, runs: args.runs, skills: stages.map((s) => s.skill), max_cost_usd: args.maxCost, total_cost_usd: budget.spent });
+  writeResults(resultsDir, reports, { started, runs: args.runs, skills: stages.map((s) => s.skill), max_cost_usd: args.maxCost, total_cost_usd: budget.spent, total_tokens: budget.tokens });
   const errs = reports.flatMap((r) => errorsOf(r.cases.flatMap((c) => c.trials)));
   const llmFails = reports.flatMap((r) => failureCounter(r.cases.flatMap((c) => c.trials)).filter((x) => x.kind === "llm"));
-  console.log(`\nresults: ${path.relative(process.cwd(), resultsDir)} · total cost $${budget.spent.toFixed(2)}${llmFails.length ? ` · ${llmFails.length} LLM criterion warning(s)` : ""}${errs.length ? ` · ${errs.length} trial error(s)` : ""}`);
+  console.log(`\nresults: ${path.relative(process.cwd(), resultsDir)} · total ${fmtTokens(budget.tokens)} · API-list-price estimate $${budget.spent.toFixed(2)}${llmFails.length ? ` · ${llmFails.length} LLM criterion warning(s)` : ""}${errs.length ? ` · ${errs.length} trial error(s)` : ""}`);
   fs.rmSync(SANDBOX_ROOT, { recursive: true, force: true });
   process.exit(exit);
 }

@@ -66,6 +66,15 @@ export interface CriterionResult {
   evidence: string;
 }
 
+/** Same shape and names as the `billed` block of the run metrics (input, output, cache_read, cache_write, total). */
+export interface Tokens {
+  input: number;
+  output: number;
+  cache_read: number;
+  cache_write: number;
+  total: number;
+}
+
 export interface TrialResult {
   case: string;
   trial: number;
@@ -73,6 +82,8 @@ export interface TrialResult {
   criteria: CriterionResult[];
   pass: boolean; // no error and every deterministic criterion passed
   cost_usd: number;
+  tokens: Tokens; // skill trial + judges
+  skill_tokens: Tokens; // the skill trial alone
   turns: number;
   duration_ms: number;
   dir?: string; // where the trial folder was kept

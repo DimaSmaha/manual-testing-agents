@@ -14,7 +14,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { EVALS_DIR, REPO_ROOT, skillDir } from "./stages";
 import { startStubTracker } from "./stub-tracker";
-import type { Case, StageDef } from "./types";
+import { noTokens, tokensFromModelUsage } from "./tokens";
+import type { Case, StageDef, Tokens } from "./types";
 
 export const SANDBOX_ROOT = path.join(REPO_ROOT, ".eval-runs");
 
@@ -44,6 +45,7 @@ export interface TrialRun {
   reply: string;
   finalReply: string;
   costUsd: number;
+  tokens: Tokens;
   turns: number;
   durationMs: number;
   error?: string;
@@ -128,7 +130,7 @@ export async function runSkillTrial(
   fs.mkdirSync(dir, { recursive: true });
   seedInputs(stage.skill, c, dir, relDir);
 
-  const run: TrialRun = { dir, relDir, reply: "", finalReply: "", costUsd: 0, turns: 0, durationMs: 0, trace: [] };
+  const run: TrialRun = { dir, relDir, reply: "", finalReply: "", costUsd: 0, tokens: noTokens(), turns: 0, durationMs: 0, trace: [] };
   const started = Date.now();
   const stub = stage.n === 1 ? await startStubTracker(path.join(skillDir(stage.skill), "inputs", c.input, "tracker.json"), c.key) : null;
   const controller = new AbortController();
@@ -176,8 +178,9 @@ export async function runSkillTrial(
           run.trace.push({ kind: "tool_result", is_error: block["is_error"] === true, text: text.slice(0, 300) });
         }
       } else if (message.type === "result") {
-        const r = message as unknown as { subtype: string; result?: string; total_cost_usd?: number; num_turns?: number; duration_ms?: number; errors?: string[] };
+        const r = message as unknown as { subtype: string; result?: string; total_cost_usd?: number; modelUsage?: unknown; num_turns?: number; duration_ms?: number; errors?: string[] };
         run.costUsd = r.total_cost_usd ?? 0;
+        run.tokens = tokensFromModelUsage(r.modelUsage);
         run.turns = r.num_turns ?? 0;
         if (r.subtype === "success") {
           if (typeof r.result === "string" && r.result.trim() !== "") run.finalReply = r.result;

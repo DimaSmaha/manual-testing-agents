@@ -23,6 +23,12 @@ Options: `--skill <name|all>`, `--only c1,c2` (one skill), `--runs N` (default 3
 trials above it; the run is then incomplete, exit 2), `--timeout-min N` (default 20), `--update-baseline --reason "…"
 [--allow-decrease]`. Uses the local Claude Code login or `ANTHROPIC_API_KEY`. Real model calls: stage 2 runs on Opus.
 
+**Tokens and cost.** The report and `results.json` carry tokens per trial, case, skill and run (`input`, `output`,
+`cache_read`, `cache_write`, `total` — the same fields as the `billed` block of the run metrics report), for the skill
+trial plus its judges. The numbers come from the SDK `result` message (`modelUsage`), because eval trials do not
+persist a transcript and the metrics hooks are off during evals. The dollar figure is the SDK's API-list-price
+estimate, not your plan's usage; `--max-cost-usd` caps that estimate, so it still works as a safety ceiling.
+
 Exit code: `0` no regression · `1` a case that passed in the baseline fails now, the cases changed since the baseline,
 or a baseline rule was broken · `2` bad input or incomplete run. A deterministic failure of a case that already failed in
 the baseline is not a regression. LLM criteria only print a WARN.

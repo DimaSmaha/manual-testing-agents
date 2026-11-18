@@ -3,7 +3,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import type { Diff } from "./baseline";
-import type { CaseResult, TrialResult } from "./types";
+import { addTokens, fmtTokens, noTokens } from "./tokens";
+import type { CaseResult, Tokens, TrialResult } from "./types";
 
 export interface SkillReport {
   skill: string;
@@ -13,7 +14,8 @@ export interface SkillReport {
   cases: (CaseResult & { trials: TrialResult[] })[];
   diff: Diff;
   hash: string;
-  costUsd: number; // skill trials + judges
+  costUsd: number; // skill trials + judges (API list price estimate, not plan usage)
+  tokens: Tokens; // skill trials + judges
   incomplete: boolean; // the cost ceiling stopped the run before every trial ran
 }
 
@@ -54,16 +56,19 @@ export function renderSkill(r: SkillReport): string {
   const trials = r.cases.flatMap((c) => c.trials);
   const out: string[] = [];
   out.push(`## ${r.skill}`, "");
-  out.push(`pass rate ${pct(r.diff.passRate)} (${r.cases.filter((c) => c.pass).length}/${r.cases.length} cases, ${r.runs} trial(s) each, a case passes at ${r.threshold}) · cost $${r.costUsd.toFixed(2)} · cases_hash ${r.hash}`);
+  out.push(`pass rate ${pct(r.diff.passRate)} (${r.cases.filter((c) => c.pass).length}/${r.cases.length} cases, ${r.runs} trial(s) each, a case passes at ${r.threshold}) · ${fmtTokens(r.tokens)} · est. API cost $${r.costUsd.toFixed(2)} · cases_hash ${r.hash}`);
   if (r.diff.noBaseline) out.push("", "No baseline yet (`--update-baseline --reason \"…\"` creates it).");
   else if (r.diff.hashChanged) out.push("", `**Not comparable:** the cases or inputs changed since the baseline (needs \`--update-baseline --reason\`).`);
   else out.push("", `Baseline ${r.diff.baselineRate === null ? "-" : pct(r.diff.baselineRate)} → now ${pct(r.diff.passRate)}.`);
   if (r.incomplete) out.push("", "**Incomplete:** the cost ceiling stopped the run before every trial ran.");
-  out.push("", "| Case | Result | Trials | Baseline |", "|---|---|---|---|");
+  out.push("", "| Case | Result | Trials | Baseline | Tokens | In | Out | Cache read | Cache write |", "|---|---|---|---|---|---|---|---|---|");
+  const n = (v: number): string => v.toLocaleString("en-US");
   for (const c of r.cases) {
     const tag = r.diff.regressions.includes(c.id) ? "REGRESSION" : r.diff.fixes.includes(c.id) ? "fixed" : r.diff.newCases.includes(c.id) ? "new" : "same";
-    out.push(`| ${c.id} | ${c.pass ? "pass" : "FAIL"} | ${c.trials_passed}/${c.of} | ${r.diff.noBaseline ? "-" : tag} |`);
+    const t = c.trials.reduce((acc, x) => addTokens(acc, x.tokens), noTokens());
+    out.push(`| ${c.id} | ${c.pass ? "pass" : "FAIL"} | ${c.trials_passed}/${c.of} | ${r.diff.noBaseline ? "-" : tag} | ${n(t.total)} | ${n(t.input)} | ${n(t.output)} | ${n(t.cache_read)} | ${n(t.cache_write)} |`);
   }
+  out.push("", "_Tokens: every API call of the trial's skill run and its judges, summed over all trials of the case; same fields as the run metrics report (`<KEY>-metrics.md`). Cost is an API list-price estimate, not plan usage._");
   const rows = failureCounter(trials);
   const det = rows.filter((x) => x.kind === "deterministic");
   const llm = rows.filter((x) => x.kind === "llm");
@@ -83,11 +88,12 @@ export function renderSkill(r: SkillReport): string {
 
 export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null }): string {
   const total = reports.reduce((n, r) => n + r.costUsd, 0);
+  const totalTokens = reports.reduce((t, r) => addTokens(t, r.tokens), noTokens());
   const regs = reports.flatMap((r) => r.diff.regressions.map((c) => `${r.skill}/${c}`));
   const head = [
     "# expl1 skill evals",
     "",
-    `Started ${meta.started} · total cost $${total.toFixed(2)}${meta.maxCost ? ` of $${meta.maxCost} ceiling` : ""}`,
+    `Started ${meta.started} · total ${fmtTokens(totalTokens)} · est. API cost $${total.toFixed(2)}${meta.maxCost ? ` of $${meta.maxCost} ceiling` : ""}`,
     regs.length ? `\n**Regressions (exit 1):** ${regs.join(", ")}` : "\nNo regressions against the baselines.",
     "",
   ];
