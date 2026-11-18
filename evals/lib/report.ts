@@ -86,7 +86,40 @@ export function renderSkill(r: SkillReport): string {
   return out.join("\n");
 }
 
-export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null; complete?: boolean; skills?: string[] }): string {
+/**
+ * How to accept this run as the new baseline: the `eval:set-baseline` command (no new model calls) for every skill that can
+ * be baselined, and a short reason for each skill that cannot. Printed at the end of the console output and of report.md.
+ */
+export function baselineHints(reports: SkillReport[], resultsRel: string, runComplete: boolean): string[] {
+  if (reports.length === 0) return [];
+  const ok: string[] = [];
+  const notes: string[] = [];
+  let needsAllowDecrease = false;
+  for (const r of reports) {
+    const errs = errorsOf(r.cases.flatMap((c) => c.trials)).length;
+    const d = r.diff;
+    if (r.incomplete) notes.push(`${r.skill}: incomplete (cost ceiling), not a valid baseline`);
+    else if (errs) notes.push(`${r.skill}: ${errs} trial error(s), fix the cause and re-run before baselining`);
+    else if (d.hashChanged && r.partial) notes.push(`${r.skill}: cases changed since the baseline, a partial (--only) run cannot replace it; run all cases`);
+    else if (!d.noBaseline && !d.hashChanged && !d.regressions.length && !d.fixes.length && !d.newCases.length && d.baselineRate === d.passRate) notes.push(`${r.skill}: same as the current baseline, nothing to update`);
+    else {
+      ok.push(r.skill);
+      if (d.regressions.length) needsAllowDecrease = true;
+    }
+  }
+  const out: string[] = [];
+  if (ok.length) {
+    const allow = needsAllowDecrease ? " --allow-decrease" : "";
+    const cmd = (skill: string | null): string => `npm run eval:set-baseline -- ${resultsRel} --reason "<why the baseline moves>"${skill ? ` --skill ${skill}` : ""}${allow}`;
+    out.push(ok.length === reports.length ? cmd(null) : ok.map((s) => cmd(s)).join("\n"));
+    if (needsAllowDecrease) out.push("(--allow-decrease is needed: a case that passed in the baseline fails now. Accept that only on purpose.)");
+    if (!runComplete) out.push("(the run was not finished: only the skills above that finished are in results.json)");
+  }
+  out.push(...notes.map((n) => `- ${n}`));
+  return out;
+}
+
+export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null; complete?: boolean; skills?: string[]; resultsRel?: string }): string {
   const missing = (meta.skills ?? []).filter((s) => !reports.some((r) => r.skill === s));
   const total = reports.reduce((n, r) => n + r.costUsd, 0);
   const totalTokens = reports.reduce((t, r) => addTokens(t, r.tokens), noTokens());
@@ -99,11 +132,13 @@ export function renderReport(reports: SkillReport[], meta: { started: string; ma
     ...(meta.complete === false ? ["", `**Run not finished** — skills without a result: ${missing.length ? missing.join(", ") : "none (a cost ceiling or error stopped it)"}.`] : []),
     "",
   ];
-  return [...head, ...reports.map(renderSkill)].join("\n");
+  const hints = meta.resultsRel ? baselineHints(reports, meta.resultsRel, meta.complete !== false) : [];
+  const tail = hints.length ? ["## Update the baseline", "", "```", hints.filter((h) => h.startsWith("npm ")).join("\n"), "```", "", ...hints.filter((h) => !h.startsWith("npm ")), ""] : [];
+  return [...head, ...reports.map(renderSkill), ...tail].join("\n");
 }
 
 export function writeResults(dir: string, reports: SkillReport[], meta: Record<string, unknown>): void {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "results.json"), `${JSON.stringify({ meta, skills: reports }, null, 2)}\n`);
-  fs.writeFileSync(path.join(dir, "report.md"), renderReport(reports, { started: String(meta["started"] ?? ""), maxCost: (meta["max_cost_usd"] as number | null) ?? null, complete: meta["run_complete"] as boolean | undefined, skills: meta["skills"] as string[] | undefined }));
+  fs.writeFileSync(path.join(dir, "report.md"), renderReport(reports, { started: String(meta["started"] ?? ""), maxCost: (meta["max_cost_usd"] as number | null) ?? null, complete: meta["run_complete"] as boolean | undefined, skills: meta["skills"] as string[] | undefined, resultsRel: meta["results_dir"] as string | undefined }));
 }

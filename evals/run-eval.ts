@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { diffAgainst, casesHash, passThreshold, updateBaseline } from "./lib/baseline";
 import { judgeWithGrader, judgeWithReviewer } from "./lib/llm-judge";
-import { errorsOf, failureCounter, renderSkill, writeResults, type SkillReport } from "./lib/report";
+import { baselineHints, errorsOf, failureCounter, renderSkill, writeResults, type SkillReport } from "./lib/report";
 import { probeLeak, resetSandboxRoot, runSkillTrial, SANDBOX_ROOT } from "./lib/run-skill";
 import { addTokens, fmtTokens, noTokens } from "./lib/tokens";
 import { EVALS_DIR, loadCases, loadCriteria, loadGrader, REVIEWER_CRITERIA, STAGES, stageOf } from "./lib/stages";
@@ -232,6 +232,7 @@ async function main(): Promise<void> {
   fs.mkdirSync(resultsDir, { recursive: true });
   const budget = { spent: 0, tokens: noTokens() };
   const reports: SkillReport[] = [];
+  const resultsRel = path.relative(process.cwd(), resultsDir).split(path.sep).join("/");
   let exit = 0;
 
   // report.md + results.json are rewritten after every finished skill (and on Ctrl-C), so stopping a long run
@@ -245,6 +246,7 @@ async function main(): Promise<void> {
       total_cost_usd: budget.spent,
       total_tokens: budget.tokens,
       run_complete: complete,
+      results_dir: resultsRel,
     });
   process.on("SIGINT", () => {
     flush(false);
@@ -287,6 +289,8 @@ async function main(): Promise<void> {
   const errs = reports.flatMap((r) => errorsOf(r.cases.flatMap((c) => c.trials)));
   const llmFails = reports.flatMap((r) => failureCounter(r.cases.flatMap((c) => c.trials)).filter((x) => x.kind === "llm"));
   console.log(`\nresults: ${path.relative(process.cwd(), resultsDir)} · total ${fmtTokens(budget.tokens)} · API-list-price estimate $${budget.spent.toFixed(2)}${llmFails.length ? ` · ${llmFails.length} LLM criterion warning(s)` : ""}${errs.length ? ` · ${errs.length} trial error(s)` : ""}`);
+  const hints = baselineHints(reports, resultsRel, reports.length === stages.length && !reports.some((r) => r.incomplete));
+  if (hints.length && !args.update) console.log(`\nTo accept this run as the baseline (no new model calls):\n${hints.join("\n")}`);
   fs.rmSync(SANDBOX_ROOT, { recursive: true, force: true });
   process.exit(exit);
 }
