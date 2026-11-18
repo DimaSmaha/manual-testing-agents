@@ -1,0 +1,49 @@
+{
+  "skill": "expl1-1-task-context",
+  "cases_hash": "50c35e1d64564800",
+  "last_run": "2026-11-11T11:11:11.000Z",
+  "total_cases": 5,
+  "pass_rate": 1,
+  "results": {
+    "TASK-111": {
+      "id": "TASK-111",
+      "pass": true,
+      "trials_passed": 1,
+      "of": 1
+    },
+    "TASK-112": {
+      "id": "TASK-112",
+      "pass": true,
+      "trials_passed": 1,
+      "of": 1
+    },
+    "TASK-113": {
+      "id": "TASK-113",
+      "pass": true,
+      "trials_passed": 1,
+      "of": 1
+    },
+    "TASK-114": {
+      "id": "TASK-114",
+      "pass": true,
+      "trials_passed": 1,
+      "of": 1
+    },
+    "BUG-114": {
+      "id": "BUG-114",
+      "pass": true,
+      "trials_passed": 1,
+      "of": 1
+    }
+  },
+  "history": [
+    {
+      "date": "2026-11-11T11:11:11.000Z",
+      "pass_rate": 1,
+      "cases_hash": "50c35e1d64564800",
+      "reason": "first"
+    }
+  ],
+  "changed": true,
+  "reason": "first"
+}
