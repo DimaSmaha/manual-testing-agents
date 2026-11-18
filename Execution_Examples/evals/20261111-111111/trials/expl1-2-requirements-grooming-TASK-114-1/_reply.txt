@@ -1,0 +1,21 @@
+Saved with no hook feedback, so the file passed validation.
+
+### Questions
+- REQ-1: "Product details experience" is vague, and REQ-2 to REQ-6 already describe it → treat it as an umbrella, with nothing separate to verify.
+- REQ-2: Does only the product name link to the details page, or does the image link too? → state which elements are clickable.
+- REQ-2: What if the product id in the URL is unknown or the product was removed? → state the expected behavior (error page or redirect).
+- REQ-3: What does "larger product image" mean, and what shows when the product has no image or description? → give the expected sizes and the fallback behavior.
+- REQ-3: What if the product is already in the cart when the page opens? → confirm the button shows 'Remove' on load.
+- REQ-4: "Without losing state" lists only cart contents ("e.g.") → state whether sort order, filters or scroll position also count.
+- REQ-5: Does "at any time" cover the cart page itself and the empty-cart state? → state the expected cart count display.
+- REQ-6: "Routing, UI consistency, state synchronization" has no concrete criteria → state which behaviors count (URL format, browser back/forward, page reload).
+
+### Uncovered requirements
+- REQ-3, REQ-4: Browser Back/Forward and a page reload on the details page are not described → state whether the cart state must survive them.
+
+### Risks
+- REQ-6: Acceptance for consistency and synchronization can't be decided without concrete criteria → clarify before testing.
+
+AUTO-DECISION: 8 grooming questions left unanswered → requirements kept as in the context
+
+Path: `.eval-runs/expl1-2-requirements-grooming-TASK-114-1/TASK-114-2-requirements.md`

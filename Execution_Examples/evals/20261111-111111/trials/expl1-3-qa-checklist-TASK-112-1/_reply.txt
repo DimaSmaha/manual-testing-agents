@@ -1,0 +1,6 @@
+I saved the checklist to `.eval-runs/expl1-3-qa-checklist-TASK-112-1/TASK-112-3-checklist.md`. It has 5 checks: 2 for REQ-1, 2 for REQ-2 and 1 for REQ-3.
+
+I didn't see any validation feedback after the write, so I haven't confirmed the hook's check passed.
+
+AUTO-DECISION: REQ-1 "validated credentials" has no stated validation rules → built checks only for valid vs. invalid credentials, with no invented format rules.
+AUTO-DECISION: REQ-2 "clear inline error states" is ambiguous → checks cover that the error appears inline and that its text states the reason for the failure. No specific message text was invented.

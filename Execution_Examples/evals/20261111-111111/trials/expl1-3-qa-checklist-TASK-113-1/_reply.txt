@@ -1,0 +1,8 @@
+I saved the checklist to `.eval-runs/expl1-3-qa-checklist-TASK-113-1/TASK-113-3-checklist.md`. It has 6 checks:
+- **REQ-1:** 2 checks, covering session cleared after manual logout and after automatic expiration.
+- **REQ-2:** 2 checks, covering redirect to the sign-in screen after manual logout and after automatic expiration.
+- **REQ-3:** 2 checks, covering the same cleared-session state and the same sign-in screen for both paths.
+
+I didn't see any validation feedback after the write. I haven't checked the `.validation.json` file, so I can't confirm the hook passed.
+
+AUTO-DECISION: REQ-3 ("behaves consistently") has no stated criteria → built checks only from what REQ-1 and REQ-2 name (same cleared session state, same sign-in screen), with no extra behavior invented.

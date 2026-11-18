@@ -1,0 +1,6 @@
+{
+  "id": 114,
+  "title": "Login button stays disabled after valid credentials are entered",
+  "description": "On the sign-in page, the primary Login button remains disabled even after a user enters a valid email and password combination, preventing authentication from starting.",
+  "severity": "high"
+}

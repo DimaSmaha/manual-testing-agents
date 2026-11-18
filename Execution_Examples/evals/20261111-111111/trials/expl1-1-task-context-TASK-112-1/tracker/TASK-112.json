@@ -1,0 +1,6 @@
+{
+  "id": 112,
+  "title": "Implement secure user sign-in with inline validation feedback",
+  "description": "Create the end-to-end login experience so users can sign in with validated credentials, see clear inline error states, and remain on the page when authentication fails.",
+  "type": "story"
+}
