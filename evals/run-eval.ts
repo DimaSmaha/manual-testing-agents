@@ -234,6 +234,25 @@ async function main(): Promise<void> {
   const reports: SkillReport[] = [];
   let exit = 0;
 
+  // report.md + results.json are rewritten after every finished skill (and on Ctrl-C), so stopping a long run
+  // keeps everything finished so far. `run_complete` is true only for the last write.
+  const flush = (complete: boolean): void =>
+    writeResults(resultsDir, reports, {
+      started,
+      runs: args.runs,
+      skills: stages.map((s) => s.skill),
+      max_cost_usd: args.maxCost,
+      total_cost_usd: budget.spent,
+      total_tokens: budget.tokens,
+      run_complete: complete,
+    });
+  process.on("SIGINT", () => {
+    flush(false);
+    console.log(`\n!! interrupted: report for the ${reports.length} finished skill(s) written to ${path.relative(process.cwd(), resultsDir)} (the skill in progress is not included)`);
+    fs.rmSync(SANDBOX_ROOT, { recursive: true, force: true });
+    process.exit(130);
+  });
+
   for (const stage of stages) {
     let report: SkillReport;
     try {
@@ -245,6 +264,8 @@ async function main(): Promise<void> {
     }
     reports.push(report);
     console.log(`\n${renderSkill(report)}`);
+    flush(false);
+    console.log(`report so far: ${path.relative(process.cwd(), path.join(resultsDir, "report.md"))}`);
     if (report.incomplete) exit = Math.max(exit, 2);
     if (report.diff.regressions.length) exit = 1;
     else if (report.diff.hashChanged && !args.update) {
@@ -262,7 +283,7 @@ async function main(): Promise<void> {
     if (args.maxCost !== null && budget.spent >= args.maxCost) console.log(`!! cost ceiling $${args.maxCost} reached ($${budget.spent.toFixed(2)}); remaining trials were not run`);
   }
 
-  writeResults(resultsDir, reports, { started, runs: args.runs, skills: stages.map((s) => s.skill), max_cost_usd: args.maxCost, total_cost_usd: budget.spent, total_tokens: budget.tokens });
+  flush(reports.length === stages.length && !reports.some((r) => r.incomplete));
   const errs = reports.flatMap((r) => errorsOf(r.cases.flatMap((c) => c.trials)));
   const llmFails = reports.flatMap((r) => failureCounter(r.cases.flatMap((c) => c.trials)).filter((x) => x.kind === "llm"));
   console.log(`\nresults: ${path.relative(process.cwd(), resultsDir)} · total ${fmtTokens(budget.tokens)} · API-list-price estimate $${budget.spent.toFixed(2)}${llmFails.length ? ` · ${llmFails.length} LLM criterion warning(s)` : ""}${errs.length ? ` · ${errs.length} trial error(s)` : ""}`);

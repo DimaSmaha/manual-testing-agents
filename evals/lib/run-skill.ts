@@ -106,16 +106,46 @@ export function seedInputs(skill: string, c: Case, dir: string, relDir: string):
 export function allowedTools(stage: StageDef, baseUrl?: string): string[] {
   const tools = ["Read", "Glob", "Grep", "Write(.eval-runs/**)", "Edit(.eval-runs/**)"];
   if (stage.n === 1 && baseUrl) {
+    // Rules end at the flags, not at the URL: the matcher compares whole tokens, so a rule ending in `<base>/` matches
+    // the health check but not `<base>/tasks/112` (probed: exact-URL rule DENIED, flags-prefix rule ALLOWED).
+    // The stub's address is therefore not in the rule; the SHELL_RULE prompt keeps the agent on it.
     tools.push(
-      `Bash(curl -s --max-time 5 ${baseUrl}/:*)`,
-      `Bash(curl -s --retry 3 --retry-all-errors --max-time 10 --create-dirs ${baseUrl}/:*)`,
+      "Bash(curl -s --max-time 5:*)",
+      "Bash(curl -s --retry 3 --retry-all-errors --max-time 10 --create-dirs:*)",
       "Bash(date:*)",
+      // On Windows the SDK child offers PowerShell and no Bash tool (verified with a tool-list probe), so the same
+      // single commands are allowed there, with curl.exe because `curl` is an alias of Invoke-WebRequest in PowerShell.
+      "PowerShell(curl.exe -s --max-time 5:*)",
+      "PowerShell(curl.exe -s --retry 3 --retry-all-errors --max-time 10 --create-dirs:*)",
+      "PowerShell(Get-Date:*)",
     );
   }
   return tools;
 }
 
 export const disallowedTools = (): string[] => DENIED_READS.map((p) => `Read(${p})`);
+
+/**
+ * Stage 1 may run curl and date only, and the allow rules match whole commands. In a real session the user's global
+ * CLAUDE.md ("one simple command, no chains") keeps the agent inside such rules, but a trial loads project settings
+ * only, so the rule is repeated here. Without it the agent chained `curl … | head; echo; curl …`, every shell call was
+ * denied, and all stage 1 trials failed or passed (the STOP case) for the wrong reason.
+ */
+export const SHELL_RULE =
+  "Sandbox rule for this session: use the shell tool you have (Bash or PowerShell). Every shell call must be exactly ONE simple command " +
+  "that starts with `curl` (`curl.exe` in PowerShell) or `date` (`Get-Date` in PowerShell). " +
+  "No pipes, no `;`, no `&&`, no `echo`/`head`/`cat`/`Select-Object`, no redirection other than curl's own `-o`. " +
+  "Run the tracker health check and the item request as two separate shell calls, with the exact flags the skill's reference file gives.";
+
+/** A denied shell or write tool means the sandbox, not the skill, broke the trial: report it instead of grading an empty output. */
+export function sandboxDenial(trace: TraceEntry[]): string | null {
+  for (const t of trace) {
+    if (t.kind !== "tool_result" || !t.is_error) continue;
+    const m = /Permission to use (Bash|PowerShell|Write|Edit) has been denied/.exec(t.text ?? "");
+    if (m) return `sandbox denied ${m[1]} (harness problem, not graded as a skill result)`;
+  }
+  return null;
+}
 
 export async function runSkillTrial(
   stage: StageDef,
@@ -147,6 +177,7 @@ export async function runSkillTrial(
         effort: stage.effort,
         thinking: stage.thinking ? { type: "adaptive" } : { type: "disabled" },
         settingSources: ["project"],
+        ...(stage.n === 1 ? { systemPrompt: { type: "preset" as const, preset: "claude_code" as const, append: SHELL_RULE } } : {}),
         skills: "all",
         permissionMode: "dontAsk",
         allowedTools: allowedTools(stage, stub?.baseUrl),
@@ -198,6 +229,11 @@ export async function runSkillTrial(
     clearTimeout(timer);
     await stub?.close();
     run.durationMs = Date.now() - started;
+  }
+  if (!run.error) {
+    const denial = sandboxDenial(run.trace);
+    if (denial) run.error = denial;
+    else if (stub && stub.requests.item === 0) run.error = "the skill never requested the item from the tracker (harness problem, not graded as a skill result)";
   }
   fs.writeFileSync(path.join(dir, "_trace.jsonl"), run.trace.map((t) => JSON.stringify(t)).join("\n"));
   fs.writeFileSync(path.join(dir, "_reply.txt"), run.reply);

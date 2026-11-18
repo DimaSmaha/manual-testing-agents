@@ -23,6 +23,16 @@ Options: `--skill <name|all>`, `--only c1,c2` (one skill), `--runs N` (default 3
 trials above it; the run is then incomplete, exit 2), `--timeout-min N` (default 20), `--update-baseline --reason "…"
 [--allow-decrease]`. Uses the local Claude Code login or `ANTHROPIC_API_KEY`. Real model calls: stage 2 runs on Opus.
 
+**Reports are written as the run goes.** `report.md` and `results.json` in `evals/results/<timestamp>/` are rewritten
+after every finished skill and on Ctrl-C, so stopping a long `--skill all` run keeps every skill that finished (the one
+in progress is lost). An unfinished run says so at the top of the report (`run_complete: false` in `results.json`).
+
+**Harness errors are not skill failures.** A trial ends as an ERROR (counted as a fail, not graded) when the sandbox
+denied a Bash/PowerShell/Write/Edit call, or when a stage 1 trial never asked the stub tracker for the item. Stage 1
+needs a shell: on Windows the SDK child has PowerShell and no Bash tool, so the allow rules cover `curl.exe` and
+`Get-Date` as well as `curl` and `date`, and the trial's system prompt repeats the "one simple command" rule that your
+global CLAUDE.md gives a real session. Allow rules match whole tokens, so they end at the flags, not at the URL.
+
 **Tokens and cost.** The report and `results.json` carry tokens per trial, case, skill and run (`input`, `output`,
 `cache_read`, `cache_write`, `total` — the same fields as the `billed` block of the run metrics report), for the skill
 trial plus its judges. The numbers come from the SDK `result` message (`modelUsage`), because eval trials do not

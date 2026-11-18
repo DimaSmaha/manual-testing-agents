@@ -86,7 +86,8 @@ export function renderSkill(r: SkillReport): string {
   return out.join("\n");
 }
 
-export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null }): string {
+export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null; complete?: boolean; skills?: string[] }): string {
+  const missing = (meta.skills ?? []).filter((s) => !reports.some((r) => r.skill === s));
   const total = reports.reduce((n, r) => n + r.costUsd, 0);
   const totalTokens = reports.reduce((t, r) => addTokens(t, r.tokens), noTokens());
   const regs = reports.flatMap((r) => r.diff.regressions.map((c) => `${r.skill}/${c}`));
@@ -95,6 +96,7 @@ export function renderReport(reports: SkillReport[], meta: { started: string; ma
     "",
     `Started ${meta.started} · total ${fmtTokens(totalTokens)} · est. API cost $${total.toFixed(2)}${meta.maxCost ? ` of $${meta.maxCost} ceiling` : ""}`,
     regs.length ? `\n**Regressions (exit 1):** ${regs.join(", ")}` : "\nNo regressions against the baselines.",
+    ...(meta.complete === false ? ["", `**Run not finished** — skills without a result: ${missing.length ? missing.join(", ") : "none (a cost ceiling or error stopped it)"}.`] : []),
     "",
   ];
   return [...head, ...reports.map(renderSkill)].join("\n");
@@ -103,5 +105,5 @@ export function renderReport(reports: SkillReport[], meta: { started: string; ma
 export function writeResults(dir: string, reports: SkillReport[], meta: Record<string, unknown>): void {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "results.json"), `${JSON.stringify({ meta, skills: reports }, null, 2)}\n`);
-  fs.writeFileSync(path.join(dir, "report.md"), renderReport(reports, { started: String(meta["started"] ?? ""), maxCost: (meta["max_cost_usd"] as number | null) ?? null }));
+  fs.writeFileSync(path.join(dir, "report.md"), renderReport(reports, { started: String(meta["started"] ?? ""), maxCost: (meta["max_cost_usd"] as number | null) ?? null, complete: meta["run_complete"] as boolean | undefined, skills: meta["skills"] as string[] | undefined }));
 }

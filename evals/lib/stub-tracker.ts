@@ -5,6 +5,8 @@ import * as http from "http";
 
 export interface StubTracker {
   baseUrl: string;
+  /** Requests served so far: `health` = GET /, `item` = GET of the item route. A trial that left `item` at 0 never read the tracker. */
+  requests: { health: number; item: number };
   close(): Promise<void>;
 }
 
@@ -13,11 +15,14 @@ export async function startStubTracker(trackerJson: string, key: string): Promis
   const m = /^(TASK|BUG)-(\d+)$/.exec(key);
   if (!m) throw new Error(`bad issue key ${key}`);
   const route = `/${m[1] === "BUG" ? "bugs" : "tasks"}/${m[2]}`;
+  const requests = { health: 0, item: 0 };
   const server = http.createServer((req, res) => {
     const url = (req.url ?? "/").split("?")[0]!;
     if (req.method === "GET" && url === "/") {
+      requests.health += 1;
       res.writeHead(200, { "content-type": "text/plain" }).end("eval tracker ok");
     } else if (req.method === "GET" && url === route) {
+      requests.item += 1;
       res.writeHead(200, { "content-type": "application/json" }).end(record);
     } else {
       res.writeHead(404, { "content-type": "application/json" }).end(JSON.stringify({ status: "error", message: "not found" }));
@@ -30,6 +35,7 @@ export async function startStubTracker(trackerJson: string, key: string): Promis
   const port = (server.address() as { port: number }).port;
   return {
     baseUrl: `http://127.0.0.1:${port}`,
+    requests,
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
   };
 }
