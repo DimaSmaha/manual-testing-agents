@@ -1,0 +1,6 @@
+Saved: `.eval-runs/expl1-3-qa-checklist-TASK-114-1/TASK-114-3-checklist.md`
+
+The checklist has 29 items across 9 requirement headings (REQ-1, REQ-2, REQ-3a to REQ-3e, REQ-4, REQ-5, REQ-6). I didn't see any validation hook feedback after the write, so I can't say whether the checklist passed validation.
+
+AUTO-DECISION: REQ-1 and REQ-6 were vague, so I built a single minimal check for REQ-1. For REQ-6 I limited the checks to what the text names (routing, state sync, UI consistency).
+AUTO-DECISION: REQ-3e says "proper cart count update", so I read it as the count going up by 1 on 'Add to cart' and down by 1 on 'Remove'.

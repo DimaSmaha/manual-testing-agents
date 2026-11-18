@@ -1,0 +1,1274 @@
+{
+  "meta": {
+    "started": "2026-11-11T11:11:11.000Z",
+    "runs": 1,
+    "skills": [
+      "expl1-1-task-context",
+      "expl1-2-requirements-grooming",
+      "expl1-3-qa-checklist",
+      "expl1-4-qa-test-cases"
+    ],
+    "max_cost_usd": null,
+    "total_cost_usd": 3.4506766000000004,
+    "total_tokens": {
+      "input": 36604,
+      "output": 60357,
+      "cache_read": 3340052,
+      "cache_write": 736006,
+      "total": 4173019
+    },
+    "run_complete": true,
+    "results_dir": "evals/results/20261111-111111",
+    "finished": "2026-11-11T11:18:27.724Z"
+  },
+  "skills": [
+    {
+      "skill": "expl1-1-task-context",
+      "runs": 1,
+      "threshold": 1,
+      "partial": false,
+      "cases": [
+        {
+          "id": "TASK-111",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-111",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s1.stop-behavior",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "STOP: reply and no context file"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2466946,
+              "tokens": {
+                "input": 11,
+                "output": 1098,
+                "cache_read": 237636,
+                "cache_write": 45475,
+                "total": 284220
+              },
+              "skill_tokens": {
+                "input": 11,
+                "output": 1098,
+                "cache_read": 237636,
+                "cache_write": 45475,
+                "total": 284220
+              },
+              "turns": 9,
+              "duration_ms": 13077,
+              "dir": "results/20261111-111111/trials/expl1-1-task-context-TASK-111-1",
+              "total_ms": 13377
+            }
+          ]
+        },
+        {
+          "id": "TASK-112",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-112",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s1.stop-behavior",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "context file written"
+                },
+                {
+                  "id": "s1.one-h1",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.header",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "header ok"
+                },
+                {
+                  "id": "s1.sections",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "sections: Goal, Scope, Requirements"
+                },
+                {
+                  "id": "s1.requirement-count",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "1 requirement bullets"
+                },
+                {
+                  "id": "s1.literals",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "4 literals present"
+                },
+                {
+                  "id": "s1.no-pm-data",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "The context file adds values that the tracker record does not contain. The header line 'Source: http://127.0.0.1:3000/tasks/112' gives a URL and port that appear nowhere in the tracker JSON, which has only id, title, description and type. The header line 'Generated: 2026-11-11' gives a date that is also absent from the tracker record. The remaining content (title, type 'story', goal and requireme"
+                },
+                {
+                  "id": "s1.llm-no-merge-reword",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Tracker description: 'Create the end-to-end login experience so users can sign in with validated credentials, see clear inline error states, and remain on the page when authentication fails.' Context '## Goal' and '## Requirements' both repeat this sentence word for word. The three conditions (validated credentials, clear inline error states, remain on the page when authentication fails) are kept "
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2210851,
+              "tokens": {
+                "input": 1999,
+                "output": 2602,
+                "cache_read": 317713,
+                "cache_write": 49703,
+                "total": 372017
+              },
+              "skill_tokens": {
+                "input": 11,
+                "output": 1548,
+                "cache_read": 317147,
+                "cache_write": 48217,
+                "total": 366923
+              },
+              "turns": 9,
+              "duration_ms": 17972,
+              "dir": "results/20261111-111111/trials/expl1-1-task-context-TASK-112-1",
+              "total_ms": 25972
+            }
+          ]
+        },
+        {
+          "id": "TASK-113",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-113",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s1.stop-behavior",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "context file written"
+                },
+                {
+                  "id": "s1.one-h1",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.header",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "header ok"
+                },
+                {
+                  "id": "s1.sections",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "sections: Goal, Scope, Requirements"
+                },
+                {
+                  "id": "s1.requirement-count",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "3 requirement bullets"
+                },
+                {
+                  "id": "s1.literals",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "4 literals present"
+                },
+                {
+                  "id": "s1.no-pm-data",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "The context file adds values that the tracker record does not contain. The header line 'Source: http://127.0.0.1:3000/tasks/113' gives a URL that appears nowhere in the tracker JSON (which has only id, title, description, type). The header line 'Generated: 2026-11-11' gives a date that also appears nowhere in the tracker. Everything else (Goal, the three Requirements, and the 'Not specified in th"
+                },
+                {
+                  "id": "s1.llm-no-merge-reword",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Tracker description: 'Add logout handling that clears the current session, redirects the user to the sign-in screen, and behaves consistently for both manual logout and automatic session expiration.' Context Goal repeats this sentence verbatim. Requirements split it into three bullets: 'Add logout handling that clears the current session.' / 'Logout handling redirects the user to the sign-in scree"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2125539,
+              "tokens": {
+                "input": 2030,
+                "output": 2964,
+                "cache_read": 317814,
+                "cache_write": 49767,
+                "total": 372575
+              },
+              "skill_tokens": {
+                "input": 13,
+                "output": 1563,
+                "cache_read": 317259,
+                "cache_write": 48252,
+                "total": 367087
+              },
+              "turns": 9,
+              "duration_ms": 16728,
+              "dir": "results/20261111-111111/trials/expl1-1-task-context-TASK-113-1",
+              "total_ms": 19728
+            }
+          ]
+        },
+        {
+          "id": "TASK-114",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-114",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s1.stop-behavior",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "context file written"
+                },
+                {
+                  "id": "s1.one-h1",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.header",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "header ok"
+                },
+                {
+                  "id": "s1.sections",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "sections: Goal, Scope, Requirements"
+                },
+                {
+                  "id": "s1.requirement-count",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "6 requirement bullets"
+                },
+                {
+                  "id": "s1.literals",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "10 literals present"
+                },
+                {
+                  "id": "s1.no-pm-data",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "The context file adds facts that no tracker field states. The header line \"Source: http://127.0.0.1:3000/tasks/114\" contains a URL that does not appear anywhere in the tracker record. The header line \"Generated: 2026-11-11\" contains a date that is also absent from the tracker. The rest of the content (Goal, Scope, Requirements) restates or splits tracker text without adding steps, results, fixes,"
+                },
+                {
+                  "id": "s1.llm-no-merge-reword",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Tracker: \"The product details page must include product name, detailed description, price, a larger product image, and an 'Add to cart' button that behaves identically to the one on the inventory page (including state change to 'Remove' when clicked and proper cart count update).\" Context splits this into two bullets: \"The product details page must include product name, detailed description, price"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2153025,
+              "tokens": {
+                "input": 2451,
+                "output": 3914,
+                "cache_read": 308298,
+                "cache_write": 48237,
+                "total": 362900
+              },
+              "skill_tokens": {
+                "input": 11,
+                "output": 1913,
+                "cache_read": 307734,
+                "cache_write": 46198,
+                "total": 355856
+              },
+              "turns": 9,
+              "duration_ms": 18516,
+              "dir": "results/20261111-111111/trials/expl1-1-task-context-TASK-114-1",
+              "total_ms": 24516
+            }
+          ]
+        },
+        {
+          "id": "BUG-114",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "BUG-114",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s1.stop-behavior",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "context file written"
+                },
+                {
+                  "id": "s1.one-h1",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.header",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "header ok"
+                },
+                {
+                  "id": "s1.sections",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "sections: Goal, Scope, Requirements"
+                },
+                {
+                  "id": "s1.requirement-count",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "1 requirement bullets"
+                },
+                {
+                  "id": "s1.literals",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "4 literals present"
+                },
+                {
+                  "id": "s1.no-pm-data",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s1.bug-fields",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "bug fields ok"
+                },
+                {
+                  "id": "s1.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "The context file adds values and statements that the tracker record does not contain. (1) \"Source: http://127.0.0.1:3000/bugs/114\" is a URL that appears nowhere in the tracker JSON. (2) \"Type: bug\" is not a field in the record. (3) \"Goal: Retest of the bug: verify that the described problem no longer occurs.\" is a goal and expected outcome that no tracker field states. The Scope and Requirements "
+                },
+                {
+                  "id": "s1.llm-no-merge-reword",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Tracker description: \"On the sign-in page, the primary Login button remains disabled even after a user enters a valid email and password combination, preventing authentication from starting.\" Context Requirements: \"On the sign-in page, the primary Login button remains disabled even after a user enters a valid email and password combination, preventing authentication from starting.\" The text is ide"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.200121,
+              "tokens": {
+                "input": 1988,
+                "output": 2956,
+                "cache_read": 307793,
+                "cache_write": 47159,
+                "total": 359896
+              },
+              "skill_tokens": {
+                "input": 11,
+                "output": 1652,
+                "cache_read": 307227,
+                "cache_write": 45774,
+                "total": 354664
+              },
+              "turns": 9,
+              "duration_ms": 15882,
+              "dir": "results/20261111-111111/trials/expl1-1-task-context-BUG-114-1",
+              "total_ms": 21882
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "comparable": false,
+        "noBaseline": true,
+        "hashChanged": false,
+        "regressions": [],
+        "fixes": [],
+        "newCases": [],
+        "passRate": 1,
+        "baselineRate": null
+      },
+      "hash": "50c35e1d64564800",
+      "costUsd": 1.0957571,
+      "tokens": {
+        "input": 8479,
+        "output": 13534,
+        "cache_read": 1489254,
+        "cache_write": 240341,
+        "total": 1751608
+      },
+      "incomplete": false
+    },
+    {
+      "skill": "expl1-2-requirements-grooming",
+      "runs": 1,
+      "threshold": 1,
+      "partial": false,
+      "cases": [
+        {
+          "id": "TASK-112",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-112",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s2.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s2.text-unchanged",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "3 context requirements checked"
+                },
+                {
+                  "id": "s2.auto-decision",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "AUTO-DECISION line present"
+                },
+                {
+                  "id": "s2.problem-list",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "0 problems in 0 group(s)"
+                },
+                {
+                  "id": "s2.llm-split-faithful",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "no split requirements. The output keeps REQ-1, REQ-2 and REQ-3 as single items, and none has an a/b sub-item split."
+                },
+                {
+                  "id": "s2.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "The chat reply states: \"The validation hook gave no feedback after the write.\" The context file mentions no validation hook, no write operation and no feedback behavior. It describes product behavior the context does not give, and it is not tied to any real gap, ambiguity or conflict in REQ-1, REQ-2 or REQ-3. The same reply also reports \"AUTO-DECISION: 6 grooming questions left unanswered\", but it"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.1230195,
+              "tokens": {
+                "input": 2306,
+                "output": 2248,
+                "cache_read": 189575,
+                "cache_write": 28674,
+                "total": 222803
+              },
+              "skill_tokens": {
+                "input": 7,
+                "output": 1551,
+                "cache_read": 189000,
+                "cache_write": 26886,
+                "total": 217444
+              },
+              "turns": 7,
+              "duration_ms": 16326,
+              "dir": "results/20261111-111111/trials/expl1-2-requirements-grooming-TASK-112-1",
+              "total_ms": 24326
+            }
+          ]
+        },
+        {
+          "id": "TASK-113",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-113",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s2.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s2.text-unchanged",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "3 context requirements checked"
+                },
+                {
+                  "id": "s2.auto-decision",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "AUTO-DECISION line present"
+                },
+                {
+                  "id": "s2.problem-list",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "0 problems in 0 group(s)"
+                },
+                {
+                  "id": "s2.llm-split-faithful",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "no split requirements. The output document keeps the three context requirements as single items REQ-1, REQ-2 and REQ-3, with the same wording as the context. None was split into sub-items such as REQ-3a or REQ-3b."
+                },
+                {
+                  "id": "s2.llm-no-invention",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "no problems listed. The chat reply names the saved file, says REQ-1 to REQ-3 are unchanged from the context, and gives the note \"AUTO-DECISION: 4 grooming questions left unanswered → requirements kept as in the context\". That is a count of unanswered questions, not a list of problem entries, and it states no product behavior."
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2299507,
+              "tokens": {
+                "input": 2249,
+                "output": 2167,
+                "cache_read": 175798,
+                "cache_write": 48471,
+                "total": 228685
+              },
+              "skill_tokens": {
+                "input": 9,
+                "output": 1453,
+                "cache_read": 175234,
+                "cache_write": 46733,
+                "total": 223429
+              },
+              "turns": 6,
+              "duration_ms": 16261,
+              "dir": "results/20261111-111111/trials/expl1-2-requirements-grooming-TASK-113-1",
+              "total_ms": 19261
+            }
+          ]
+        },
+        {
+          "id": "TASK-114",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-114",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s2.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s2.text-unchanged",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "6 context requirements checked"
+                },
+                {
+                  "id": "s2.auto-decision",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "AUTO-DECISION line present"
+                },
+                {
+                  "id": "s2.problem-list",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "10 problems in 3 group(s)"
+                },
+                {
+                  "id": "s2.llm-split-faithful",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "no split requirements. The output file lists REQ-1 through REQ-6 as one-to-one renumberings of the context's requirement bullets, with no sub-items such as REQ-3a or REQ-3b."
+                },
+                {
+                  "id": "s2.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "The same REQ-6 finding appears in two groups. Under Questions: \"REQ-6: 'Routing, UI consistency, state synchronization' has no concrete criteria → state which behaviors count\". Under Risks: \"REQ-6: Acceptance for consistency and synchronization can't be decided without concrete criteria → clarify before testing.\" The criterion fails when one finding is restated in several groups. The other entries"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2312733,
+              "tokens": {
+                "input": 3205,
+                "output": 3738,
+                "cache_read": 171677,
+                "cache_write": 48194,
+                "total": 226814
+              },
+              "skill_tokens": {
+                "input": 7,
+                "output": 2050,
+                "cache_read": 171102,
+                "cache_write": 45397,
+                "total": 218556
+              },
+              "turns": 7,
+              "duration_ms": 17238,
+              "dir": "results/20261111-111111/trials/expl1-2-requirements-grooming-TASK-114-1",
+              "total_ms": 21738
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "noBaseline": false,
+        "hashChanged": false,
+        "regressions": [],
+        "fixes": [],
+        "newCases": [],
+        "passRate": 1,
+        "baselineRate": 1
+      },
+      "hash": "6dd76bbe19e83b08",
+      "costUsd": 0.5842435,
+      "tokens": {
+        "input": 7760,
+        "output": 8153,
+        "cache_read": 537050,
+        "cache_write": 125339,
+        "total": 678302
+      },
+      "incomplete": false
+    },
+    {
+      "skill": "expl1-3-qa-checklist",
+      "runs": 1,
+      "threshold": 1,
+      "partial": false,
+      "cases": [
+        {
+          "id": "TASK-112",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-112",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s3.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s3.forbidden-words",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "5 checks scanned"
+                },
+                {
+                  "id": "s3.one-per-line",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s3.independent",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s3.no-orphan-check",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "5 checks, all with an id"
+                },
+                {
+                  "id": "s3.llm-atomic",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Each check asserts one behavior with one expected result, e.g. REQ-1.1 \"Submitting the login form with valid credentials signs the user in.\" and REQ-3.1 \"the browser stays on the login page (the URL does not change).\" The parenthetical in REQ-2.1 \"(not in a separate page)\" restates the same placement assertion rather than adding a second verifiable element, so no check joins two independently veri"
+                },
+                {
+                  "id": "s3.llm-no-invention",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "REQ-2.2: \"The inline error message text states the reason for the failure.\" The requirement only says \"Users see clear inline error states\"; it does not state that the message must give a reason for the failure. This adds a content requirement (message must explain the cause) that the requirement does not state. REQ-3.1's URL check is a reasonable operationalization of \"remain on the page\", so the"
+                },
+                {
+                  "id": "s3.llm-coverage",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "REQ-1 \"Users can sign in with validated credentials\": success path covered by REQ-1.1 and failure path by REQ-1.2. REQ-2 \"clear inline error states\": inline display covered by REQ-2.1 and message content by REQ-2.2. REQ-3 \"Users remain on the page when authentication fails\": covered by REQ-3.1. The requirements state no numeric values or named states that the checks generalise or omit, and the lab"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.1938987,
+              "tokens": {
+                "input": 2283,
+                "output": 2825,
+                "cache_read": 178408,
+                "cache_write": 49623,
+                "total": 233139
+              },
+              "skill_tokens": {
+                "input": 9,
+                "output": 1142,
+                "cache_read": 177833,
+                "cache_write": 47950,
+                "total": 226934
+              },
+              "turns": 7,
+              "duration_ms": 13976,
+              "dir": "results/20261111-111111/trials/expl1-3-qa-checklist-TASK-112-1",
+              "total_ms": 18476
+            }
+          ]
+        },
+        {
+          "id": "TASK-113",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-113",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s3.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s3.forbidden-words",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "6 checks scanned"
+                },
+                {
+                  "id": "s3.one-per-line",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s3.independent",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s3.no-orphan-check",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "6 checks, all with an id"
+                },
+                {
+                  "id": "s3.llm-atomic",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "No check joins two independently verifiable results with \"and\" or allows partial passes. Each check has one expected outcome for one flow. The closest cases are REQ-1.1 (\"the current session is cleared: the user is no longer authenticated\"), where the colon elaborates a single outcome, and REQ-3.1 (\"Manual logout and automatic session expiration both clear the current session with the same resulti"
+                },
+                {
+                  "id": "s3.llm-no-invention",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Checks reuse the requirement's own terms: \"current session\", \"sign-in screen\", \"manual logout\", \"automatic session expiration\", and \"consistently\". No routes, selectors, messages, limits, or roles are added. The phrase \"the user is no longer authenticated\" in REQ-1.1 and REQ-1.2 is a plain reading of \"clears the current session\", not new behavior. The only possible stretch is that this reading nam"
+                },
+                {
+                  "id": "s3.llm-coverage",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "REQ-1 (clears the current session) is covered for manual logout by REQ-1.1 and for automatic expiration by REQ-1.2. REQ-2 (redirects to the sign-in screen) is covered for manual logout by REQ-2.1 and for automatic expiration by REQ-2.2. REQ-3 (behaves consistently for both) is covered by REQ-3.1 for session clearing and by REQ-3.2 for the redirect. Labels such as \"sign-in screen\" and \"current sess"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2543199,
+              "tokens": {
+                "input": 2484,
+                "output": 2940,
+                "cache_read": 178251,
+                "cache_write": 49836,
+                "total": 233511
+              },
+              "skill_tokens": {
+                "input": 9,
+                "output": 1277,
+                "cache_read": 177676,
+                "cache_write": 47953,
+                "total": 226915
+              },
+              "turns": 7,
+              "duration_ms": 11464,
+              "dir": "results/20261111-111111/trials/expl1-3-qa-checklist-TASK-113-1",
+              "total_ms": 14464
+            }
+          ]
+        },
+        {
+          "id": "TASK-114",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-114",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s3.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s3.forbidden-words",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "26 checks scanned"
+                },
+                {
+                  "id": "s3.one-per-line",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s3.independent",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s3.no-orphan-check",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "26 checks, all with an id"
+                },
+                {
+                  "id": "s3.llm-atomic",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "Worst offender REQ-2.3: \"The cart is available on the product details page (cart icon/button and 'Add to cart' button).\" This joins two separately verifiable elements, the cart icon/button and the 'Add to cart' button, under one pass/fail, so it could be partially pass. REQ-2.1 also joins navigation with separateness (\"navigates the user to a product details page, separate from the inventory page\""
+                },
+                {
+                  "id": "s3.llm-no-invention",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "Checks stay close to the requirements. REQ-3a.1 and REQ-3c.1 require name and price to equal the inventory values, which is the closest extrapolation, but it is grounded in REQ-6 \"UI consistency\". REQ-3e.1's \"for a product that is not in the cart\" is implied by the Add to cart/Remove toggle in REQ-3e. REQ-6.1's own URL is grounded in REQ-6 \"Ensure routing\". REQ-5.3/5.4 are grounded in REQ-5 \"at an"
+                },
+                {
+                  "id": "s3.llm-coverage",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "REQ-6: \"Ensure routing, UI consistency, and state synchronization between inventory and product pages.\" The part \"UI consistency\" has no check. REQ-6.1 covers routing, REQ-6.2-6.4 cover state sync, but no check verifies UI consistency between the two pages. Additionally, REQ-3e: \"behaves identically to the one on the inventory page\" is only checked on the product details page (REQ-3e.1-3e.5); no c"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2520251,
+              "tokens": {
+                "input": 3657,
+                "output": 5685,
+                "cache_read": 178644,
+                "cache_write": 52489,
+                "total": 240475
+              },
+              "skill_tokens": {
+                "input": 9,
+                "output": 2478,
+                "cache_read": 178069,
+                "cache_write": 49453,
+                "total": 230009
+              },
+              "turns": 7,
+              "duration_ms": 19439,
+              "dir": "results/20261111-111111/trials/expl1-3-qa-checklist-TASK-114-1",
+              "total_ms": 25439
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "comparable": false,
+        "noBaseline": true,
+        "hashChanged": false,
+        "regressions": [],
+        "fixes": [],
+        "newCases": [],
+        "passRate": 1,
+        "baselineRate": null
+      },
+      "hash": "105a657715fe3f17",
+      "costUsd": 0.7002437,
+      "tokens": {
+        "input": 8424,
+        "output": 11450,
+        "cache_read": 535303,
+        "cache_write": 151948,
+        "total": 707125
+      },
+      "incomplete": false
+    },
+    {
+      "skill": "expl1-4-qa-test-cases",
+      "runs": 1,
+      "threshold": 1,
+      "partial": false,
+      "cases": [
+        {
+          "id": "TASK-112",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-112",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s4.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s4.statistics",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "3 requirements, 4 test cases"
+                },
+                {
+                  "id": "s4.scenario-names",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "4 names"
+                },
+                {
+                  "id": "s4.no-placeholders",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.vague-expected",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "13 expected results scanned"
+                },
+                {
+                  "id": "s4.structural-note",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.steps-mechanical",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.precondition",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "4 test cases"
+                },
+                {
+                  "id": "s4.llm-step-assertion-separation",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "All four test cases (TC-REQ-1.1, TC-REQ-1.2, TC-REQ-2.1, TC-REQ-3.1) use mechanical single-action steps: \"Open the login page\", \"Enter the email and the password\" / \"Enter the email and a wrong password\", \"Submit the login form\", and \"Read the address of the current page\". No step contains a judgement. Assertions sit only in the Expected result column. Multi-condition cells are split with <br>: TC"
+                },
+                {
+                  "id": "s4.llm-reviewer",
+                  "kind": "llm",
+                  "pass": false,
+                  "evidence": "TC-REQ-1.1 step 2 (same in TC-REQ-1.2, TC-REQ-2.1 and TC-REQ-3.1 step 3): the expected result 'The entered values are in the form fields' only restates the data-entry step (rule 7) → Remove the expected result from the entry step, or replace it with a check that comes from the checklist. Keep the verifications in the submit step. | TC-REQ-3.1 step 2: the expected result 'The address of the login page is shown in the address bar' only restates the step 'Read the address of the current page' (rule 7) → Put the address in the step's test data (for example 'Address: current login page URL, recorde"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.2760522,
+              "tokens": {
+                "input": 2979,
+                "output": 6715,
+                "cache_read": 205598,
+                "cache_write": 58005,
+                "total": 273297
+              },
+              "skill_tokens": {
+                "input": 9,
+                "output": 4309,
+                "cache_read": 188054,
+                "cache_write": 32322,
+                "total": 224694
+              },
+              "turns": 8,
+              "duration_ms": 30709,
+              "dir": "results/20261111-111111/trials/expl1-4-qa-test-cases-TASK-112-1",
+              "total_ms": 40209
+            }
+          ]
+        },
+        {
+          "id": "TASK-113",
+          "pass": true,
+          "trials_passed": 1,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-113",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s4.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s4.statistics",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "3 requirements, 5 test cases"
+                },
+                {
+                  "id": "s4.scenario-names",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "5 names"
+                },
+                {
+                  "id": "s4.no-placeholders",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.vague-expected",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "12 expected results scanned"
+                },
+                {
+                  "id": "s4.structural-note",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.steps-mechanical",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.precondition",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "5 test cases"
+                },
+                {
+                  "id": "s4.llm-step-assertion-separation",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "All steps are single mechanical actions or reads: \"Click the logout control\", \"Reload the page\", \"Wait until the session expires\", \"Sign in\", \"Sign in again\", \"Read the displayed screen\". No step contains a judgement. Every assertion sits in the Expected result column, with multiple conditions split by <br>, e.g. TC-REQ-1.1 step 2: \"The user is still signed out<br>The signed-in state of the previo"
+                },
+                {
+                  "id": "s4.llm-reviewer",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "PASS"
+                }
+              ],
+              "pass": true,
+              "cost_usd": 0.3353503,
+              "tokens": {
+                "input": 3174,
+                "output": 6212,
+                "cache_read": 251689,
+                "cache_write": 72749,
+                "total": 333824
+              },
+              "skill_tokens": {
+                "input": 11,
+                "output": 4289,
+                "cache_read": 231378,
+                "cache_write": 49525,
+                "total": 285203
+              },
+              "turns": 8,
+              "duration_ms": 36672,
+              "dir": "results/20261111-111111/trials/expl1-4-qa-test-cases-TASK-113-1",
+              "total_ms": 39672
+            }
+          ]
+        },
+        {
+          "id": "TASK-114",
+          "pass": false,
+          "trials_passed": 0,
+          "of": 1,
+          "trials": [
+            {
+              "case": "TASK-114",
+              "trial": 1,
+              "criteria": [
+                {
+                  "id": "s4.structure",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "structure ok"
+                },
+                {
+                  "id": "s4.statistics",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "10 requirements, 9 test cases"
+                },
+                {
+                  "id": "s4.scenario-names",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "9 names"
+                },
+                {
+                  "id": "s4.no-placeholders",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.vague-expected",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "23 expected results scanned"
+                },
+                {
+                  "id": "s4.structural-note",
+                  "kind": "deterministic",
+                  "pass": false,
+                  "evidence": "## REQ-1 (line 8) has no test cases and no \"> ℹ️ Structural requirement …\" / \"> ⚠️ The requirement needs clarification …\" note"
+                },
+                {
+                  "id": "s4.steps-mechanical",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "ok"
+                },
+                {
+                  "id": "s4.precondition",
+                  "kind": "deterministic",
+                  "pass": true,
+                  "evidence": "9 test cases"
+                },
+                {
+                  "id": "s4.llm-step-assertion-separation",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "All nine test cases (TC-REQ-2.1, TC-REQ-3d.1, TC-REQ-3e.1, TC-REQ-4.1, TC-REQ-5.1, TC-REQ-5.2, TC-REQ-6.1, TC-REQ-6.2, TC-REQ-6.3) use single mechanical step actions (Read, Click, Find). Assertions sit only in the Expected result column, split into one condition per line with <br>. Examples: TC-REQ-2.1 step 2 expected \"The inventory page is replaced by a product details page<br>The page address di"
+                },
+                {
+                  "id": "s4.llm-reviewer",
+                  "kind": "llm",
+                  "pass": true,
+                  "evidence": "PASS"
+                }
+              ],
+              "pass": false,
+              "cost_usd": 0.4590298,
+              "tokens": {
+                "input": 5788,
+                "output": 14293,
+                "cache_read": 321158,
+                "cache_write": 87624,
+                "total": 428863
+              },
+              "skill_tokens": {
+                "input": 11,
+                "output": 10405,
+                "cache_read": 300746,
+                "cache_write": 59419,
+                "total": 370581
+              },
+              "turns": 10,
+              "duration_ms": 74664,
+              "dir": "results/20261111-111111/trials/expl1-4-qa-test-cases-TASK-114-1",
+              "total_ms": 82664
+            }
+          ]
+        }
+      ],
+      "diff": {
+        "comparable": false,
+        "noBaseline": true,
+        "hashChanged": false,
+        "regressions": [],
+        "fixes": [],
+        "newCases": [],
+        "passRate": 0.6666666666666666,
+        "baselineRate": null
+      },
+      "hash": "1c58da4f818900b2",
+      "costUsd": 1.0704323,
+      "tokens": {
+        "input": 11941,
+        "output": 27220,
+        "cache_read": 778445,
+        "cache_write": 218378,
+        "total": 1035984
+      },
+      "incomplete": false
+    }
+  ]
+}

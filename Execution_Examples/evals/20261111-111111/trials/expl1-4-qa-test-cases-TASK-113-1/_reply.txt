@@ -1,0 +1,8 @@
+Saved: `.eval-runs/expl1-4-qa-test-cases-TASK-113-1/TASK-113-4-test-cases.md`
+
+- Test cases: 5 (TC-REQ-1.1, 1.2, 2.1, 2.2, 3.1)
+- Requirements covered: 3 of 3 (none needed clarification)
+
+AUTO-DECISION: The checklist doesn't give the session lifetime, the logout control or the test account. The test cases use `[test data]` markers for these and don't invent values. For automatic expiration the step is "Wait until the session expires", with the test environment's configured session lifetime as test data.
+
+For the next skills (pr-summary, code review), continue in a new chat with the test-cases and checklist files.

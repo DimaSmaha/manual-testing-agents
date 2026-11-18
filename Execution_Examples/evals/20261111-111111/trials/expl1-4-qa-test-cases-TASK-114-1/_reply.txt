@@ -1,0 +1,13 @@
+The test cases are saved to `.eval-runs/expl1-4-qa-test-cases-TASK-114-1/TASK-114-4-test-cases.md`. The write hook showed no validation feedback, so I haven't seen a gate result for this file.
+
+- **Test cases:** 9.
+- **Requirements covered:** 10 of 10. Six have test cases: REQ-2, 3d, 3e, 4, 5 and 6. REQ-3a, 3b and 3c are structural and get a `>` note. REQ-1 gets a `>` note too, because its only check is exercised by TC-REQ-2.1.
+- **Needing clarification:** 0.
+
+AUTO-DECISION: REQ-1 only says the details page "can be reached from the inventory page". A separate test case would repeat TC-REQ-2.1 → REQ-1 got a `>` note pointing to TC-REQ-2.1.
+AUTO-DECISION: REQ-3a, 3b and 3c check only that the name, description and price are present → structural, so no test cases. TC-REQ-2.1 still compares the name and price with the inventory page.
+AUTO-DECISION: "larger" in REQ-3d.2 has no stated dimension → TC-REQ-3d.1 compares displayed width × height (area) on the two pages.
+AUTO-DECISION: the checklist names no products → I used "Sauce Labs Backpack", "Sauce Labs Bike Light" and "Sauce Labs Bolt T-Shirt", marked `[test data]`.
+AUTO-DECISION: REQ-3e.2 (the button changes to "Remove") and REQ-3e.3 (the cart count goes up by 1) use the same steps → merged into TC-REQ-3e.1, where the count goes from 1 to 2.
+
+For the next stages (pr-summary, code review), continue in a new chat with the test-cases and checklist files.

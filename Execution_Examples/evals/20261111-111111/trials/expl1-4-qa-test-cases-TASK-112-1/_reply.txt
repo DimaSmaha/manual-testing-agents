@@ -1,0 +1,13 @@
+I'll start with the autonomous-mode rules for stage 4.
+
+Saved: `.eval-runs/expl1-4-qa-test-cases-TASK-112-1/TASK-112-4-test-cases.md`
+
+- Test cases: 4 (TC-REQ-1.1, TC-REQ-1.2, TC-REQ-2.1, TC-REQ-3.1)
+- Requirements covered: 3 of 3 (none needed clarification)
+- I made 1 test case per check where the steps differed. The checks REQ-2.2 and REQ-3.2 share their steps with REQ-2.1 and REQ-3.1, so I merged each into that case.
+
+AUTO-DECISION: The checklist gives no credentials, no login URL and no signed-in indicator → I used `[test data]` for the credentials and wrote the expected result as "The user is signed in" with no invented UI detail.
+AUTO-DECISION: The checklist doesn't say which credentials "fail validation" → I used one representative case (a wrong password for an existing account) for REQ-1.2, REQ-2.1 and REQ-3.1, with no extra partitions.
+AUTO-DECISION: The error message wording isn't specified → TC-REQ-2.1 checks only that an inline error state with a visible text message appears, not its text.
+
+For the next stages (pr-summary, code review), I recommend continuing in a new chat with the test-cases and checklist files.

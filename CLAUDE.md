@@ -209,7 +209,8 @@ was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate`
   the code review", not partial, not incidental), FAIL/BLOCKED rows say what happened, the report names the app. This
   is why stage 8 now runs every test case whatever its code-review status (user decision).
 - Shared parsing lives in `lib/expl1-markdown.mjs`. **Changing the output template of stage 1, 2, 3, 4 or 8 means
-  changing this parser, the validators, the reviewer agent and the fixtures together.**
+  changing this parser, the validators, the reviewer agent, the fixtures **and the evals (`evals/lib/md.ts`,
+  `evals/lib/validators.ts`, `evals/<skill>/checks.ts`, `grader.md`, frozen `inputs/`, see "Evals")** together.**
 - Feedback is `{"decision":"block","reason":…}`, shown next to the Write/Edit result. It is one note per problem with
   one fix each. The loop is bounded per (session, run folder, artifact): 3 blocks, then a final block asking for a
   `<REQUIREMENTS|CHECKLIST|TEST-CASES|WEB-TESTING> VALIDATION FAILED after 3 retries — <path>` reply, then silence.
@@ -238,6 +239,33 @@ was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate`
   `edits` (or named `versions`), the expected outcome sequence (per reviewer mode when they differ) and asserts. Run
   folders are created under `.workflow-artifacts/gate-test-*` and deleted afterwards.
 
+## Evals (stages 1–4, offline)
+
+`evals/` (TypeScript on the Agent SDK; `npm run eval`, `eval:selftest`, `eval:typecheck`) checks that an edit to a stage
+skill did not make the skill worse. The feedback loops above fix one live output; evals measure the skill, so the gate is
+**off** during an eval (`EXPL1_REVIEW_CHILD=1` → `artifact-gate.mjs` / `agent-metrics.mjs` are no-ops). Full workflow,
+rules and options: `evals/README.md`. Rules to keep when editing:
+
+- One shared runner `evals/run-eval.ts`; per-skill folders hold only `cases.jsonl`, `inputs/`, `checks.ts` (deterministic,
+  the hard gate), `grader.md` (LLM, warning only) and `baseline.json`. Criteria are ids, so failures are reported per
+  criterion. Stage 4 reuses `expl1-test-cases-reviewer` through `reviewWithSubagent` as its judge.
+- **The structure checks are independent of the feedback loops**: `evals/lib/md.ts` (parser) and `evals/lib/validators.ts`
+  (`s2/s3/s4.validator`) import nothing from `.claude/hooks`, so a hook change cannot move a baseline. Only
+  `evals/self-test/gate-parity.ts` imports the hook validators, to assert both agree on every fixture. A changed stage
+  output template means changing both parsers; `npm run eval:selftest` fails when they disagree.
+- Trials run in `.eval-runs/<skill>-<case>-<trial>/` (git-ignored) with Read of `evals/**`, `.workflow-artifacts/**`,
+  `Execution_Examples/**` and the gate fixtures **denied** (`npm run eval -- --probe-leak` proves it) and Write/Edit allowed
+  in `.eval-runs/` only. Stage 1 reads a stub tracker (`evals/lib/stub-tracker.ts`) serving the frozen `tracker.json`.
+- Baselines (`<skill>/baseline.json`) are committed and move only with `--update-baseline --reason "…"`; down only with
+  `--allow-decrease`. `npm run eval:set-baseline -- evals/results/<ts> --reason "…"` does the same from a finished run
+  without new model calls. A regression is a case that passed and now fails (exit 1). Changing `cases.jsonl` or `inputs/`
+  changes `cases_hash` and requires a re-baseline.
+- `evals/self-test/` holds the known-bad fixtures: every deterministic check must have one, and the real gate-validated
+  runs must pass. Run `npm run eval:selftest` (free) after any change to a check or to a stage output template.
+- The runner drives the installed `claude` binary (`pathToClaudeCodeExecutable`; override `EVAL_CLAUDE_BIN`) because the
+  CLI bundled in the SDK package can be too old for the pinned models.
+- The evals never edit stage skills, validators or reviewer agents.
+
 ## External dependencies
 
 - **Issue tracker**: a REST API read with `curl` (no auth), default `http://localhost:3000`, with an ngrok alternative. Tasks (`/tasks/<id>`) and bugs (`/bugs/<id>`) have **separate id spaces**, so the kind must always be known. Commands, retry flags and response shapes: `.claude/skills/expl1-1-task-context/references/issue-tracker.md`. Pre-flight health check is `curl -s --max-time 5 <BASE>/`; if it fails, stop and ask rather than work around it. Comments, attachments and linked items are not exposed by the tracker.
@@ -248,7 +276,7 @@ was widened for loop 4 (below). Ported from the `artifact-gate` / `us-json-gate`
 
 - `.claude/skills/` is the only folder Claude Code loads. `.claude/skills-archive/` holds retired versions (currently the Claude Desktop variant of stage 8) and is inert. To restore one, copy it into `skills/` under a non-clashing name.
 - `.claude/skills-archive/testomat-skills/` is the imported `testomatio/skills` set. Five were promoted (moved out: `qa-thinking`, `qa-review-pr`, `qa-explain-behavior`, `qa-detect-useless-tests` (renamed from `detect-useless-tests`), `qa-data-seeder`); useful rules from `qa-write-test-cases`, `epic-requirement-reviewer`, `write-user-story`, `pull-request-diff-analyzer`, `wiki-from-code`, `detect-product-mismatches`, `qa-pr-requirements-analyzer`, `detect-duplicate-test-cases` and the three `explorbot-*` skills were merged into stages 2–7 and the explorbot flow (the archive copies stay). The rest are Testomat/TMS- or automation-tied and are not used. Do not import their `.test.md` format, ids, `.testeiya/` folder or "never generate IDs" rule: they conflict with `REQ-N` / `TC-REQ-N.N` and the artifact layout.
-- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks. For stages 1–3, they must also be matched in the feedback-loop validators and fixtures (`.claude/hooks/lib/expl1-markdown.mjs`, `validate-*.mjs`, `.claude/hooks/test/fixtures/`).
+- Each stage's output format is defined by its `references/output-template.md`. Changes to a stage's output shape must be matched in the downstream skills that parse it (for example stage 8 reads the stage 6 results table and stage 7's "Retest in stage 8" section) and in the orchestrator's pipeline table and handoff checks. For stages 1–3, they must also be matched in the feedback-loop validators and fixtures (`.claude/hooks/lib/expl1-markdown.mjs`, `validate-*.mjs`, `.claude/hooks/test/fixtures/`). For stages 1–4, also in the evals (`evals/<skill>/checks.ts`, `grader.md`, `inputs/`, `evals/self-test/`).
 - `setup-guide.md` in each stage records how to reconfigure that stage for another tracker or project. Stages 1 and 7 also keep `references/configure-blocks-original.md` with the original `⚠️ CONFIGURE` placeholder blocks.
 - Skill text is written in English, with short chat messages and no invented data. Several skills have hard "do not" rules (do not reword requirements, do not invent test data, uncovered files never get FAIL). Preserve them when editing.
 

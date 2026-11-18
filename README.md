@@ -30,6 +30,7 @@ More flows will be added next to it under `.claude/skills/`.
 - [Exploratory flow: `expl-bot-*`](#exploratory-flow-expl-bot-)
 - [Run metrics: tokens, cost and time per skill](#run-metrics-tokens-cost-and-time-per-skill)
 - [Feedback loops: stages check their own output](#feedback-loops-stages-check-their-own-output)
+- [Evals: did my skill edit make it worse?](#evals-did-my-skill-edit-make-it-worse)
 - [Repository layout](#repository-layout)
 - [Configuring and adapting the skills](#configuring-and-adapting-the-skills)
 - [Design principles](#design-principles)
@@ -506,6 +507,28 @@ node .claude/hooks/lib/validate-test-cases.mjs   .workflow-artifacts/TASK-114/TA
 
 ---
 
+## Evals: did my skill edit make it worse?
+
+The feedback loops above fix **one** live task's output; they cannot show that an edit to a stage skill made the skill
+itself worse (a skill that is wrong most of the time still ships valid files because the gate bounces it). `evals/` closes
+that gap for stages 1–4: fixed cases built from real stories (TASK-111 empty record, TASK-112/113/114, BUG-114), 3 trials
+per case, scored per criterion, diffed per case against a committed `baseline.json`. The gate is switched off during an eval
+so the skill's first output is what gets measured.
+
+```
+npm run eval:selftest        # free, seconds: every check catches its known-bad fixture
+npm run eval:typecheck
+npm run eval -- --skill expl1-2-requirements-grooming --only TASK-112 --runs 1   # real model calls
+npm run eval -- --skill all --runs 3 --max-cost-usd 40
+npm run eval -- --skill <name> --update-baseline --reason "what changed and why"
+```
+
+Deterministic checks (the existing validators plus new count/wording checks) are the hard gate; LLM criteria only warn. A
+case that passed in the baseline and fails now exits 1. See [`evals/README.md`](evals/README.md) for the layout, the leak
+protection, the baseline rules and the step-by-step improvement workflow. A CI gate is in `.github/workflows/eval-gate.yml`.
+
+---
+
 ## Repository layout
 
 ```
@@ -514,6 +537,9 @@ node .claude/hooks/lib/validate-test-cases.mjs   .workflow-artifacts/TASK-114/TA
 ├── README.md                      This file
 ├── package.json                   Playwright + Agent SDK deps; scripts expl-bot:run, expl-bot:typecheck, test:artifact-gate
 ├── scripts/                       expl-bot-run.ts (Flow 2 runner) and utils/colors.ts
+├── evals/                         Offline evals of expl1 stages 1-4 (run-eval.ts, per-skill cases/checks/baseline,
+│                                  self-test/); see evals/README.md. Scripts eval, eval:selftest, eval:typecheck
+├── .github/workflows/eval-gate.yml  CI gate: self-test + evals on PRs that touch skills/agents/validators/evals
 ├── .env.sample                    Env template for the runner and explorbot (copy to .env, git-ignored)
 ├── explorbot.config.mjs           Config for Flow 3 (explorbot as-is)
 ├── playwright.config.ts           Stock Playwright scaffold (not used by the pipeline)

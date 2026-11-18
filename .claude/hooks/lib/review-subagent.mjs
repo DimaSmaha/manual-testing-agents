@@ -32,7 +32,7 @@ export const OUTPUT_SCHEMA = {
 
 /**
  * @param {{ projectDir: string, agent: string, prompt: string, timeoutMs?: number }} args
- * @returns {Promise<{ verdict: "PASS"|"FAIL", notes: string[], cost_usd: number|null, duration_ms: number|null } | { error: string }>}
+ * @returns {Promise<{ verdict: "PASS"|"FAIL", notes: string[], cost_usd: number|null, usage: object|null, duration_ms: number|null } | { error: string }>}
  *          `error` = the reviewer itself could not run (CLI missing, auth, timeout, bad output) — not a verdict.
  */
 export async function reviewWithSubagent({ projectDir, agent, prompt, timeoutMs = REVIEW_TIMEOUT_MS }) {
@@ -70,6 +70,7 @@ export async function reviewWithSubagent({ projectDir, agent, prompt, timeoutMs 
       verdict: out.verdict,
       notes: out.notes.map(String),
       cost_usd: typeof result.total_cost_usd === "number" ? result.total_cost_usd : null,
+      usage: result.usage && typeof result.usage === "object" ? result.usage : null,
       duration_ms: typeof result.duration_ms === "number" ? result.duration_ms : null,
     };
   }

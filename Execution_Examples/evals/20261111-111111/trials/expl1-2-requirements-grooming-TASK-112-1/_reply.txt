@@ -1,0 +1,5 @@
+Saved: `.eval-runs/expl1-2-requirements-grooming-TASK-112-1/TASK-112-2-requirements.md`
+
+It holds REQ-1 to REQ-3, copied unchanged from the context, and the Goal is copied unchanged too. The validation hook gave no feedback after the write.
+
+AUTO-DECISION: 6 grooming questions left unanswered → requirements kept as in the context

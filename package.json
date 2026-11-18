@@ -6,6 +6,10 @@
   "scripts": {
     "expl-bot:run": "tsx --tsconfig tsconfig.scripts.json scripts/expl-bot-run.ts",
     "expl-bot:typecheck": "tsc -p tsconfig.scripts.json",
+    "eval": "tsx --tsconfig tsconfig.evals.json evals/run-eval.ts",
+    "eval:set-baseline": "tsx --tsconfig tsconfig.evals.json evals/set-baseline.ts",
+    "eval:selftest": "tsx --tsconfig tsconfig.evals.json evals/self-test/run-selftest.ts",
+    "eval:typecheck": "tsc -p tsconfig.evals.json",
     "test:artifact-gate": "node .claude/hooks/test/run-artifact-gate-cases.mjs",
     "test:artifact-gate:real": "node .claude/hooks/test/run-artifact-gate-cases.mjs --reviewer real --artifact test-cases,web-testing"
   },

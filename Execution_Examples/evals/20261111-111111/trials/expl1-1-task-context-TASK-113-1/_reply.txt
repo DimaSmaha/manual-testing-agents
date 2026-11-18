@@ -1,0 +1,9 @@
+Health check first, then the item request.
+
+Saved: `.eval-runs/expl1-1-task-context-TASK-113-1/TASK-113-1-context.md`. The raw tracker response is in `.eval-runs/expl1-1-task-context-TASK-113-1/tracker/TASK-113.json`.
+
+- The tracker health check passed and TASK-113 was read as a story.
+- The ticket has only a title and a one-sentence description. I split the description into three requirements: clear the session, redirect to the sign-in screen, and behave consistently for manual logout and automatic session expiration. Scope is "Not specified in the tracker".
+- The tracker returns no comments, attachments or linked items, so none are included.
+
+AUTO-DECISION: the run folder was given as `.eval-runs/expl1-1-task-context-TASK-113-1`, so I used it in place of `.workflow-artifacts/<ISSUEKEY>/`. I skipped the settings-confirmation step because the run is autonomous.

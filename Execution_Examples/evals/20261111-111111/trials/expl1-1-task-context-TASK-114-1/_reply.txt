@@ -1,0 +1,9 @@
+Stage 1 is done: I saved the context file for TASK-114 (story).
+
+- **File:** `.eval-runs/expl1-1-task-context-TASK-114-1/TASK-114-1-context.md`
+- **Raw tracker response:** `.eval-runs/expl1-1-task-context-TASK-114-1/tracker/TASK-114.json`
+- **Requirements:** 6 bullets, all taken from the description as written.
+- **Out of scope:** "Not specified in the tracker".
+- **Not included:** the tracker returns no comments, attachments or linked items, so the file has no sections for them.
+
+Autonomous mode skipped the settings confirmation, and I asked no questions.

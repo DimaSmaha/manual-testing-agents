@@ -1,0 +1,5 @@
+I saved the BUG-114 context file: `.eval-runs/expl1-1-task-context-BUG-114-1/BUG-114-1-context.md`.
+
+It has the title, severity (high), Goal, Scope and one Requirement. The Requirement is the bug description, copied as-is. The tracker has no comments, attachments or linked items, so none of those sections are in the file.
+
+The raw tracker response is in `.eval-runs/expl1-1-task-context-BUG-114-1/tracker/BUG-114.json`.
