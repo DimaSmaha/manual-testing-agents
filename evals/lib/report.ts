@@ -52,23 +52,37 @@ export function errorsOf(trials: TrialResult[]): string[] {
 
 const pct = (n: number): string => `${Math.round(n * 100)}%`;
 
+/** `45s`, `3m 05s`, `1h 02m`. */
+export function fmtDur(ms: number): string {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ${String(s % 60).padStart(2, "0")}s`;
+  return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
+}
+
+/** Time of one trial end to end (skill + grading); results saved before `total_ms` existed fall back to the skill run. */
+const trialMs = (t: TrialResult): number => t.total_ms ?? t.duration_ms;
+const sumMs = (trials: TrialResult[]): number => trials.reduce((n, t) => n + trialMs(t), 0);
+
 export function renderSkill(r: SkillReport): string {
   const trials = r.cases.flatMap((c) => c.trials);
   const out: string[] = [];
   out.push(`## ${r.skill}`, "");
-  out.push(`pass rate ${pct(r.diff.passRate)} (${r.cases.filter((c) => c.pass).length}/${r.cases.length} cases, ${r.runs} trial(s) each, a case passes at ${r.threshold}) · ${fmtTokens(r.tokens)} · est. API cost $${r.costUsd.toFixed(2)} · cases_hash ${r.hash}`);
+  out.push(`pass rate ${pct(r.diff.passRate)} (${r.cases.filter((c) => c.pass).length}/${r.cases.length} cases, ${r.runs} trial(s) each, a case passes at ${r.threshold}) · ${fmtTokens(r.tokens)} · est. API cost $${r.costUsd.toFixed(2)} · time ${fmtDur(sumMs(trials))} (${trials.length ? `${fmtDur(sumMs(trials) / trials.length)} per trial` : "no trials"}) · cases_hash ${r.hash}`);
   if (r.diff.noBaseline) out.push("", "No baseline yet (`--update-baseline --reason \"…\"` creates it).");
   else if (r.diff.hashChanged) out.push("", `**Not comparable:** the cases or inputs changed since the baseline (needs \`--update-baseline --reason\`).`);
   else out.push("", `Baseline ${r.diff.baselineRate === null ? "-" : pct(r.diff.baselineRate)} → now ${pct(r.diff.passRate)}.`);
   if (r.incomplete) out.push("", "**Incomplete:** the cost ceiling stopped the run before every trial ran.");
-  out.push("", "| Case | Result | Trials | Baseline | Tokens | In | Out | Cache read | Cache write |", "|---|---|---|---|---|---|---|---|---|");
+  out.push("", "| Case | Result | Trials | Baseline | Time (all trials) | Per trial | Est. cost | Tokens | In | Out | Cache read | Cache write |", "|---|---|---|---|---|---|---|---|---|---|---|---|");
   const n = (v: number): string => v.toLocaleString("en-US");
   for (const c of r.cases) {
     const tag = r.diff.regressions.includes(c.id) ? "REGRESSION" : r.diff.fixes.includes(c.id) ? "fixed" : r.diff.newCases.includes(c.id) ? "new" : "same";
     const t = c.trials.reduce((acc, x) => addTokens(acc, x.tokens), noTokens());
-    out.push(`| ${c.id} | ${c.pass ? "pass" : "FAIL"} | ${c.trials_passed}/${c.of} | ${r.diff.noBaseline ? "-" : tag} | ${n(t.total)} | ${n(t.input)} | ${n(t.output)} | ${n(t.cache_read)} | ${n(t.cache_write)} |`);
+    const usd = c.trials.reduce((acc, x) => acc + x.cost_usd, 0);
+    out.push(`| ${c.id} | ${c.pass ? "pass" : "FAIL"} | ${c.trials_passed}/${c.of} | ${r.diff.noBaseline ? "-" : tag} | ${fmtDur(sumMs(c.trials))} | ${c.trials.map((x) => fmtDur(trialMs(x))).join(" · ")} | $${usd.toFixed(2)} | ${n(t.total)} | ${n(t.input)} | ${n(t.output)} | ${n(t.cache_read)} | ${n(t.cache_write)} |`);
   }
-  out.push("", "_Tokens: every API call of the trial's skill run and its judges, summed over all trials of the case; same fields as the run metrics report (`<KEY>-metrics.md`). Cost is an API list-price estimate, not plan usage._");
+  out.push("", "_Time: each trial end to end (skill run + checks + judges), summed over the case's trials; \"Per trial\" lists them in order. Tokens: every API call of the skill run and its judges, summed over the case's trials; same fields as the run metrics report (`<KEY>-metrics.md`). Est. cost is an API list-price estimate, not plan usage._");
   const rows = failureCounter(trials);
   const det = rows.filter((x) => x.kind === "deterministic");
   const llm = rows.filter((x) => x.kind === "llm");
@@ -119,7 +133,10 @@ export function baselineHints(reports: SkillReport[], resultsRel: string, runCom
   return out;
 }
 
-export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null; complete?: boolean; skills?: string[]; resultsRel?: string }): string {
+export function renderReport(reports: SkillReport[], meta: { started: string; maxCost: number | null; complete?: boolean; skills?: string[]; resultsRel?: string; finished?: string }): string {
+  const testMs = sumMs(reports.flatMap((r) => r.cases.flatMap((c) => c.trials)));
+  const wallMs = Date.parse(meta.finished ?? "") - Date.parse(meta.started);
+  const timeLine = `test time ${fmtDur(testMs)} (sum of all trials)${Number.isFinite(wallMs) && wallMs > 0 ? ` · wall clock ${fmtDur(wallMs)}` : ""}`;
   const missing = (meta.skills ?? []).filter((s) => !reports.some((r) => r.skill === s));
   const total = reports.reduce((n, r) => n + r.costUsd, 0);
   const totalTokens = reports.reduce((t, r) => addTokens(t, r.tokens), noTokens());
@@ -127,7 +144,7 @@ export function renderReport(reports: SkillReport[], meta: { started: string; ma
   const head = [
     "# expl1 skill evals",
     "",
-    `Started ${meta.started} · total ${fmtTokens(totalTokens)} · est. API cost $${total.toFixed(2)}${meta.maxCost ? ` of $${meta.maxCost} ceiling` : ""}`,
+    `Started ${meta.started} · total ${fmtTokens(totalTokens)} · est. API cost $${total.toFixed(2)}${meta.maxCost ? ` of $${meta.maxCost} ceiling` : ""} · ${timeLine}`,
     regs.length ? `\n**Regressions (exit 1):** ${regs.join(", ")}` : "\nNo regressions against the baselines.",
     ...(meta.complete === false ? ["", `**Run not finished** — skills without a result: ${missing.length ? missing.join(", ") : "none (a cost ceiling or error stopped it)"}.`] : []),
     "",
@@ -140,5 +157,5 @@ export function renderReport(reports: SkillReport[], meta: { started: string; ma
 export function writeResults(dir: string, reports: SkillReport[], meta: Record<string, unknown>): void {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, "results.json"), `${JSON.stringify({ meta, skills: reports }, null, 2)}\n`);
-  fs.writeFileSync(path.join(dir, "report.md"), renderReport(reports, { started: String(meta["started"] ?? ""), maxCost: (meta["max_cost_usd"] as number | null) ?? null, complete: meta["run_complete"] as boolean | undefined, skills: meta["skills"] as string[] | undefined, resultsRel: meta["results_dir"] as string | undefined }));
+  fs.writeFileSync(path.join(dir, "report.md"), renderReport(reports, { started: String(meta["started"] ?? ""), maxCost: (meta["max_cost_usd"] as number | null) ?? null, complete: meta["run_complete"] as boolean | undefined, skills: meta["skills"] as string[] | undefined, resultsRel: meta["results_dir"] as string | undefined, finished: meta["finished"] as string | undefined }));
 }

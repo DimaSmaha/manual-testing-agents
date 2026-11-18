@@ -85,7 +85,8 @@ export interface TrialResult {
   tokens: Tokens; // skill trial + judges
   skill_tokens: Tokens; // the skill trial alone
   turns: number;
-  duration_ms: number;
+  duration_ms: number; // the skill run alone
+  total_ms?: number; // skill run + grading (checks and judges): the time the trial took end to end
   dir?: string; // where the trial folder was kept
 }
 

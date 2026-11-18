@@ -19,7 +19,7 @@ npm run eval -- --skill all --runs 3 --max-cost-usd 40                          
 npm run eval -- --probe-leak                # proves the agent cannot read evals/, .workflow-artifacts/ …
 ```
 
-Options: `--skill <name|all>`, `--only c1,c2` (one skill), `--runs N` (default 3), `--max-cost-usd N` (stop launching
+Options: `--skill <name[,name…]|all>` (e.g. `expl1-1-task-context,expl1-4-qa-test-cases`), `--only c1,c2` (one skill), `--runs N` (default 3), `--max-cost-usd N` (stop launching
 trials above it; the run is then incomplete, exit 2), `--timeout-min N` (default 20), `--update-baseline --reason "…"
 [--allow-decrease]`. Uses the local Claude Code login or `ANTHROPIC_API_KEY`. Real model calls: stage 2 runs on Opus.
 

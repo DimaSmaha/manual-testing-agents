@@ -1,6 +1,6 @@
 // Eval runner for the expl1 stage skills 1-4.
 //
-//   npm run eval -- --skill <name|all> [--only c1,c2] [--runs 3] [--max-cost-usd N] [--timeout-min 20]
+//   npm run eval -- --skill <name[,name…]|all> [--only c1,c2] [--runs 3] [--max-cost-usd N] [--timeout-min 20]
 //                   [--update-baseline --reason "…" [--allow-decrease]] [--probe-leak]
 //
 // Exit codes: 0 no regression · 1 regression, not comparable, or baseline rule broken · 2 bad input / run incomplete.
@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { diffAgainst, casesHash, passThreshold, updateBaseline } from "./lib/baseline";
 import { judgeWithGrader, judgeWithReviewer } from "./lib/llm-judge";
-import { baselineHints, errorsOf, failureCounter, renderSkill, writeResults, type SkillReport } from "./lib/report";
+import { baselineHints, errorsOf, failureCounter, fmtDur, renderSkill, writeResults, type SkillReport } from "./lib/report";
 import { probeLeak, resetSandboxRoot, runSkillTrial, SANDBOX_ROOT } from "./lib/run-skill";
 import { addTokens, fmtTokens, noTokens } from "./lib/tokens";
 import { EVALS_DIR, loadCases, loadCriteria, loadGrader, REVIEWER_CRITERIA, STAGES, stageOf } from "./lib/stages";
@@ -29,7 +29,7 @@ interface Args {
 }
 
 const USAGE =
-  'Usage: npm run eval -- --skill <name|all> [--only c1,c2] [--runs 3] [--max-cost-usd N] [--timeout-min 20] [--update-baseline --reason "…" [--allow-decrease]] [--probe-leak]';
+  'Usage: npm run eval -- --skill <name[,name…]|all> [--only c1,c2] [--runs 3] [--max-cost-usd N] [--timeout-min 20] [--update-baseline --reason "…" [--allow-decrease]] [--probe-leak]';
 
 function parseArgs(argv: string[]): Args {
   const a: Args = { skill: "", only: null, runs: 3, maxCost: null, timeoutMin: 20, update: false, reason: "", allowDecrease: false, probeLeak: false };
@@ -146,6 +146,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
       let criteria: CriterionResult[] = [];
       let judgeCost = 0;
       let judgeTokens = noTokens();
+      const gradeStart = Date.now();
       if (!run.error) {
         const g = await gradeTrial(stage, c, n, run);
         criteria = g.criteria;
@@ -153,6 +154,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
         judgeTokens = g.judgeTokens;
         if (g.judgeError) console.log(`   judge problem (ignored for pass/fail): ${g.judgeError}`);
       }
+      const totalMs = run.durationMs + (Date.now() - gradeStart);
       const cost = run.costUsd + judgeCost;
       const tokens = addTokens(run.tokens, judgeTokens);
       budget.spent += cost;
@@ -170,6 +172,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
         skill_tokens: run.tokens,
         turns: run.turns,
         duration_ms: run.durationMs,
+        total_ms: totalMs,
       };
       // Keep the finished folder outside .eval-runs/ so the next trial cannot see it.
       const kept = path.join(resultsDir, "trials", path.basename(run.dir));
@@ -178,7 +181,7 @@ async function runSkill(stage: StageDef, args: Args, resultsDir: string, budget:
       t.dir = path.relative(EVALS_DIR, kept).split(path.sep).join("/");
       trials.push(t);
       const bad = criteria.filter((x) => !x.pass).map((x) => `${x.id}${x.kind === "llm" ? "(warn)" : ""}`);
-      console.log(`   ${c.id}#${n}: ${t.error ? `ERROR ${t.error}` : t.pass ? "PASS" : "FAIL"}  ${tokens.total.toLocaleString("en-US")} tok  $${cost.toFixed(2)}  ${Math.round(run.durationMs / 1000)}s${bad.length ? `  failed: ${bad.join(", ")}` : ""}`);
+      console.log(`   ${c.id}#${n}: ${t.error ? `ERROR ${t.error}` : t.pass ? "PASS" : "FAIL"}  ${tokens.total.toLocaleString("en-US")} tok  $${cost.toFixed(2)}  ${fmtDur(totalMs)}${bad.length ? `  failed: ${bad.join(", ")}` : ""}`);
     }
     if (trials.length === 0) continue;
     const passed = trials.filter((t) => t.pass).length;
@@ -215,7 +218,13 @@ async function main(): Promise<void> {
     process.exit(r.denied ? 0 : 1);
   }
 
-  const stages = args.skill === "all" ? STAGES : [stageOf(args.skill)];
+  let stages: StageDef[];
+  try {
+    stages = args.skill === "all" ? STAGES : [...new Set(args.skill.split(",").map((s) => s.trim()).filter(Boolean))].map(stageOf);
+  } catch (e) {
+    console.error(`[ERROR] ${(e as Error).message}\n${USAGE}`);
+    process.exit(2);
+  }
   if (args.only && stages.length > 1) {
     console.error("[ERROR] --only needs one --skill");
     process.exit(2);
@@ -246,6 +255,7 @@ async function main(): Promise<void> {
       total_cost_usd: budget.spent,
       total_tokens: budget.tokens,
       run_complete: complete,
+      finished: new Date().toISOString(),
       results_dir: resultsRel,
     });
   process.on("SIGINT", () => {
@@ -288,7 +298,7 @@ async function main(): Promise<void> {
   flush(reports.length === stages.length && !reports.some((r) => r.incomplete));
   const errs = reports.flatMap((r) => errorsOf(r.cases.flatMap((c) => c.trials)));
   const llmFails = reports.flatMap((r) => failureCounter(r.cases.flatMap((c) => c.trials)).filter((x) => x.kind === "llm"));
-  console.log(`\nresults: ${path.relative(process.cwd(), resultsDir)} · total ${fmtTokens(budget.tokens)} · API-list-price estimate $${budget.spent.toFixed(2)}${llmFails.length ? ` · ${llmFails.length} LLM criterion warning(s)` : ""}${errs.length ? ` · ${errs.length} trial error(s)` : ""}`);
+  console.log(`\nresults: ${path.relative(process.cwd(), resultsDir)} · total ${fmtTokens(budget.tokens)} · API-list-price estimate $${budget.spent.toFixed(2)} · wall clock ${fmtDur(Date.now() - Date.parse(started))}${llmFails.length ? ` · ${llmFails.length} LLM criterion warning(s)` : ""}${errs.length ? ` · ${errs.length} trial error(s)` : ""}`);
   const hints = baselineHints(reports, resultsRel, reports.length === stages.length && !reports.some((r) => r.incomplete));
   if (hints.length && !args.update) console.log(`\nTo accept this run as the baseline (no new model calls):\n${hints.join("\n")}`);
   fs.rmSync(SANDBOX_ROOT, { recursive: true, force: true });
